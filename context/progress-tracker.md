@@ -267,3 +267,9 @@ introduced, so later explanations don't repeat them.
   `TransactionManager` bean override, JPA attribute
   converters, `@IdClass` composite keys, Java `ScopedValue`,
   `@TestComponent`.
+- **17 Nov 2026 — CI fix.** First GitHub Actions run failed at
+  web typecheck: `LayoutProps` is a Next 16 generated type
+  (`.next/types`) that doesn't exist on a fresh checkout.
+  `apps/web` `typecheck` script is now `next typegen && tsc
+  --noEmit`. Lesson: scripts that run before `build` can't rely
+  on `.next/` existing.
