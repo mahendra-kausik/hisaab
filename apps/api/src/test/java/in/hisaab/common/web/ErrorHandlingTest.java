@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import in.hisaab.PostgresTestBase;
+import in.hisaab.TestFixtures;
+import jakarta.servlet.http.Cookie;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +20,14 @@ import org.springframework.test.web.servlet.MockMvc;
 class ErrorHandlingTest extends PostgresTestBase {
 
   @Autowired private MockMvc mockMvc;
+  @Autowired private TestFixtures fixtures;
 
+  // Unknown routes are behind authentication now, so the request carries a real token.
   @Test
   void unknownRouteReturnsTheErrorShape() throws Exception {
+    String token = fixtures.signup().accessToken();
     mockMvc
-        .perform(get("/api/v1/does-not-exist"))
+        .perform(get("/api/v1/does-not-exist").cookie(new Cookie("hisaab_access", token)))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error.code").value("not_found"))
         .andExpect(jsonPath("$.error.message").value("Not Found"))

@@ -51,7 +51,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     Map<String, Object> fields = new LinkedHashMap<>();
     ex.getBindingResult()
         .getFieldErrors()
-        .forEach(e -> fields.putIfAbsent(e.getField(), e.getDefaultMessage()));
+        .forEach(e -> fields.putIfAbsent(toSnakeCase(e.getField()), e.getDefaultMessage()));
     return body(status, "validation_failed", "Request validation failed", Map.of("fields", fields));
   }
 
@@ -77,6 +77,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     String reason = resolved != null ? resolved.getReasonPhrase() : "Error";
     String code = reason.toLowerCase(Locale.ROOT).replace(' ', '_');
     return body(statusCode, code, reason, null);
+  }
+
+  /**
+   * Validation reports Java field names ({@code periodStartDay}), but clients know the JSON names
+   * ({@code period_start_day}); Jackson's SNAKE_CASE setting does not apply to error keys.
+   */
+  private static String toSnakeCase(String javaName) {
+    return javaName.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase(Locale.ROOT);
   }
 
   private static ResponseEntity<Object> body(

@@ -1,6 +1,7 @@
 package in.hisaab.workspaces;
 
 import in.hisaab.common.security.CurrentUser;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,5 +27,11 @@ public class WorkspaceService {
     var workspace = workspaces.save(new Workspace(name, kind, userId));
     members.save(new WorkspaceMember(workspace.getId(), userId, WorkspaceRole.OWNER));
     return workspace;
+  }
+
+  /** The workspaces the current user belongs to. RLS already hides everyone else's. */
+  @Transactional(readOnly = true)
+  public List<WorkspaceMembership> listForCurrentUser() {
+    return workspaces.findMemberships(currentUser.require());
   }
 }

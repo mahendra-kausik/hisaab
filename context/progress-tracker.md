@@ -5,12 +5,12 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0, U1 done)
+- Phase 1 (manual tracker) — in progress (U0, U1, U2 done)
 
 ## Current Goal
 
-- U2: auth API — signup, login, logout, refresh, `GET /me`,
-  settings update (see Next Up)
+- U3: accounts & categories API — CRUD, default seeding by
+  workspace kind, computed balances (see Next Up)
 
 ## Completed
 
@@ -34,6 +34,18 @@ change.
   passes. No endpoints yet. Not run by hand: `make dev`
   (the tests boot the full app against the same roles and
   migrations).
+- **U2 — Auth API (17 Nov 2026):** `POST /api/v1/auth/signup`,
+  `login`, `refresh` (rotation + reuse detection), `logout`;
+  `GET` / `PATCH /api/v1/me`. Flyway `V3` adds
+  `refresh_tokens`. Spring Security with httpOnly cookies
+  (also accepts a bearer header), Nimbus HS256 access JWTs,
+  BCrypt strength 12, Bucket4j limits on login and signup.
+  Signup creates the user and personal workspace in one
+  transaction. 27 new tests (49 total); `make check` passes
+  and the flow was also run by hand with curl against
+  `make dev-api` (signup, me, refresh, patch, logout, 429).
+  Not done here: default categories and the Cash account
+  (U3 hooks into `WorkspaceService.create`).
 
 ## In Progress
 
@@ -59,7 +71,7 @@ IDs are stable labels; build in the order listed here.
   workspaces, workspace_members; `CurrentUser`,
   `RlsTransactionManager`, `WorkspaceAccess`; test
   fixtures with two users proving RLS isolation.
-- [ ] **U2 — Auth API:** signup, login, logout, refresh
+- [x] **U2 — Auth API:** signup, login, logout, refresh
   (rotation + reuse detection), `GET /me`, settings
   update; signup creates the personal workspace and
   defaults; Bucket4j rate limiting on login and signup.
@@ -125,6 +137,18 @@ IDs are stable labels; build in the order listed here.
   always-on instance. Decide before deploying U10.
 - **Project name:** keep the working name "Hisaab" or
   rename?
+- **Rate limiting behind Vercel (decide before deploy):**
+  login and signup limits count per client IP. With the web
+  app on Vercel proxying to the API on Render, every browser
+  user may reach the API from Vercel's shared egress IPs and
+  share one bucket. Options: trust a Vercel-set client-IP
+  header, or also limit per email.
+- **Concurrent refresh logs the user out:** a strict
+  rotation has no grace window, so two refresh calls with
+  the same token at once count as reuse and revoke the
+  session. Matters once the web client refreshes
+  automatically (U6); the fix is to serialise refreshes
+  in the client.
 
 ## Architecture Decisions
 
@@ -238,6 +262,28 @@ IDs are stable labels; build in the order listed here.
   database-generated UUID and `WorkspaceMemberId` is a
   record `@IdClass`; both worked with Hibernate as planned.
 
+- **U2 decisions (17 Nov 2026)** — Spring Boot 4.1 starters
+  are `spring-boot-starter-security` and
+  `spring-boot-starter-security-oauth2-resource-server`;
+  Bucket4j 8.22.0 (`bucket4j_jdk17-core`) is pinned because
+  Boot does not manage it. The user id is generated in Java
+  so signup can bind it with `runAs` before the transaction
+  starts (`User` therefore has an app-assigned id, like
+  `WorkspaceMember`). `refresh_tokens` has no RLS (see
+  `architecture.md`). `/me` returns the user's workspaces so
+  the signup result is visible and the U6 switcher has data.
+  Login runs bcrypt against a dummy hash for unknown emails
+  so timing does not reveal which emails exist, and returns
+  one `invalid_credentials` message for both cases. Passwords
+  are limited to 72 bytes (bcrypt's limit). CORS moved from
+  `WebConfig` into `SecurityConfig`. The rate-limit filter is
+  not a Spring bean (Boot would register it twice). Validation
+  errors now report snake_case field names (fixed in
+  `GlobalExceptionHandler`; before, `periodStartDay` leaked
+  through). Tests pass a fake client IP per request
+  (`TestFixtures.fromNewIp`) because the limiter's counters
+  are shared across the whole test run.
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -273,3 +319,14 @@ introduced, so later explanations don't repeat them.
   `apps/web` `typecheck` script is now `next typegen && tsc
   --noEmit`. Lesson: scripts that run before `build` can't rely
   on `.next/` existing.
+- **17 Nov 2026 — Session 2, U2 done.** Key files: `V3__refresh_tokens.sql`,
+  `auth/{AuthController,AuthService,TokenService,AuthCookies}`,
+  `users/{User,UserService,UserController}`,
+  `common/security/{SecurityConfig,CookieBearerTokenResolver,
+  AuthRateLimitFilter,CurrentUser}`, `AuthFlowTest`. Concepts
+  introduced: Spring Security filter chain and `SecurityFilterChain`
+  bean, stateless JWT auth with the OAuth2 resource server, cookies
+  vs headers, bcrypt, token rotation and reuse detection,
+  `TransactionTemplate` (programmatic transactions), pessimistic
+  locking (`@Lock`), `@Modifying` queries, `@CookieValue`,
+  Bean Validation on PATCH bodies, Bucket4j token buckets.

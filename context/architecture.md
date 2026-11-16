@@ -203,11 +203,48 @@ direction comes from the type.
   token protection is turned off because of these three
   measures; record this reasoning in a comment in the
   security config.
-- Access JWTs are signed with HMAC-SHA256 (secret from an
-  environment variable) and verified by Spring Security's
-  OAuth2 Resource Server. A custom `BearerTokenResolver`
+- Access JWTs are signed with HMAC-SHA256 (`JWT_SECRET`
+  environment variable, at least 32 characters) and
+  verified by Spring Security's OAuth2 Resource Server. A
+  custom `BearerTokenResolver` (`CookieBearerTokenResolver`)
   reads the token from the access cookie first, then the
-  `Authorization` header.
+  `Authorization` header, and ignores tokens on
+  `/api/v1/auth/**` so an expired cookie can never block
+  login or refresh.
+- Cookies: `hisaab_access` (`Path=/api`, 15 min) and
+  `hisaab_refresh` (`Path=/api/v1/auth`, 30 days), so the
+  refresh token is only ever sent to auth endpoints. Tokens
+  are never returned in a response body; a mobile client
+  that needs them gets that added when it exists.
+- Endpoints: `POST /api/v1/auth/{signup,login,refresh,logout}`
+  (public), `GET` and `PATCH /api/v1/me` (settings; `/me`
+  also lists the user's workspaces). Every other route
+  requires authentication.
+- `refresh_tokens` has **no RLS**: refresh arrives before
+  any user is known (the token is the credential), and the
+  table is user-owned, not workspace-owned. Only the
+  SHA-256 hash of a token is stored. Each refresh revokes
+  the old token and issues a new one in the same
+  `family_id`; presenting a revoked token revokes the whole
+  family. Expired rows are not purged yet.
+- Signup generates the user id in Java, then runs
+  `CurrentUser.runAs(id, ...)` around one transaction that
+  creates the user, calls `WorkspaceService.create` for the
+  personal workspace, and issues the first tokens. Binding
+  the id before the transaction begins lets
+  `RlsTransactionManager` tag it normally.
+- `CurrentUser.id()` returns the id bound by `runAs` if
+  there is one, otherwise the subject of the request's
+  `JwtAuthenticationToken`.
+- Rate limiting: `AuthRateLimitFilter` (Bucket4j, in
+  memory, per client IP, LRU-capped at 10,000 entries)
+  allows 10 logins per minute and 5 signups per 10 minutes,
+  then answers 429 with `Retry-After`. `server.forward-
+  headers-strategy=native` makes the client IP honour
+  `X-Forwarded-For` only from trusted proxies.
+- CORS is configured in `SecurityConfig` (the earlier
+  `WebConfig` was removed) so it runs inside the security
+  filter chain.
 - Future mobile: the same endpoints; the API also
   accepts `Authorization: Bearer <access token>`.
 - Data belongs to a workspace, not a user. Users reach a

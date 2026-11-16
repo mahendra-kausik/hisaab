@@ -24,6 +24,13 @@ spring:
 
 app:
   web-origin: ${WEB_ORIGIN}
+  jwt-secret: ${JWT_SECRET}
+
+server:
+  # "native": Tomcat honours X-Forwarded-For only when the request comes from a
+  # trusted (private-network) proxy, such as the Next.js server or the hosting
+  # load balancer. A public caller cannot fake their IP to dodge rate limits.
+  forward-headers-strategy: native
 
 ---
 spring:
@@ -42,6 +49,8 @@ spring:
 # Database settings are injected by the Testcontainers base class.
 app:
   web-origin: http://localhost:3000
+  # Test-only key; not a secret.
+  jwt-secret: test-only-jwt-secret-0123456789-abcdefghijklmnopqrstuvwxyz
 
 ---
 spring:
