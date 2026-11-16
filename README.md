@@ -15,7 +15,9 @@ income, budgets, reports, and a people-and-dues ledger. The specs live in
 - **Docker** (Docker Desktop on Windows/Mac). Used for local Postgres and for
   the API tests (Testcontainers), so it must be running.
 - **Node.js 24** and npm.
-- **make**. On Windows, run everything from **Git Bash**, which includes it.
+- **make** and **Git for Windows** (on Windows). The Makefile uses Git's `sh`
+  automatically, so `make` works from cmd, PowerShell, or Git Bash. Git must be
+  installed in `C:\Program Files\Git`.
 
 You do not need Maven installed: the project uses the Maven Wrapper
 (`apps/api/mvnw`).

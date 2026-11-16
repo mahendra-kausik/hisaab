@@ -207,7 +207,10 @@ IDs are stable labels; build in the order listed here.
   the system theme or a `light`/`dark` class on `<html>`.
   shadcn's `accent-foreground` is mapped to the primary text
   color because our `--accent-foreground` token means "text
-  on the accent". `ErrorHandlingTest`'s unit tests extend the
+  on the accent". On Windows the Makefile switches `SHELL`
+  to Git's `sh.exe` and adds Git's `usr/bin` to PATH, and
+  calls `npm.cmd` (npm's bash wrapper would pick WSL's
+  `bash.exe`); verified from cmd.exe. `ErrorHandlingTest`'s unit tests extend the
   Spring base class; split them out if startup time matters.
 
 ## Session Notes
