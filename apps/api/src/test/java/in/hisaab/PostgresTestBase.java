@@ -3,6 +3,7 @@ package in.hisaab;
 import java.nio.file.Path;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -17,6 +18,7 @@ import org.testcontainers.utility.MountableFile;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestFixtures.class)
 public abstract class PostgresTestBase {
 
   private static final PostgreSQLContainer POSTGRES =

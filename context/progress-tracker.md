@@ -5,14 +5,12 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0 done)
+- Phase 1 (manual tracker) — in progress (U0, U1 done)
 
 ## Current Goal
 
-- U1: core schema and RLS foundation — users, workspaces,
-  workspace_members; `CurrentUser`, `RlsTransactionManager`,
-  `WorkspaceAccess`; test fixtures with two users proving
-  RLS isolation
+- U2: auth API — signup, login, logout, refresh, `GET /me`,
+  settings update (see Next Up)
 
 ## Completed
 
@@ -24,6 +22,18 @@ change.
   tokens, `/api` proxy, TanStack Query, money helpers (15
   Vitest tests); Makefile, `.env.example` files, CI workflow.
   `make db-up && make dev` and `make check` both verified.
+- **U1 — Core schema & RLS foundation (16 Nov 2026):**
+  Flyway `V2` creates `users`, `workspaces`,
+  `workspace_members` with RLS (enabled and forced on the
+  two workspace tables), `app_current_user_id()` and
+  `app_is_workspace_creator()`. Java: `CurrentUser`
+  (`ScopedValue`), `RlsTransactionManager`,
+  `WorkspaceService.create`, `WorkspaceAccess.require`,
+  `LowercaseEnumConverter`. 13 new tests (22 total) incl.
+  two users proving isolation by raw SQL. `make check`
+  passes. No endpoints yet. Not run by hand: `make dev`
+  (the tests boot the full app against the same roles and
+  migrations).
 
 ## In Progress
 
@@ -45,7 +55,7 @@ IDs are stable labels; build in the order listed here.
   `/api` rewrite proxy; money formatting helpers (date
   helpers come in U7); `make` targets; `.env.example` files; GitHub
   Actions running `make check`.
-- [ ] **U1 — Core schema & RLS foundation:** users,
+- [x] **U1 — Core schema & RLS foundation:** users,
   workspaces, workspace_members; `CurrentUser`,
   `RlsTransactionManager`, `WorkspaceAccess`; test
   fixtures with two users proving RLS isolation.
@@ -213,6 +223,21 @@ IDs are stable labels; build in the order listed here.
   `bash.exe`); verified from cmd.exe. `ErrorHandlingTest`'s unit tests extend the
   Spring base class; split them out if startup time matters.
 
+- **U1 decisions (16 Nov 2026)** — `users` has no RLS (not
+  workspace-owned; signup/login need it before a user is
+  known). A workspace is visible to its creator, so the
+  insert and the owner membership fit in one transaction.
+  Only SELECT/INSERT policies exist on the workspace tables
+  until a unit needs more. `CurrentUser` uses Java 25
+  `ScopedValue` (`call`/`run`, not `get`, run code with a
+  binding). The `User` entity waits for U2.
+  `RlsTransactionManager` marks its `CurrentUser` field
+  `transient` because `JpaTransactionManager` is
+  `Serializable` and `-Xlint:all -Werror` flags the field.
+  `Workspace.id` uses `GenerationType.IDENTITY` with a
+  database-generated UUID and `WorkspaceMemberId` is a
+  record `@IdClass`; both worked with Hibernate as planned.
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -231,3 +256,14 @@ introduced, so later explanations don't repeat them.
   profiles + environment variables, `@ConfigurationProperties`,
   `@RestControllerAdvice`, Flyway, two database roles,
   Testcontainers.
+
+- **16 Nov 2026 — Session 1 (continued), U1 done.** Key
+  files: `V2__users_workspaces.sql`, `CurrentUser`,
+  `RlsTransactionManager`, `WorkspaceAccess`,
+  `WorkspaceService`, `TestFixtures`, `RlsIsolationTest`.
+  Concepts introduced: Postgres RLS policies, JPA entities
+  and Spring Data repositories, `@Transactional`
+  (including joining a caller's transaction), custom
+  `TransactionManager` bean override, JPA attribute
+  converters, `@IdClass` composite keys, Java `ScopedValue`,
+  `@TestComponent`.

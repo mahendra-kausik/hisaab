@@ -227,12 +227,34 @@ direction comes from the type.
     (separate `spring.flyway.user` / `password`).
   - Every workspace-scoped table has RLS enabled **and
     forced**, with policies that allow only rows whose
-    `workspace_id` is in the current user's memberships.
+    `workspace_id` is in the current user's memberships:
+    `workspace_id IN (SELECT workspace_id FROM
+    workspace_members WHERE user_id =
+    app_current_user_id())`. Copy this pattern for each new
+    table.
+  - `app_current_user_id()` (SQL function, V2) reads the
+    `app.user_id` setting and returns NULL when it is unset
+    or empty, so no user means no rows.
+  - Exceptions in the bootstrap tables (V2): `users` has
+    **no RLS** (it is not workspace-owned, and signup and
+    login read it before any user is known; the API only
+    queries it by id or email). `workspaces` rows are also
+    visible to their `created_by` user, so a workspace can
+    be inserted and its owner membership added in the same
+    transaction. `workspace_members` shows a user only
+    their own rows, and a user may insert only an `owner`
+    row for themselves in a workspace they created
+    (`app_is_workspace_creator()`). Only SELECT and INSERT
+    policies exist on both tables; add UPDATE/DELETE
+    policies in the unit that needs them.
   - A custom transaction manager (`RlsTransactionManager`
     in `common/db`, extending `JpaTransactionManager`)
     runs `SELECT set_config('app.user_id', ?, true)`
     right after every transaction begins, using the
-    current user from `CurrentUser`. The setting is
+    current user from `CurrentUser` (in `common/security`,
+    backed by a Java `ScopedValue`, bound with
+    `runAs(userId, ...)`). The bean is named
+    `transactionManager` so Spring Data uses it. The setting is
     transaction-local, so it is safe with connection
     pooling. With no current user it sets nothing, and
     RLS returns no rows.
