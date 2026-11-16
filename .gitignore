@@ -1,0 +1,23 @@
+# Secrets: never commit. Keep the .env.example files current instead.
+.env
+.env.*
+!.env.example
+
+# API (Maven)
+apps/api/target/
+
+# Web (Next.js)
+apps/web/node_modules/
+apps/web/.next/
+apps/web/out/
+apps/web/coverage/
+apps/web/*.tsbuildinfo
+apps/web/next-env.d.ts
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+*.log

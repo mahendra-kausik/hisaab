@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * Dark mode follows the system preference. Adding the class `dark` or `light`
+ * to <html> forces a mode (used by the manual toggle later). Tailwind's
+ * `dark:` variant matches the same two cases.
+ */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not(.light, .light *)) {
+      @slot;
+    }
+  }
+}
+
+/*
+ * Design tokens from context/ui-context.md. light-dark(<light>, <dark>) picks
+ * a value from the current color scheme, so each token is defined once.
+ * Components never use hex values; they use these tokens through the shadcn
+ * variables and the Tailwind theme below.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg-base: light-dark(#f7f8fa, #0b0f14);
+  --bg-surface: light-dark(#ffffff, #121821);
+  --bg-subtle: light-dark(#f1f3f6, #1a222d);
+  --text-primary: light-dark(#111827, #e6eaf0);
+  --text-muted: light-dark(#5b6472, #94a3b8);
+  --accent-primary: light-dark(#0f766e, #2dd4bf);
+  --accent-foreground: light-dark(#ffffff, #042f2e); /* text ON the accent */
+  --border-default: light-dark(#e5e7eb, #243041);
+  --ring: light-dark(#14b8a6, #5eead4);
+  --state-error: light-dark(#dc2626, #f87171);
+  --state-warning: light-dark(#b45309, #fbbf24);
+  --state-success: light-dark(#15803d, #4ade80);
+  --money-in: light-dark(#15803d, #4ade80);
+  --money-out: light-dark(#b42318, #f87171);
+
+  /* shadcn/ui variables, defined in terms of the tokens above. */
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --card: var(--bg-surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent-primary);
+  --primary-foreground: var(--accent-foreground);
+  --secondary: var(--bg-subtle);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-subtle);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--bg-subtle);
+  --destructive: var(--state-error);
+  --border: var(--border-default);
+  --input: var(--border-default);
+
+  --radius: 0.625rem;
+}
+
+:root.light {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+/*
+ * Tailwind theme. `--accent-foreground` is already taken by our token (text on
+ * the accent color), so shadcn's accent-foreground (text on a hovered subtle
+ * surface) is mapped straight to the primary text color here.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--text-primary);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Extra semantic colors: bg-surface, bg-subtle, text-money-in, ... */
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-subtle: var(--bg-subtle);
+  --color-success: var(--state-success);
+  --color-warning: var(--state-warning);
+  --color-money-in: var(--money-in);
+  --color-money-out: var(--money-out);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-sans);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

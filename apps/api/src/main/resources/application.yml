@@ -1,0 +1,56 @@
+# Shared settings first; the sections below add per-profile settings.
+# Pick a profile with SPRING_PROFILES_ACTIVE (dev | test | prod).
+# Credentials only ever come from environment variables (see .env.example).
+spring:
+  application:
+    name: hisaab-api
+  datasource:
+    # The API connects as hisaab_app: no table ownership, no BYPASSRLS.
+    url: ${DB_URL}
+    username: ${DB_APP_USER}
+    password: ${DB_APP_PASSWORD}
+  flyway:
+    # Migrations run at startup as hisaab_owner, which owns the schema.
+    url: ${DB_URL}
+    user: ${DB_OWNER_USER}
+    password: ${DB_OWNER_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks entities match it.
+      ddl-auto: validate
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+app:
+  web-origin: ${WEB_ORIGIN}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+    # Reads apps/api/.env (KEY=value lines) if it exists; real environment
+    # variables take precedence.
+    import: optional:file:.env[.properties]
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+# Database settings are injected by the Testcontainers base class.
+app:
+  web-origin: http://localhost:3000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+# No API docs or Swagger UI in production.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -1,0 +1,7 @@
+# Always LF in the repo and on checkout: shell scripts (mvnw, the Makefile) and
+# the Dockerfile break on Windows line endings inside Linux (CI, Docker).
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png binary
+*.ico binary
+*.woff2 binary
