@@ -104,6 +104,7 @@ public class TransactionService {
     access.require(workspaceId, WorkspaceRole.EDITOR);
     requireManualType(request.type());
     var transaction = findLive(workspaceId, id);
+    requireNotTransferLeg(transaction);
     // Keeping a transaction on its archived account is fine; moving one onto it is not.
     if (!transaction.getAccountId().equals(request.accountId())) {
       accounts.requireOpen(workspaceId, request.accountId());
@@ -128,7 +129,9 @@ public class TransactionService {
   @Transactional
   public void delete(UUID workspaceId, UUID id) {
     access.require(workspaceId, WorkspaceRole.EDITOR);
-    findLive(workspaceId, id).softDelete(Instant.now(clock));
+    var transaction = findLive(workspaceId, id);
+    requireNotTransferLeg(transaction);
+    transaction.softDelete(Instant.now(clock));
   }
 
   /** Undo for delete. Restoring a transaction that is not deleted changes nothing. */
@@ -139,6 +142,7 @@ public class TransactionService {
         transactions
             .findByIdAndWorkspaceId(id, workspaceId)
             .orElseThrow(TransactionService::notFound);
+    requireNotTransferLeg(transaction);
     if (transaction.getDeletedAt() != null) {
       transaction.restore(Instant.now(clock));
       transactions.saveAndFlush(transaction);
@@ -166,7 +170,19 @@ public class TransactionService {
         .orElseThrow(() -> new IllegalStateException("Transaction vanished inside its own save"));
   }
 
-  // Transfers are a linked pair of rows that U5 creates together; a single row can't be one.
+  // Changing one leg of a transfer would split the pair: money would appear or vanish. Clients use
+  // the transfers endpoints, which always change both legs together.
+  private static void requireNotTransferLeg(Transaction transaction) {
+    if (transaction.isTransfer()) {
+      throw new ValidationException(
+          "transfer_leg",
+          "This is one side of a transfer; edit, delete or restore it through the transfers"
+              + " endpoint",
+          Map.of("transfer_group_id", transaction.getTransferGroupId().toString()));
+    }
+  }
+
+  // A transfer is a linked pair of rows made by TransferService; a single row can't be one.
   private static void requireManualType(TransactionType type) {
     if (type.isTransfer()) {
       throw new ValidationException(

@@ -207,8 +207,31 @@ direction comes from the type.
     (the category and its children), tag (ignoring case),
     and `q`, a case-insensitive search of the note.
   - Edit is `PUT` with the same body as create; optional
-    fields left out are cleared. This unit accepts only
-    `expense` and `income`; U5 owns transfers.
+    fields left out are cleared. `/transactions` accepts only
+    `expense` and `income` (transfer types are 422
+    `invalid_type`); transfers go through `/transfers`.
+  - Transfers (U5, `V6`): `POST /transfers` writes a
+    `transfer_out` row on `from_account_id` and a
+    `transfer_in` row on `to_account_id` in one database
+    transaction, sharing a new `transfer_group_id` and the
+    same amount, date, note and payment method (no category,
+    no tags). The transfer's id in every `/transfers` path
+    and response is that group id. `GET`, `PUT` (full
+    replace, like transactions), `DELETE` (soft-deletes both
+    legs) and `POST .../{id}/restore` always act on both
+    rows. Both accounts must be different (422
+    `same_account`), in the workspace and not archived (the
+    same archived rule as transactions: unchanged accounts
+    on edit, delete and restore are fine). `V6` adds a unique
+    index on `(transfer_group_id, type)`, so a group can
+    never have more than one leg of each type.
+  - Both legs appear in `GET /transactions` (with
+    `transfer_group_id` set) so balances and the list agree.
+    `PUT`, `DELETE` and restore on `/transactions/{id}` for
+    a transfer leg are refused with 422 `transfer_leg`
+    (`details.transfer_group_id` names the transfer to use
+    instead), because changing one leg would make money
+    appear or vanish.
   - Account balance = opening balance + sum of `income`
     and `transfer_in` − sum of `expense` and
     `transfer_out`, over rows with `deleted_at IS NULL`.

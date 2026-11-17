@@ -27,7 +27,7 @@ public class TransactionQueries {
   private static final String SELECT =
       """
       SELECT t.id, t.account_id, t.type, t.amount_paise, t.occurred_on, t.category_id,
-             t.payment_method, t.note, t.source, t.created_at, t.updated_at,
+             t.payment_method, t.note, t.transfer_group_id, t.source, t.created_at, t.updated_at,
              array(SELECT g.name FROM transaction_tags tt JOIN tags g ON g.id = tt.tag_id
                    WHERE tt.transaction_id = t.id ORDER BY lower(g.name)) AS tags
       FROM transactions t
@@ -50,6 +50,15 @@ public class TransactionQueries {
             id)
         .stream()
         .findFirst();
+  }
+
+  /** The live legs of one transfer (normally two: out and in). */
+  public List<TransactionResponse> findTransferLegs(UUID workspaceId, UUID transferGroupId) {
+    return jdbc.query(
+        SELECT + " WHERE t.workspace_id = ? AND t.transfer_group_id = ? AND t.deleted_at IS NULL",
+        MAPPER,
+        workspaceId,
+        transferGroupId);
   }
 
   /**
@@ -125,6 +134,7 @@ public class TransactionQueries {
         paymentMethod == null ? null : PaymentMethod.valueOf(paymentMethod.toUpperCase()),
         rs.getString("note"),
         List.of((String[]) rs.getArray("tags").getArray()),
+        rs.getObject("transfer_group_id", UUID.class),
         rs.getString("source"),
         rs.getObject("created_at", OffsetDateTime.class).toInstant(),
         rs.getObject("updated_at", OffsetDateTime.class).toInstant());

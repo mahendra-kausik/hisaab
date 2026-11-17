@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import in.hisaab.common.db.LowercaseEnumConverter;
 import jakarta.persistence.Converter;
 
-/** Transfers are two linked rows (out + in) created by U5; this unit only accepts the first two. */
+/**
+ * Expense and income are single rows made through /transactions. A transfer is two linked rows (out
+ * + in) made through /transfers.
+ */
 public enum TransactionType {
   EXPENSE,
   INCOME,

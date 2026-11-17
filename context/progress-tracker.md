@@ -5,12 +5,12 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U4 done)
+- Phase 1 (manual tracker) — in progress (U0–U5 done)
 
 ## Current Goal
 
-- U5: transfers API — linked-pair create, update, delete
-  (see Next Up).
+- U6: web shell — auth screens, app shell, workspace
+  switcher, theme toggle (see Next Up).
 
 ## Completed
 
@@ -74,6 +74,19 @@ change.
   (113 total); `make check` passes, the flow was run by hand
   against `make dev-api`, and `schema.d.ts` was regenerated.
   Only expense and income are accepted; transfers are U5.
+- **U5 — Transfers API (17 Nov 2026):** Flyway `V6` adds a
+  unique index on `(transfer_group_id, type)`; no new table.
+  Endpoints under `/api/v1/workspaces/{id}/transfers`: `POST`,
+  `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `POST /{id}/restore`.
+  A transfer is two `transactions` rows (out + in) written
+  and changed together in one database transaction; its id is
+  the shared `transfer_group_id`. Both legs show in
+  `GET /transactions` with `transfer_group_id`, and balances
+  move on both accounts. `PUT`, `DELETE` and restore on a
+  transfer leg through `/transactions/{id}` are 422
+  `transfer_leg`. 14 new tests (127 total); the flow was run
+  by hand against `make dev-api`, and `schema.d.ts` was
+  regenerated.
 
 ## In Progress
 
@@ -109,8 +122,8 @@ IDs are stable labels; build in the order listed here.
 - [x] **U4 — Transactions API:** create, list, filter,
   search, update, soft delete, restore; cursor
   pagination; tags. Also made account balances real.
-- [ ] **U5 — Transfers API:** linked-pair create,
-  update, delete.
+- [x] **U5 — Transfers API:** linked-pair create,
+  update, delete, restore.
 - [ ] **U6 — Web shell:** auth screens, desktop app
   shell (sidebar, collapsing to a slide-over menu on
   narrow screens), workspace switcher, theme toggle.
@@ -374,6 +387,27 @@ IDs are stable labels; build in the order listed here.
   rows; fine at this size, revisit with a trigram index if
   lists get slow).
 
+- **U5 decisions (17 Nov 2026)** — Confirmed with the
+  developer: `PUT`, `DELETE` and restore on a transfer leg
+  through `/transactions/{id}` are refused (422 `transfer_leg`
+  with `details.transfer_group_id`) rather than acting on both
+  rows, so each endpoint keeps one meaning; transfers carry a
+  note and a payment method (copied onto both legs), but no
+  category or tags. Decided in the plan: the transfer's id is
+  the `transfer_group_id` (no separate table); the code lives
+  in the `transactions` package (`TransferService`,
+  `TransferController`) because it shares the `Transaction`
+  entity and repository; the response is assembled from the
+  two live legs read through `TransactionQueries` so it matches
+  the list; a group that does not have exactly one out and one
+  in is treated as not found; `PUT` checks "archived" only for
+  a leg whose account changes (same rule as U4); `created_at`
+  and `updated_at` come from the out leg. A restore of a live
+  transfer is a no-op, as for transactions. Tests that need
+  money to move assert balances through `GET /accounts`.
+  Note for U7: the web must send edit, delete and Undo of a
+  transfer row to `/transfers/{transfer_group_id}`.
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -449,3 +483,15 @@ introduced, so later explanations don't repeat them.
   carry `workspace_id` for defense in depth, `-Xlint`
   "this-escape" (don't call overridable methods from a
   constructor), soft delete and restore.
+- **17 Nov 2026 — Session 2 (continued), U5 done.** Key files:
+  `V6__transfer_legs.sql`,
+  `transactions/{TransferService,TransferController,Transaction,
+  TransactionQueries,TransactionService}`,
+  `transactions/dto/{TransferRequest,TransferResponse}`,
+  `TransfersApiTest`, `TransactionsApiTest`. Concepts introduced:
+  one business operation writing two rows atomically in a single
+  `@Transactional` method, a partial unique index
+  (`WHERE ... IS NOT NULL`) as a structural guard, a static
+  factory method on an entity, a private `record` used as a
+  local helper type, guarding an older endpoint against rows
+  a newer feature owns (`transfer_leg`).

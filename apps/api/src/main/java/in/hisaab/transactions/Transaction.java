@@ -11,8 +11,9 @@ import java.util.UUID;
 
 /**
  * One row of {@code transactions}. created_at is not mapped; the database fills it (and the list
- * query reads it). Transfer, source, raw_description and merchant columns are not mapped yet:
- * manual transactions use the column defaults, and U5 / Phase 2 add what they need.
+ * query reads it). source, raw_description and merchant are not mapped yet: manual transactions use
+ * the column defaults, and Phase 2 adds what it needs. A transfer is two of these rows (see {@link
+ * #transferLeg}) that share a transfer_group_id.
  */
 @Entity
 @Table(name = "transactions")
@@ -30,6 +31,7 @@ public class Transaction {
   private UUID categoryId;
   private PaymentMethod paymentMethod;
   private String note;
+  private UUID transferGroupId;
   private UUID createdBy;
   private Instant updatedAt;
   private Instant deletedAt;
@@ -59,8 +61,48 @@ public class Transaction {
     this.updatedAt = now;
   }
 
+  /** One side of a transfer: no category, and the shared group id ties it to the other side. */
+  public static Transaction transferLeg(
+      UUID workspaceId,
+      UUID createdBy,
+      UUID transferGroupId,
+      UUID accountId,
+      TransactionType type,
+      long amountPaise,
+      LocalDate occurredOn,
+      PaymentMethod paymentMethod,
+      String note,
+      Instant now) {
+    var leg =
+        new Transaction(
+            workspaceId,
+            createdBy,
+            accountId,
+            type,
+            amountPaise,
+            occurredOn,
+            null,
+            paymentMethod,
+            note,
+            now);
+    leg.transferGroupId = transferGroupId;
+    return leg;
+  }
+
   public UUID getId() {
     return id;
+  }
+
+  public TransactionType getType() {
+    return type;
+  }
+
+  public UUID getTransferGroupId() {
+    return transferGroupId;
+  }
+
+  public boolean isTransfer() {
+    return transferGroupId != null;
   }
 
   public UUID getWorkspaceId() {

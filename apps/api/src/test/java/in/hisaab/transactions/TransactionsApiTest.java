@@ -245,6 +245,45 @@ class TransactionsApiTest extends PostgresTestBase {
   }
 
   @Test
+  void transferLegsCannotBeEditedDeletedOrRestoredHere() throws Exception {
+    Session s = fixtures.signup();
+    UUID ws = fixtures.workspaceIdOf(s);
+    String cash = cashId(s, ws);
+    String bank = createAccount(s, ws, "HDFC");
+    String groupId = createTransfer(s, ws, cash, bank, 5000);
+    String list =
+        listTx(s, ws).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    List<String> outLegs = JsonPath.read(list, "$.items[?(@.type == 'transfer_out')].id");
+    String outLeg = outLegs.getFirst();
+
+    // Each of these would split the pair, so all three point the client at the transfer instead.
+    putTx(s, ws, outLeg, tx(cash, "expense", 5000, "2026-11-01"))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.error.code").value("transfer_leg"))
+        .andExpect(jsonPath("$.error.details.transfer_group_id").value(groupId));
+    mockMvc
+        .perform(delete(url(ws) + "/" + outLeg).cookie(auth(s)))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.error.code").value("transfer_leg"));
+    mockMvc
+        .perform(post(url(ws) + "/" + outLeg + "/restore").cookie(auth(s)))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.error.code").value("transfer_leg"));
+    // Nothing changed: both legs are still live.
+    assertThat(count(s, ws)).isEqualTo(2);
+
+    // Also after the whole transfer is deleted: its legs can only come back through /transfers.
+    mockMvc
+        .perform(delete("/api/v1/workspaces/" + ws + "/transfers/" + groupId).cookie(auth(s)))
+        .andExpect(status().isNoContent());
+    mockMvc
+        .perform(post(url(ws) + "/" + outLeg + "/restore").cookie(auth(s)))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.error.code").value("transfer_leg"));
+    assertThat(count(s, ws)).isZero();
+  }
+
+  @Test
   void accountsAndCategoriesMustBelongToTheWorkspaceAndKind() throws Exception {
     Session a = fixtures.signup();
     UUID wsA = fixtures.workspaceIdOf(a);
@@ -619,6 +658,25 @@ class TransactionsApiTest extends PostgresTestBase {
             .cookie(auth(s))
             .contentType(MediaType.APPLICATION_JSON)
             .content(json));
+  }
+
+  /** Creates a transfer through /transfers and returns its id (the transfer_group_id). */
+  private String createTransfer(Session s, UUID ws, String from, String to, long amountPaise)
+      throws Exception {
+    String body =
+        mockMvc
+            .perform(
+                post("/api/v1/workspaces/" + ws + "/transfers")
+                    .cookie(auth(s))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        "{\"from_account_id\": \"%s\", \"to_account_id\": \"%s\", \"amount_paise\": %d, \"occurred_on\": \"2026-11-01\"}"
+                            .formatted(from, to, amountPaise)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return JsonPath.read(body, "$.id");
   }
 
   private String createTx(Session s, UUID ws, String json) throws Exception {
