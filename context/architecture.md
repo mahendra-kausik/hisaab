@@ -131,10 +131,24 @@ direction comes from the type.
 - `accounts`: id, workspace_id, name, type (`cash` |
   `bank` | `credit_card` | `wallet`),
   opening_balance_paise (may be negative, e.g. credit
-  card dues), archived_at, created_at, updated_at.
+  card dues), archived_at, created_at, updated_at. Names
+  are unique per workspace, ignoring case (unique index
+  on `workspace_id, lower(name)`). Accounts are archived,
+  never deleted.
 - `categories`: id, workspace_id, parent_id (nullable;
   one level of nesting only), name, kind (`expense` |
   `income`), is_system, hidden_at, sort_order.
+  `is_system` is true for every seeded default: it can be
+  renamed or hidden but never deleted. User-added
+  categories can be deleted while nothing references them
+  (a foreign key violation becomes 409 `category_in_use`).
+  A composite foreign key `(parent_id, workspace_id, kind)
+  → (id, workspace_id, kind)` makes the database
+  guarantee a parent is in the same workspace and of the
+  same kind; the one-level rule is checked in the service.
+  Sibling names are unique ignoring case (unique index on
+  `workspace_id, kind, parent_id, lower(name)` with
+  `NULLS NOT DISTINCT`, so Postgres 15+).
 - `tags`: id, workspace_id, name (unique per workspace,
   case-insensitive). `transaction_tags`: transaction_id,
   tag_id.
@@ -218,8 +232,17 @@ direction comes from the type.
   that needs them gets that added when it exists.
 - Endpoints: `POST /api/v1/auth/{signup,login,refresh,logout}`
   (public), `GET` and `PATCH /api/v1/me` (settings; `/me`
-  also lists the user's workspaces). Every other route
+  also lists the user's workspaces), `POST /api/v1/workspaces`
+  (`{name, kind}`; creates another workspace with its
+  default Cash account and categories). Every other route
   requires authentication.
+- Every new workspace, including the one signup creates,
+  is seeded inside `WorkspaceService.create`'s transaction
+  with a Cash account and the default categories for its
+  kind (`AccountService.createDefaults`,
+  `CategoryService.createDefaults`). The owner membership
+  is flushed first because the seed inserts' RLS policy
+  checks membership.
 - `refresh_tokens` has **no RLS**: refresh arrives before
   any user is known (the token is the credential), and the
   table is user-owned, not workspace-owned. Only the

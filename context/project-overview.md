@@ -88,7 +88,8 @@ insights, and later tax and business features.
 ### Money Accounts
 
 - Account types: cash, bank, credit card, wallet. Name,
-  type, opening balance, archive.
+  type, opening balance, archive. Names are unique within
+  a workspace, ignoring case.
 - Current balance is computed from the opening balance
   and the account's transactions.
 
@@ -99,6 +100,9 @@ insights, and later tax and business features.
 - Default categories seeded per workspace by kind (see
   Default Data). Users can rename, add, and hide
   categories. Categories in use cannot be hard-deleted.
+  Default (seeded) categories can be renamed or hidden but
+  never deleted; categories the user adds can be deleted
+  while unused. Sibling names are unique, ignoring case.
 - Free-form tags on transactions.
 
 ### Transactions

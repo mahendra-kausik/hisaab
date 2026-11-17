@@ -1,5 +1,6 @@
 package in.hisaab.workspaces;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import in.hisaab.common.db.LowercaseEnumConverter;
 import jakarta.persistence.Converter;
 
@@ -7,6 +8,12 @@ import jakarta.persistence.Converter;
 public enum WorkspaceKind {
   PERSONAL,
   BUSINESS;
+
+  // JSON uses the lowercase name ("business"), so requests can carry a kind.
+  @JsonValue
+  public String json() {
+    return name().toLowerCase();
+  }
 
   // autoApply: JPA uses this for every WorkspaceKind field without further annotations.
   @Converter(autoApply = true)

@@ -5,12 +5,13 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0, U1, U2 done)
+- Phase 1 (manual tracker) — in progress (U0–U3 done)
 
 ## Current Goal
 
-- U3: accounts & categories API — CRUD, default seeding by
-  workspace kind, computed balances (see Next Up)
+- U4: transactions API — create, list, filter, search,
+  update, soft delete, restore, cursor pagination, tags
+  (see Next Up). It also makes account balances real.
 
 ## Completed
 
@@ -46,6 +47,19 @@ change.
   `make dev-api` (signup, me, refresh, patch, logout, 429).
   Not done here: default categories and the Cash account
   (U3 hooks into `WorkspaceService.create`).
+- **U3 — Accounts & categories API (17 Nov 2026):** Flyway
+  `V4` adds `accounts` and `categories`, both with RLS
+  enabled and forced. Endpoints under
+  `/api/v1/workspaces/{id}/`: `accounts` (GET, POST, PATCH;
+  archive through PATCH, no DELETE) and `categories` (GET,
+  POST, PATCH, DELETE), plus a new `POST /api/v1/workspaces`.
+  `WorkspaceService.create` now seeds a Cash account and the
+  default categories for the workspace kind, so signup
+  already gives a usable workspace. Accounts return
+  `balance_paise`, which equals the opening balance until U4
+  adds transactions. 36 new tests (85 total); `make check`
+  passes, the flow was run by hand against `make dev-api`, and
+  `schema.d.ts` was regenerated with `make gen-api`.
 
 ## In Progress
 
@@ -75,8 +89,9 @@ IDs are stable labels; build in the order listed here.
   (rotation + reuse detection), `GET /me`, settings
   update; signup creates the personal workspace and
   defaults; Bucket4j rate limiting on login and signup.
-- [ ] **U3 — Accounts & categories API:** CRUD, default
-  seeding by workspace kind, computed balances.
+- [x] **U3 — Accounts & categories API:** CRUD, default
+  seeding by workspace kind, computed balances (balance =
+  opening balance until U4). Also added `POST /workspaces`.
 - [ ] **U4 — Transactions API:** create, list, filter,
   search, update, soft delete, restore; cursor
   pagination; tags.
@@ -284,6 +299,33 @@ IDs are stable labels; build in the order listed here.
   (`TestFixtures.fromNewIp`) because the limiter's counters
   are shared across the whole test run.
 
+- **U3 decisions (17 Nov 2026)** — Confirmed with the
+  developer: `POST /api/v1/workspaces` is part of U3 (no
+  later unit had it, and business seeding was otherwise
+  unreachable over HTTP); `is_system` is true for every
+  seeded category (rename and hide allowed, delete refused
+  with 409 `system_category`); names are unique ignoring case
+  (accounts per workspace, categories per workspace + kind +
+  parent), duplicates answer 409 `name_taken`. A composite
+  foreign key lets Postgres enforce that a parent category
+  has the same workspace and kind; the one-level rule is in
+  `CategoryService`. `NULLS NOT DISTINCT` on the sibling-name
+  index needs Postgres 15+ (local and Neon are 16). Writes
+  use `saveAndFlush` so constraint violations become 409 inside
+  the service instead of a 500 at commit. Categories in use
+  are detected through the foreign key (`category_in_use`), so
+  U4 and U9 need no change to `delete`. Lists use the shared
+  `ListResponse` with `next_cursor: null`. Enums gained
+  `@JsonValue` (lowercase) so requests can carry them; an
+  unknown enum value is a 400 `malformed_json`. Seeding runs
+  after `members.saveAndFlush`, because the seed inserts' RLS
+  check needs the membership row to exist. In tests,
+  MockMvc's `jsonPath(...).value(List)` does not match
+  filter-expression results (`[?(...)]`); read the body with
+  `JsonPath.read` and assert with AssertJ. `RlsIsolationTest`
+  now finds every table with a `workspace_id` column, so a
+  future table that forgets RLS fails there.
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -330,3 +372,17 @@ introduced, so later explanations don't repeat them.
   `TransactionTemplate` (programmatic transactions), pessimistic
   locking (`@Lock`), `@Modifying` queries, `@CookieValue`,
   Bean Validation on PATCH bodies, Bucket4j token buckets.
+- **17 Nov 2026 — Session 2 (continued), U3 done.** Key files:
+  `V4__accounts_categories.sql`,
+  `accounts/{Account,AccountService,AccountController}`,
+  `categories/{Category,CategoryService,DefaultCategories,
+  CategoryController}`, `workspaces/{WorkspaceService,
+  WorkspaceController}`, `AccountsApiTest`, `CategoriesApiTest`,
+  `RlsIsolationTest`. Concepts introduced: a second RLS policy
+  (`FOR ALL` with `USING` and `WITH CHECK`), composite foreign
+  keys, unique indexes on `lower(name)`, Spring Data derived
+  query methods, `saveAndFlush` and translating
+  `DataIntegrityViolationException` into a 409, `@JsonValue`
+  on enums, `@ResponseStatus`, `@PathVariable`, nested
+  workspace-scoped routes, seeding data inside an existing
+  transaction.

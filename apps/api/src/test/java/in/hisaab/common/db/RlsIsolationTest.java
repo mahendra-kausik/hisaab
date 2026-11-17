@@ -132,19 +132,136 @@ class RlsIsolationTest extends PostgresTestBase {
         .hasMessageContaining("row-level security");
   }
 
+  // Finds tables by the workspace_id column, so a future workspace-owned table that forgets RLS
+  // fails here without anyone having to remember to add it to this test.
   @Test
-  void rlsIsEnabledAndForcedOnWorkspaceTables() {
+  void rlsIsEnabledAndForcedOnEveryWorkspaceOwnedTable() {
     List<Map<String, Object>> tables =
         jdbc.queryForList(
-            "SELECT relrowsecurity, relforcerowsecurity FROM pg_class"
-                + " WHERE relname IN ('workspaces', 'workspace_members')");
+            "SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class"
+                + " WHERE relkind = 'r' AND relnamespace = 'public'::regnamespace"
+                + " AND (relname = 'workspaces' OR relname IN ("
+                + "   SELECT table_name FROM information_schema.columns"
+                + "   WHERE table_schema = 'public' AND column_name = 'workspace_id'))");
 
-    assertThat(tables).hasSize(2);
+    assertThat(tables)
+        .extracting(t -> t.get("relname"))
+        .contains("workspaces", "workspace_members", "accounts", "categories");
     assertThat(tables)
         .allSatisfy(t ->
             assertThat(t)
                 .containsEntry("relrowsecurity", true)
                 .containsEntry("relforcerowsecurity", true));
+  }
+
+  @Test
+  void eachUserSeesOnlyTheirOwnAccountsAndCategories() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+
+    assertThat(
+            asUser(
+                a.id(), () -> jdbc.queryForList("SELECT workspace_id FROM accounts", UUID.class)))
+        .isNotEmpty()
+        .containsOnly(a.workspaceId());
+    assertThat(
+            asUser(
+                b.id(), () -> jdbc.queryForList("SELECT workspace_id FROM categories", UUID.class)))
+        .isNotEmpty()
+        .containsOnly(b.workspaceId());
+    assertThat(asNobody(() -> jdbc.queryForObject("SELECT count(*) FROM accounts", Integer.class)))
+        .isZero();
+    assertThat(
+            asNobody(() -> jdbc.queryForObject("SELECT count(*) FROM categories", Integer.class)))
+        .isZero();
+  }
+
+  @Test
+  void userCannotInsertAnAccountIntoAnotherUsersWorkspace() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+
+    assertThatThrownBy(() ->
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "INSERT INTO accounts (workspace_id, name, type) VALUES (?, 'Sneaky',"
+                            + " 'bank')",
+                        b.workspaceId())))
+        .rootCause()
+        .hasMessageContaining("row-level security");
+  }
+
+  @Test
+  void userCannotInsertACategoryIntoAnotherUsersWorkspace() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+
+    assertThatThrownBy(() ->
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "INSERT INTO categories (workspace_id, name, kind, sort_order)"
+                            + " VALUES (?, 'Sneaky', 'expense', 0)",
+                        b.workspaceId())))
+        .rootCause()
+        .hasMessageContaining("row-level security");
+  }
+
+  @Test
+  void userCannotUpdateOrDeleteAnotherUsersAccount() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+
+    // RLS hides B's rows from A, so these statements match nothing instead of failing.
+    assertThat(
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "UPDATE accounts SET name = 'Hacked' WHERE workspace_id = ?",
+                        b.workspaceId())))
+        .isZero();
+    assertThat(
+            asUser(
+                a.id(),
+                () -> jdbc.update("DELETE FROM accounts WHERE workspace_id = ?", b.workspaceId())))
+        .isZero();
+    assertThat(
+            asUser(
+                b.id(),
+                () ->
+                    jdbc.queryForObject(
+                        "SELECT count(*) FROM accounts WHERE name = 'Cash'", Integer.class)))
+        .isEqualTo(1);
+  }
+
+  @Test
+  void aCategoryParentMustBeInTheSameWorkspaceAndKind() {
+    TestUser a = fixtures.createUser();
+    UUID parentId =
+        asUser(
+            a.id(),
+            () ->
+                jdbc.queryForObject(
+                    "SELECT id FROM categories WHERE workspace_id = ? AND name = 'Food'",
+                    UUID.class,
+                    a.workspaceId()));
+
+    // Right workspace, wrong kind: the composite foreign key rejects it.
+    assertThatThrownBy(() ->
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "INSERT INTO categories (workspace_id, parent_id, name, kind, sort_order)"
+                            + " VALUES (?, ?, 'Tips', 'income', 0)",
+                        a.workspaceId(),
+                        parentId)))
+        .rootCause()
+        .hasMessageContaining("foreign key");
   }
 
   @Test

@@ -1,11 +1,14 @@
 package in.hisaab;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import in.hisaab.common.security.CurrentUser;
 import in.hisaab.workspaces.WorkspaceKind;
 import in.hisaab.workspaces.WorkspaceService;
+import jakarta.servlet.http.Cookie;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.boot.test.context.TestComponent;
@@ -83,6 +86,22 @@ public class TestFixtures {
         email,
         response.getCookie("hisaab_access").getValue(),
         response.getCookie("hisaab_refresh").getValue());
+  }
+
+  /** The access cookie that authenticates a request as this session's user. */
+  public static Cookie auth(Session s) {
+    return new Cookie("hisaab_access", s.accessToken());
+  }
+
+  /** The id of the personal workspace signup created for this session's user. */
+  public UUID workspaceIdOf(Session s) throws Exception {
+    String json =
+        mockMvc
+            .perform(get("/api/v1/me").cookie(auth(s)))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return UUID.fromString(JsonPath.read(json, "$.workspaces[0].id"));
   }
 
   /** Makes the request look like it came from an IP address no other request has used. */
