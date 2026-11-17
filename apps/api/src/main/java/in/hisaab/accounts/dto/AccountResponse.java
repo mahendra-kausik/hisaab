@@ -14,16 +14,16 @@ public record AccountResponse(
     Instant archivedAt) {
 
   /**
-   * The balance is computed, never stored. Today it equals the opening balance because there are no
-   * transactions yet; U4 adds the account's inflows minus outflows here.
+   * The balance is computed, never stored: the opening balance plus the account's inflows minus
+   * outflows. AccountService works out {@code netFlowPaise} from the live transactions.
    */
-  public static AccountResponse from(Account a) {
+  public static AccountResponse from(Account a, long netFlowPaise) {
     return new AccountResponse(
         a.getId(),
         a.getName(),
         a.getType(),
         a.getOpeningBalancePaise(),
-        a.getOpeningBalancePaise(),
+        Math.addExact(a.getOpeningBalancePaise(), netFlowPaise),
         a.getArchivedAt());
   }
 }

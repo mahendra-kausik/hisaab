@@ -5,13 +5,12 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U3 done)
+- Phase 1 (manual tracker) — in progress (U0–U4 done)
 
 ## Current Goal
 
-- U4: transactions API — create, list, filter, search,
-  update, soft delete, restore, cursor pagination, tags
-  (see Next Up). It also makes account balances real.
+- U5: transfers API — linked-pair create, update, delete
+  (see Next Up).
 
 ## Completed
 
@@ -61,6 +60,21 @@ change.
   passes, the flow was run by hand against `make dev-api`, and
   `schema.d.ts` was regenerated with `make gen-api`.
 
+- **U4 — Transactions API (17 Nov 2026):** Flyway `V5` adds
+  `transactions`, `tags` and `transaction_tags`, all with RLS
+  enabled and forced, plus composite foreign keys so a row
+  cannot point at another workspace's account, category or
+  tag. Endpoints under `/api/v1/workspaces/{id}/`:
+  `transactions` (GET list, POST, GET one, PUT, DELETE,
+  `POST .../{id}/restore`) and `tags` (GET names). The list
+  filters by date range, type, account, category (including
+  subcategories), tag and note text, with cursor pagination.
+  Account `balance_paise` is now real (opening balance plus
+  inflows minus outflows of live transactions). 28 new tests
+  (113 total); `make check` passes, the flow was run by hand
+  against `make dev-api`, and `schema.d.ts` was regenerated.
+  Only expense and income are accepted; transfers are U5.
+
 ## In Progress
 
 - None yet.
@@ -92,9 +106,9 @@ IDs are stable labels; build in the order listed here.
 - [x] **U3 — Accounts & categories API:** CRUD, default
   seeding by workspace kind, computed balances (balance =
   opening balance until U4). Also added `POST /workspaces`.
-- [ ] **U4 — Transactions API:** create, list, filter,
+- [x] **U4 — Transactions API:** create, list, filter,
   search, update, soft delete, restore; cursor
-  pagination; tags.
+  pagination; tags. Also made account balances real.
 - [ ] **U5 — Transfers API:** linked-pair create,
   update, delete.
 - [ ] **U6 — Web shell:** auth screens, desktop app
@@ -326,6 +340,40 @@ IDs are stable labels; build in the order listed here.
   now finds every table with a `workspace_id` column, so a
   future table that forgets RLS fails there.
 
+- **U4 decisions (17 Nov 2026)** — Confirmed with the
+  developer: same-day order is newest entered first
+  (`occurred_on DESC, created_at DESC, id DESC`, so
+  `code-standards.md` changed from `id DESC`); archived
+  accounts refuse new transactions and moves onto them (422
+  `account_archived`) but not other edits, delete or restore;
+  the category filter includes subcategories; edit is `PUT`
+  with full replacement (a `PATCH` with "null = keep" cannot
+  clear a category, note or tags). Decided in the plan:
+  `payment_method` is nullable (quick-add does not ask for
+  it); columns for parties, projects, dues and recurring
+  rules wait for the units that create those tables;
+  `transaction_tags` carries `workspace_id` (standard RLS
+  pattern, found automatically by `RlsIsolationTest`); tags
+  are sent as names and created on first use, matching
+  ignoring case; transfer types are 422 `invalid_type` until
+  U5. Balance sums are native queries in `AccountRepository`
+  because `TransactionService` already calls
+  `AccountService`, so the reverse call would be a cycle.
+  Queries use `JdbcTemplate` (`TransactionQueries`,
+  `TagRepository`) for the filtered, keyset-paginated list
+  and the tag arrays; writes use JPA. `@Min`/`@Max` on
+  `limit` answer 400 through Spring MVC's built-in method
+  validation, while a bad `type` filter or `cursor` is 422
+  (a business-rule error like the others). Search text has
+  `%`, `_` and `\` escaped so they match literally.
+  `created_at` is the database's `now()` (transaction start)
+  while `updated_at` comes from the app `Clock`, so on a
+  create they can differ by a few milliseconds (or more on
+  the very first request after startup). Not done yet: an
+  index for note search (`ILIKE '%…%'` scans the workspace's
+  rows; fine at this size, revisit with a trigram index if
+  lists get slow).
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -386,3 +434,18 @@ introduced, so later explanations don't repeat them.
   on enums, `@ResponseStatus`, `@PathVariable`, nested
   workspace-scoped routes, seeding data inside an existing
   transaction.
+- **17 Nov 2026 — Session 2 (continued), U4 done.** Key files:
+  `V5__transactions_tags.sql`,
+  `transactions/{Transaction,TransactionService,
+  TransactionController,TransactionQueries,TagRepository,
+  TransactionCursor,TagController}`, `AccountRepository`
+  (balance queries), `TransactionsApiTest`, `RlsIsolationTest`.
+  Concepts introduced: `PUT` full replace vs `PATCH`, keyset
+  (cursor) pagination with a row comparison, `JdbcTemplate`
+  with a hand-built dynamic query and bound parameters,
+  Postgres `ON CONFLICT DO NOTHING` and `array(subquery)`,
+  native `@Query` with an interface projection, `@RequestParam`
+  validation with `@Min`/`@Max`, composite foreign keys that
+  carry `workspace_id` for defense in depth, `-Xlint`
+  "this-escape" (don't call overridable methods from a
+  constructor), soft delete and restore.

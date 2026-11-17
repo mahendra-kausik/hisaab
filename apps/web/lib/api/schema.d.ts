@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/v1/workspaces/{workspaceId}/transactions/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put: operations["replace"];
+        post?: never;
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces": {
         parameters: {
             query?: never;
@@ -20,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/categories": {
+    "/api/v1/workspaces/{workspaceId}/transactions": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +52,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/accounts": {
+    "/api/v1/workspaces/{workspaceId}/transactions/{transactionId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/categories": {
         parameters: {
             query?: never;
             header?: never;
@@ -46,6 +78,22 @@ export interface paths {
         get: operations["list_1"];
         put?: never;
         post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_2"];
+        put?: never;
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -126,7 +174,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete"];
+        delete: operations["delete_1"];
         options?: never;
         head?: never;
         patch: operations["update"];
@@ -164,6 +212,22 @@ export interface paths {
         patch: operations["updateSettings"];
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -184,6 +248,45 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        TransactionRequest: {
+            /** Format: uuid */
+            accountId: string;
+            /** @enum {string} */
+            type: "expense" | "income" | "transfer_out" | "transfer_in";
+            /** Format: int64 */
+            amountPaise: number;
+            /** Format: date */
+            occurredOn: string;
+            /** Format: uuid */
+            categoryId?: string;
+            /** @enum {string} */
+            paymentMethod?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
+            note?: string;
+            tags?: string[];
+        };
+        TransactionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            accountId?: string;
+            /** @enum {string} */
+            type?: "expense" | "income" | "transfer_out" | "transfer_in";
+            /** Format: int64 */
+            amountPaise?: number;
+            /** Format: date */
+            occurredOn?: string;
+            /** Format: uuid */
+            categoryId?: string;
+            /** @enum {string} */
+            paymentMethod?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
+            note?: string;
+            tags?: string[];
+            source?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         CreateWorkspaceRequest: {
             name: string;
             /** @enum {string} */
@@ -277,6 +380,14 @@ export interface components {
             periodStartDay?: number;
             duesDigestEnabled?: boolean;
         };
+        ListResponseTransactionResponse: {
+            items?: components["schemas"]["TransactionResponse"][];
+            nextCursor?: string;
+        };
+        ListResponseString: {
+            items?: string[];
+            nextCursor?: string;
+        };
         ListResponseCategoryResponse: {
             items?: components["schemas"]["CategoryResponse"][];
             nextCursor?: string;
@@ -298,6 +409,77 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TransactionResponse"];
+                };
+            };
+        };
+    };
+    replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TransactionResponse"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     create: {
         parameters: {
             query?: never;
@@ -324,6 +506,87 @@ export interface operations {
     };
     list: {
         parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                type?: string;
+                account_id?: string;
+                category_id?: string;
+                tag?: string;
+                q?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ListResponseTransactionResponse"];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TransactionResponse"];
+                };
+            };
+        };
+    };
+    restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TransactionResponse"];
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
             query?: never;
             header?: never;
             path: {
@@ -344,7 +607,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -370,7 +633,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -392,7 +655,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -506,7 +769,7 @@ export interface operations {
             };
         };
     };
-    delete: {
+    delete_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -621,6 +884,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ListResponseString"];
                 };
             };
         };

@@ -95,6 +95,22 @@ public class CategoryService {
     }
   }
 
+  /**
+   * For transactions: the category must be in this workspace and of the given kind (an expense
+   * cannot use an income category). Hidden categories are allowed. Called after the caller's own
+   * access check.
+   */
+  @Transactional(readOnly = true)
+  public void requireForType(UUID workspaceId, UUID categoryId, CategoryKind kind) {
+    var category = categories.findByIdAndWorkspaceId(categoryId, workspaceId);
+    if (category.isEmpty() || category.get().getKind() != kind) {
+      throw new ValidationException(
+          "invalid_category",
+          "Category not found for this transaction type",
+          Map.of("fields", Map.of("category_id", "Not a " + kind.json() + " category")));
+    }
+  }
+
   /** Seeds the default categories for a new workspace. Called by WorkspaceService.create. */
   @Transactional
   public void createDefaults(UUID workspaceId, WorkspaceKind workspaceKind) {

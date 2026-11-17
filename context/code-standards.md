@@ -128,11 +128,16 @@
 - Consistent error shape:
   `{ "error": { "code": "snake_case_code", "message": "Human readable", "details": {...} | null } }`.
 - Cursor pagination for growing lists, ordered by
-  `occurred_on DESC, id DESC`; default page size 50,
-  maximum 200.
+  `occurred_on DESC, created_at DESC, id DESC` (newest
+  entered first within a day; the random id is only the
+  final tie-break); default page size 50, maximum 200.
 - Dates as ISO strings (`YYYY-MM-DD` for dates, ISO 8601
   UTC for timestamps). Money as integer paise.
-- `PATCH` for partial updates. `DELETE` soft-deletes
+- `PATCH` for partial updates where "left out" can mean
+  "keep" (accounts, categories). `PUT` for resources an
+  edit form always sends in full (transactions): the body
+  replaces everything, so optional fields left out are
+  cleared. `DELETE` soft-deletes
   where the model supports it, with
   `POST .../{id}/restore` to undo.
 

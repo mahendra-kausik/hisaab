@@ -1,6 +1,7 @@
 package in.hisaab.accounts;
 
 import static in.hisaab.TestFixtures.auth;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,6 +56,48 @@ class AccountsApiTest extends PostgresTestBase {
         .andExpect(jsonPath("$.opening_balance_paise").value(500000))
         .andExpect(jsonPath("$.balance_paise").value(500000))
         .andExpect(jsonPath("$.archived_at").doesNotExist());
+  }
+
+  @Test
+  void balanceIsOpeningPlusIncomeMinusExpenseAndIgnoresDeletedTransactions() throws Exception {
+    Session s = fixtures.signup();
+    UUID ws = fixtures.workspaceIdOf(s);
+    String bank =
+        JsonPath.read(
+            postAcct(
+                    s,
+                    ws,
+                    "{\"name\": \"Bank\", \"type\": \"bank\", \"opening_balance_paise\": 100000}")
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            "$.id");
+
+    postTxn(s, ws, bank, "income", 50000);
+    postTxn(s, ws, bank, "expense", 12000);
+    String gone = postTxn(s, ws, bank, "expense", 999);
+    mockMvc
+        .perform(delete("/api/v1/workspaces/" + ws + "/transactions/" + gone).cookie(auth(s)))
+        .andExpect(status().isNoContent());
+
+    // 100000 + 50000 - 12000; the deleted 999 does not count. Cash has no transactions.
+    mockMvc
+        .perform(get(url(ws)).cookie(auth(s)))
+        .andExpect(jsonPath("$.items[?(@.name == 'Bank')].balance_paise").value(138000))
+        .andExpect(jsonPath("$.items[?(@.name == 'Bank')].opening_balance_paise").value(100000))
+        .andExpect(jsonPath("$.items[?(@.name == 'Cash')].balance_paise").value(0));
+    // PATCH reports the same computed balance.
+    patchAcct(s, ws, bank, "{\"name\": \"Bank 2\"}")
+        .andExpect(jsonPath("$.balance_paise").value(138000));
+
+    // Restoring brings it back into the balance.
+    mockMvc
+        .perform(
+            post("/api/v1/workspaces/" + ws + "/transactions/" + gone + "/restore").cookie(auth(s)))
+        .andExpect(status().isOk());
+    mockMvc
+        .perform(get(url(ws)).cookie(auth(s)))
+        .andExpect(jsonPath("$.items[?(@.name == 'Bank 2')].balance_paise").value(137001));
   }
 
   @Test
@@ -211,6 +254,25 @@ class AccountsApiTest extends PostgresTestBase {
             .cookie(auth(s))
             .contentType(MediaType.APPLICATION_JSON)
             .content(json));
+  }
+
+  private String postTxn(Session s, UUID ws, String accountId, String type, long amount)
+      throws Exception {
+    String body =
+        mockMvc
+            .perform(
+                post("/api/v1/workspaces/" + ws + "/transactions")
+                    .cookie(auth(s))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        "{\"account_id\": \"%s\", \"type\": \"%s\", \"amount_paise\": %d,"
+                                .formatted(accountId, type, amount)
+                            + " \"occurred_on\": \"2026-11-01\"}"))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return JsonPath.read(body, "$.id");
   }
 
   private String createBank(Session s, UUID ws, String name) throws Exception {

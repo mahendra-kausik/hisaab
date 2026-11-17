@@ -146,7 +146,14 @@ class RlsIsolationTest extends PostgresTestBase {
 
     assertThat(tables)
         .extracting(t -> t.get("relname"))
-        .contains("workspaces", "workspace_members", "accounts", "categories");
+        .contains(
+            "workspaces",
+            "workspace_members",
+            "accounts",
+            "categories",
+            "transactions",
+            "tags",
+            "transaction_tags");
     assertThat(tables)
         .allSatisfy(t ->
             assertThat(t)
@@ -260,6 +267,159 @@ class RlsIsolationTest extends PostgresTestBase {
                             + " VALUES (?, ?, 'Tips', 'income', 0)",
                         a.workspaceId(),
                         parentId)))
+        .rootCause()
+        .hasMessageContaining("foreign key");
+  }
+
+  private UUID accountOf(TestUser u) {
+    return asUser(
+        u.id(),
+        () ->
+            jdbc.queryForObject(
+                "SELECT id FROM accounts WHERE workspace_id = ? AND name = 'Cash'",
+                UUID.class,
+                u.workspaceId()));
+  }
+
+  private int insertTransaction(TestUser as, UUID workspaceId, UUID accountId) {
+    return asUser(
+        as.id(),
+        () ->
+            jdbc.update(
+                "INSERT INTO transactions (workspace_id, account_id, type, amount_paise,"
+                    + " occurred_on, created_by) VALUES (?, ?, 'expense', 100, '2026-11-01', ?)",
+                workspaceId,
+                accountId,
+                as.id()));
+  }
+
+  @Test
+  void eachUserSeesOnlyTheirOwnTransactionsAndTags() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+    insertTransaction(a, a.workspaceId(), accountOf(a));
+    insertTransaction(b, b.workspaceId(), accountOf(b));
+    asUser(
+        a.id(),
+        () ->
+            jdbc.update(
+                "INSERT INTO tags (workspace_id, name) VALUES (?, 'mine')", a.workspaceId()));
+
+    assertThat(
+            asUser(
+                a.id(),
+                () -> jdbc.queryForList("SELECT workspace_id FROM transactions", UUID.class)))
+        .containsExactly(a.workspaceId());
+    assertThat(asUser(b.id(), () -> jdbc.queryForList("SELECT id FROM tags", UUID.class)))
+        .isEmpty();
+    for (String table : List.of("transactions", "tags", "transaction_tags")) {
+      assertThat(
+              asNobody(() -> jdbc.queryForObject("SELECT count(*) FROM " + table, Integer.class)))
+          .isZero();
+    }
+  }
+
+  @Test
+  void userCannotInsertATransactionIntoAnotherUsersWorkspace() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+
+    assertThatThrownBy(() -> insertTransaction(a, b.workspaceId(), accountOf(b)))
+        .rootCause()
+        .hasMessageContaining("row-level security");
+  }
+
+  @Test
+  void userCannotUpdateOrDeleteAnotherUsersTransaction() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+    insertTransaction(b, b.workspaceId(), accountOf(b));
+
+    assertThat(
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "UPDATE transactions SET amount_paise = 1 WHERE workspace_id = ?",
+                        b.workspaceId())))
+        .isZero();
+    assertThat(
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "DELETE FROM transactions WHERE workspace_id = ?", b.workspaceId())))
+        .isZero();
+  }
+
+  // Foreign key checks ignore RLS, so without the composite (account_id, workspace_id) key a
+  // user could attach their own transaction to someone else's account id.
+  @Test
+  void aTransactionCannotPointAtAnotherWorkspacesAccountOrCategory() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+
+    assertThatThrownBy(() -> insertTransaction(a, a.workspaceId(), accountOf(b)))
+        .rootCause()
+        .hasMessageContaining("foreign key");
+
+    UUID bsCategory =
+        asUser(
+            b.id(),
+            () ->
+                jdbc.queryForObject(
+                    "SELECT id FROM categories WHERE workspace_id = ? AND name = 'Food'",
+                    UUID.class,
+                    b.workspaceId()));
+    UUID asAccount = accountOf(a);
+    assertThatThrownBy(() ->
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "INSERT INTO transactions (workspace_id, account_id, type, amount_paise,"
+                            + " occurred_on, category_id, created_by)"
+                            + " VALUES (?, ?, 'expense', 100, '2026-11-01', ?, ?)",
+                        a.workspaceId(),
+                        asAccount,
+                        bsCategory,
+                        a.id())))
+        .rootCause()
+        .hasMessageContaining("foreign key");
+  }
+
+  @Test
+  void aTagLinkCannotJoinATransactionToAnotherWorkspacesTag() {
+    TestUser a = fixtures.createUser();
+    TestUser b = fixtures.createUser();
+    insertTransaction(a, a.workspaceId(), accountOf(a));
+    UUID asTransaction =
+        asUser(
+            a.id(),
+            () ->
+                jdbc.queryForObject(
+                    "SELECT id FROM transactions WHERE workspace_id = ?",
+                    UUID.class,
+                    a.workspaceId()));
+    UUID bsTag =
+        asUser(
+            b.id(),
+            () ->
+                jdbc.queryForObject(
+                    "INSERT INTO tags (workspace_id, name) VALUES (?, 'b-tag') RETURNING id",
+                    UUID.class,
+                    b.workspaceId()));
+
+    assertThatThrownBy(() ->
+            asUser(
+                a.id(),
+                () ->
+                    jdbc.update(
+                        "INSERT INTO transaction_tags (workspace_id, transaction_id, tag_id)"
+                            + " VALUES (?, ?, ?)",
+                        a.workspaceId(),
+                        asTransaction,
+                        bsTag)))
         .rootCause()
         .hasMessageContaining("foreign key");
   }

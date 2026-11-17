@@ -149,9 +149,17 @@ direction comes from the type.
   Sibling names are unique ignoring case (unique index on
   `workspace_id, kind, parent_id, lower(name)` with
   `NULLS NOT DISTINCT`, so Postgres 15+).
-- `tags`: id, workspace_id, name (unique per workspace,
-  case-insensitive). `transaction_tags`: transaction_id,
-  tag_id.
+- `tags`: id, workspace_id, name (1–50 characters, unique
+  per workspace ignoring case), created_at.
+  `transaction_tags`: workspace_id, transaction_id, tag_id.
+  `transaction_tags` repeats `workspace_id` so it follows the
+  standard RLS pattern, and composite foreign keys
+  `(transaction_id, workspace_id)` and `(tag_id,
+  workspace_id)` keep a transaction and its tags in one
+  workspace. Requests and responses carry tags as plain
+  names; a tag is created the first time it is used, and
+  names match ignoring case (the first spelling wins).
+  `GET .../tags` lists names for autocomplete.
 - `parties`: id, workspace_id, name, phone, role, notes,
   archived_at, created_at, updated_at.
 - `projects`: id, workspace_id, name, notes,
@@ -161,13 +169,52 @@ direction comes from the type.
   `transfer_in`), amount_paise (> 0), occurred_on (date,
   in the user's local calendar), category_id (nullable),
   party_id (nullable), project_id (nullable), due_id
-  (nullable), payment_method, note, transfer_group_id
+  (nullable), payment_method (nullable; `cash` | `upi` |
+  `card` | `bank_transfer` | `cheque` | `other`), note
+  (up to 500 characters), transfer_group_id
   (set on both rows of a transfer), recurring_rule_id and
   recurrence_date (nullable; unique together), source
   (`manual` now; `statement` | `email` | `sms` |
   `shortcut` later), raw_description and merchant
   (nullable; reserved for Phase 2), created_by,
   created_at, updated_at, deleted_at.
+  - U4 (`V5`) creates the table with `transfer_group_id`,
+    `source`, `raw_description` and `merchant`. `party_id`,
+    `project_id`, `due_id`, `recurring_rule_id` and
+    `recurrence_date` are added by the units that create
+    the tables they point to (U10, U14–U16).
+  - Composite foreign keys `(account_id, workspace_id)` and
+    `(category_id, workspace_id)` make the database refuse
+    a transaction that points at another workspace's
+    account or category (foreign key checks ignore RLS).
+    `accounts` and `categories` gained
+    `UNIQUE (id, workspace_id)` as their targets.
+  - CHECK constraints: a transfer type if and only if
+    `transfer_group_id` is set; transfers have no category.
+  - Category rules in the API: an expense uses an expense
+    category and an income uses an income category (422
+    `invalid_category`); hidden categories are allowed. A
+    category used by any transaction, including a
+    soft-deleted one, cannot be deleted.
+  - Archived accounts: creating a transaction on one, or
+    moving one onto it, is 422 `account_archived`. Editing
+    a transaction that already lives there, delete and
+    restore still work.
+  - List order is `occurred_on DESC, created_at DESC, id
+    DESC` (newest entered first within a day); the cursor
+    is the opaque encoding of those three values. Filters:
+    from/to (inclusive), type, account_id, category_id
+    (the category and its children), tag (ignoring case),
+    and `q`, a case-insensitive search of the note.
+  - Edit is `PUT` with the same body as create; optional
+    fields left out are cleared. This unit accepts only
+    `expense` and `income`; U5 owns transfers.
+  - Account balance = opening balance + sum of `income`
+    and `transfer_in` − sum of `expense` and
+    `transfer_out`, over rows with `deleted_at IS NULL`.
+    The sums are native queries in `AccountRepository`
+    (not a call into the transactions package, which
+    already depends on `AccountService`).
 - `budgets`: id, workspace_id, category_id,
   amount_paise, effective_from (a period start date),
   created_at. The budget in effect for a period is the
