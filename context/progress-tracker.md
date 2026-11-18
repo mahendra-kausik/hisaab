@@ -112,8 +112,11 @@ change.
 ## Next Up
 
 Units that touch both the API and the web are built as
-two steps (API first), per `ai-workflow-rules.md`. Unit
-IDs are stable labels; build in the order listed here.
+two steps (API first), per `ai-workflow-rules.md`. Build
+in the order listed here. Unit numbers always run in list
+order: when a unit is added or moved, renumber the later
+ones and every reference to them (see "Keeping Unit
+Numbers Sorted" in `ai-workflow-rules.md`).
 
 ### Phase 1 — Manual tracker
 
@@ -147,16 +150,16 @@ IDs are stable labels; build in the order listed here.
 - [ ] **U7 — Web transactions:** list, quick-add dialog
   (`N` shortcut), edit, delete with Undo.
 - [ ] **U8 — Web accounts & categories management.**
-- [ ] **U24 — Web settings:** page for name, timezone,
+- [ ] **U9 — Web settings:** page for name, timezone,
   period start day and the dues digest switch (`PATCH /me`
   already exists); gives the "Settings" sidebar item its
-  `href`. Built after U8.
-- [ ] **U9 — Budgets:** API, then web progress view.
-- [ ] **U10 — Recurring:** job queue + `@Scheduled`
+  `href`.
+- [ ] **U10 — Budgets:** API, then web progress view.
+- [ ] **U11 — Recurring:** job queue + `@Scheduled`
   poller + recurring rules API, then recurring UI.
-- [ ] **U11 — Monthly report:** period-aware report API,
+- [ ] **U12 — Monthly report:** period-aware report API,
   then report page with charts.
-- [ ] **U12 — CSV export.**
+- [ ] **U13 — CSV export.**
 
 ### Phase 1.5 — People & dues
 
@@ -183,7 +186,7 @@ IDs are stable labels; build in the order listed here.
 
 - [ ] **U23 — Phone layout:** bottom tab bar, bottom-sheet
   quick add, phone-sized lists and reports.
-- [ ] **U13 — PWA:** manifest, icons, installability.
+- [ ] **U24 — PWA:** manifest, icons, installability.
 
 ## Open Questions
 
@@ -197,7 +200,7 @@ IDs are stable labels; build in the order listed here.
   that wakes it on a schedule, catch-up on wake
   (recurring entries already catch up from
   `next_run_on`; digests would arrive late), or a paid
-  always-on instance. Decide before deploying U10.
+  always-on instance. Decide before deploying U11.
 - **Project name:** keep the working name "Hisaab" or
   rename?
 - **Rate limiting behind Vercel (decide before deploy):**
@@ -363,7 +366,7 @@ IDs are stable labels; build in the order listed here.
   use `saveAndFlush` so constraint violations become 409 inside
   the service instead of a 500 at commit. Categories in use
   are detected through the foreign key (`category_in_use`), so
-  U4 and U9 need no change to `delete`. Lists use the shared
+  U4 and U10 need no change to `delete`. Lists use the shared
   `ListResponse` with `next_cursor: null`. Enums gained
   `@JsonValue` (lowercase) so requests can carry them; an
   unknown enum value is a 400 `malformed_json`. Seeding runs
@@ -433,7 +436,7 @@ IDs are stable labels; build in the order listed here.
 - **U6 decisions (18 Nov 2026)** — Confirmed with the
   developer: the active workspace is kept in `localStorage`
   (routes stay `/transactions`, `/dues`), the switcher can create
-  workspaces in U6, and the Settings page is a later unit (U24;
+  workspaces in U6, and the Settings page is a later unit (U9;
   the nav shows it as "Soon"). Decided in the plan: the signed-in
   check is client-side because the auth cookies' paths (`/api`,
   `/api/v1/auth`) mean a page request never carries them, so a
@@ -559,3 +562,11 @@ introduced, so later explanations don't repeat them.
   TanStack Query mutations and cache seeding, React context,
   `useSyncExternalStore`, a shared in-flight promise to serialise
   token refreshes, Base UI / shadcn menus, dialogs and sheets.
+- **18 Nov 2026 — Units renumbered.** Numbers now run in list
+  order: Settings U24→U9, Budgets U9→U10, Recurring U10→U11,
+  Monthly report U11→U12, CSV export U12→U13, PWA U13→U24
+  (U0–U8 and U14–U23 unchanged). References in the context
+  files were updated; old commit messages keep the numbers
+  that were true when they were written. The comment
+  in `V5__transactions_tags.sql` still says U10 for recurring
+  (now U11); it is an applied migration, so it was left as is.

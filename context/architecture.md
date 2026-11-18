@@ -182,7 +182,7 @@ direction comes from the type.
     `source`, `raw_description` and `merchant`. `party_id`,
     `project_id`, `due_id`, `recurring_rule_id` and
     `recurrence_date` are added by the units that create
-    the tables they point to (U10, U14–U16).
+    the tables they point to (U11, U14–U16).
   - Composite foreign keys `(account_id, workspace_id)` and
     `(category_id, workspace_id)` make the database refuse
     a transaction that points at another workspace's

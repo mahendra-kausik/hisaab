@@ -134,10 +134,34 @@ changes:
 - Feature scope or behavior → `project-overview.md`
 - UI tokens or patterns → `ui-context.md`
 
+## Keeping Unit Numbers Sorted
+
+Unit numbers in `progress-tracker.md` always run in
+ascending order down the list. Whenever a unit is added,
+moved or removed:
+
+1. Renumber the units after it so the sequence stays
+   ascending with no gaps.
+2. Search the whole repo for the old numbers (for example
+   `rg '\bU(9|10|11)\b'`, excluding `node_modules`,
+   `target`, `.next`) and update every reference in the
+   context files and code comments.
+3. Do not edit an applied Flyway migration just to fix a
+   unit number in a comment (its checksum would change).
+   Leave it and let the context files be the reference.
+4. Past commit messages and dated Session Notes keep the
+   numbers that were true at the time; add a one-line
+   note in Session Notes when numbers were shifted.
+
 ## Git
 
 - One commit (or a small series) per unit, with a
   message like `feat(api): transactions CRUD (U4)`
+- After every unit (once it passes the "Before Moving to
+  the Next Unit" checklist), commit and push the current
+  branch to `origin`. This is a standing instruction from
+  the developer; it covers pushing the unit's branch only,
+  never force pushes or other branches.
 - Never commit `.env` files or secrets
 
 ## Before Moving to the Next Unit
