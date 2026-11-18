@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { formatINR, formatINRCompact, rupeesToPaise } from "./format";
+import { formatINR, formatINRCompact, paiseToRupeesInput, rupeesToPaise } from "./format";
+
+describe("paiseToRupeesInput", () => {
+  it("writes whole rupees without decimals and keeps two digits for paise", () => {
+    expect(paiseToRupeesInput(12_300)).toBe("123");
+    expect(paiseToRupeesInput(12_345)).toBe("123.45");
+    expect(paiseToRupeesInput(12_305)).toBe("123.05");
+    expect(paiseToRupeesInput(5)).toBe("0.05");
+  });
+
+  it("round-trips through rupeesToPaise", () => {
+    for (const paise of [1, 99, 100, 100_050, 123_456_789]) {
+      expect(rupeesToPaise(paiseToRupeesInput(paise))).toBe(paise);
+    }
+  });
+});
 
 describe("formatINR", () => {
   it("uses Indian digit grouping", () => {

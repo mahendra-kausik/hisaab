@@ -54,6 +54,17 @@ export function formatINRCompact(paise: number): string {
   return `${sign}${RUPEE}${indianGrouping.format(whole)}${decimal}${label}`;
 }
 
+/**
+ * Paise → text for an amount field, the reverse of rupeesToPaise: 12345 → "123.45",
+ * 12300 → "123". No grouping and no rupee sign, so the user can edit it directly.
+ */
+export function paiseToRupeesInput(paise: number): string {
+  assertPaise(paise);
+  const rupees = Math.floor(paise / 100);
+  const remainder = paise % 100;
+  return remainder === 0 ? String(rupees) : `${rupees}.${String(remainder).padStart(2, "0")}`;
+}
+
 // Digits, optionally with comma grouping (1,000 or 12,34,567), then at most two
 // decimals. No sign, no currency symbol, no leading ".5".
 const RUPEE_INPUT = /^(\d+|\d{1,3}(,\d{2,3})+)(\.(\d{1,2}))?$/;

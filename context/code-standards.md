@@ -133,6 +133,12 @@
   final tie-break); default page size 50, maximum 200.
 - Dates as ISO strings (`YYYY-MM-DD` for dates, ISO 8601
   UTC for timestamps). Money as integer paise.
+- Response DTOs mark every field that is never null with
+  `@NotNull` (see `MeResponse`, `TransactionResponse`).
+  springdoc turns that into `required`, so the generated web
+  types have no `?` on those fields and the web code needs no
+  `!`. Nullable fields (a note, a category) stay unmarked and
+  arrive as `null`, not as a missing key.
 - `PATCH` for partial updates where "left out" can mean
   "keep" (accounts, categories). `PUT` for resources an
   edit form always sends in full (transactions): the body

@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { QuickAddProvider } from "@/components/transactions/quick-add-provider";
 import { ApiError } from "@/lib/api/client";
 import { useMe } from "@/lib/queries/me";
 import { WorkspaceProvider } from "@/lib/workspace";
@@ -42,37 +43,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <WorkspaceProvider me={me.data}>
-      <div className="flex flex-1 flex-col md:flex-row">
-        {/* Desktop: fixed 240px sidebar. */}
-        <aside className="hidden w-60 shrink-0 border-r bg-surface md:block">
-          <div className="sticky top-0 h-screen">
-            <Sidebar me={me.data} />
-          </div>
-        </aside>
+      {/* One quick-add dialog for the whole shell; the sidebar and pages open it. */}
+      <QuickAddProvider>
+        <div className="flex flex-1 flex-col md:flex-row">
+          {/* Desktop: fixed 240px sidebar. */}
+          <aside className="hidden w-60 shrink-0 border-r bg-surface md:block">
+            <div className="sticky top-0 h-screen">
+              <Sidebar me={me.data} />
+            </div>
+          </aside>
 
-        {/* Narrow screens: top bar with a slide-over menu. */}
-        <header className="flex h-14 items-center gap-2 border-b bg-surface px-4 md:hidden">
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger render={<Button variant="ghost" size="icon" className="size-11" />}>
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Open menu</span>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 max-w-[85vw]">
-              <SheetTitle className="sr-only">Menu</SheetTitle>
-              <SheetDescription className="sr-only">Navigate and switch workspace</SheetDescription>
-              {/* pt-11 leaves room for the sheet's own close button in the top-right corner. */}
-              <div className="h-full pt-11">
-                <Sidebar me={me.data} onNavigate={() => setMenuOpen(false)} />
-              </div>
-            </SheetContent>
-          </Sheet>
-          <span className="font-semibold text-primary">Hisaab</span>
-        </header>
+          {/* Narrow screens: top bar with a slide-over menu. */}
+          <header className="flex h-14 items-center gap-2 border-b bg-surface px-4 md:hidden">
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger render={<Button variant="ghost" size="icon" className="size-11" />}>
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Open menu</span>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 max-w-[85vw]">
+                <SheetTitle className="sr-only">Menu</SheetTitle>
+                <SheetDescription className="sr-only">Navigate and switch workspace</SheetDescription>
+                {/* pt-11 leaves room for the sheet's own close button in the top-right corner. */}
+                <div className="h-full pt-11">
+                  <Sidebar me={me.data} onNavigate={() => setMenuOpen(false)} />
+                </div>
+              </SheetContent>
+            </Sheet>
+            <span className="font-semibold text-primary">Hisaab</span>
+          </header>
 
-        <main className="mx-auto w-full max-w-[1100px] min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
-          {children}
-        </main>
-      </div>
+          <main className="mx-auto w-full max-w-[1100px] min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
+            {children}
+          </main>
+        </div>
+      </QuickAddProvider>
     </WorkspaceProvider>
   );
 }

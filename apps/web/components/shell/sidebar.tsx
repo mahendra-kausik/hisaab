@@ -8,9 +8,12 @@ import {
   HandCoins,
   House,
   PiggyBank,
+  Plus,
   Settings,
   type LucideIcon,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useQuickAdd } from "@/components/transactions/quick-add-provider";
 import { cn } from "@/lib/utils";
 import type { Me } from "@/lib/queries/me";
 import { UserMenu } from "./user-menu";
@@ -19,7 +22,7 @@ import { WorkspaceSwitcher } from "./workspace-switcher";
 // A page with no `href` yet is shown as "Soon". Each unit that builds a page adds its href.
 const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Home", icon: House, href: "/" },
-  { label: "Transactions", icon: ArrowLeftRight },
+  { label: "Transactions", icon: ArrowLeftRight, href: "/transactions" },
   { label: "Dues", icon: HandCoins },
   { label: "Reports", icon: ChartColumn },
   { label: "Budgets", icon: PiggyBank },
@@ -30,10 +33,25 @@ const ITEM = "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medi
 
 export function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { openAdd } = useQuickAdd();
 
   return (
     <div className="flex h-full flex-col gap-4 p-3">
       <WorkspaceSwitcher />
+
+      <Button
+        className="h-11 w-full justify-start gap-3 px-3"
+        onClick={() => {
+          onNavigate?.(); // closes the slide-over menu on narrow screens
+          openAdd();
+        }}
+      >
+        <Plus className="h-5 w-5" />
+        Add
+        <kbd className="ml-auto rounded-md bg-primary-foreground/20 px-1.5 py-0.5 font-sans text-xs font-normal">
+          N
+        </kbd>
+      </Button>
 
       <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
         {NAV.map(({ label, icon: Icon, href }) =>

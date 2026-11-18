@@ -5,12 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U6 done)
+- Phase 1 (manual tracker) — in progress (U0–U7 done)
 
 ## Current Goal
 
-- U7: web transactions — list, quick-add dialog (`N`
-  shortcut), edit, delete with Undo (see Next Up).
+- U8: web accounts & categories management (see Next Up).
 
 ## Completed
 
@@ -109,6 +108,26 @@ change.
   in a 360px-wide frame (no horizontal overflow, Esc closes it and
   focus returns to the menu button). The browser check found and
   fixed three bugs, listed under "U6 decisions".
+- **U7 — Web transactions (19 Nov 2026):** the Transactions page
+  (`/transactions`): entries grouped by date with a net daily
+  total (income minus expense; transfers left out), "Load more"
+  paging, search on notes plus type, account, category, tag and
+  date-range filters kept in the URL, and a row menu with Edit and
+  Delete. The quick-add dialog (sidebar Add button or the `N` key
+  from any signed-in page) adds an expense, income or transfer and
+  edits an existing one; Delete takes effect at once and shows an
+  8-second Undo toast. Before the web work, an API fix (commit
+  `8a8e509`): response fields that are never null are marked
+  `@NotNull`, so the generated TypeScript types are no longer all
+  optional. New: `sonner` (toasts, through the shadcn CLI) and the
+  shadcn `combobox` for the category picker. 13 new web tests (36
+  total), no new API tests beyond one OpenAPI assertion (128 total);
+  `make check` passes. Checked by hand in Chrome against the
+  running API: add, edit and delete with Undo for each type,
+  balances after a transfer edit, delete and Undo of a transfer,
+  every filter, 63 rows loaded across two pages, validation
+  messages, dark theme, and a 360px-wide frame (no horizontal
+  overflow); the console had no errors.
 
 ## In Progress
 
@@ -152,8 +171,9 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U6 — Web shell:** auth screens, desktop app
   shell (sidebar, collapsing to a slide-over menu on
   narrow screens), workspace switcher, theme toggle.
-- [ ] **U7 — Web transactions:** list, quick-add dialog
-  (`N` shortcut), edit, delete with Undo.
+- [x] **U7 — Web transactions:** list, quick-add dialog
+  (`N` shortcut), edit, delete with Undo; also all list
+  filters and note search.
 - [ ] **U8 — Web accounts & categories management.**
 - [ ] **U9 — Web settings:** page for name, timezone,
   period start day and the dues digest switch (`PATCH /me`
@@ -480,6 +500,45 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   already signed in; the Add button (arrives with quick-add in
   U7).
 
+- **U7 decisions (19 Nov 2026)** — Confirmed with the developer:
+  all list filters and note search are part of U7; `sonner` is
+  the toast library; Delete has no confirm dialog, only the Undo
+  toast (confirm dialogs stay for deletes that cannot be undone);
+  the daily total is net income minus expense. Decided in the plan:
+  a transfer's two legs are shown as one row (`toRows`), and its
+  edit, delete and Undo go to `/transfers/{transfer_group_id}`;
+  the type cannot be changed while editing (an expense cannot
+  become a transfer; delete and add instead), which also keeps
+  edit to one endpoint; the type filter offers "Transfer out" and
+  "Transfer in" because the API filters one leg at a time, so an
+  account or type filter can leave a transfer with only one leg
+  in the list, and opening that row fetches the whole transfer
+  first (`useTransfer`). Filters live in the URL (`?type=…&q=…`)
+  and the search box is debounced 300 ms; the category picker is a
+  searchable combobox (recently used first, taken from the newest
+  page of transactions), the other selects are native `<select>`s.
+  No react-hook-form: one controlled form with Zod is enough (add
+  it if forms multiply). `payment_method` is not in the form but is
+  sent back on edit, because `PUT` replaces the whole entry. The
+  generated `components/ui/sonner.tsx` was edited by hand to use
+  our own `useTheme` (`lib/theme.ts`) instead of `next-themes`,
+  which does not know our theme choice; `next-themes` was
+  removed. The generated `cn` import in `components/ui/*` comes
+  from the `cn` package (U0), not `@/lib/utils`; feature code uses
+  `@/lib/utils`. Response DTOs now mark never-null fields
+  `@NotNull` (see `code-standards.md`); Jackson sends `null`, not
+  a missing key, for nullable fields, so check with `??` or
+  `!= null`. The window-resize tool did not change the page's
+  viewport; a 360px check was done in a same-origin iframe, which
+  evaluates media queries at its own width. Pressing `N` before
+  the shell has loaded does nothing (the listener mounts with the
+  shell). Not done: field-level error marking in the dialog (the
+  message shows under the form with `role="alert"`, but the
+  input is not set `aria-invalid`); the search box is not
+  re-synced if the URL changes while the user is typing; no
+  automated component tests (only helper tests), per the standards
+  that ask for Vitest on helpers.
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -590,3 +649,17 @@ introduced, so later explanations don't repeat them.
   that were true when they were written. The comment
   in `V5__transactions_tags.sql` still says U10 for recurring
   (now U11); it is an applied migration, so it was left as is.
+- **19 Nov 2026 — Session 3 (continued), U7 done.** Key files:
+  `lib/{dates,transactions,category-icons}.ts` (+ tests),
+  `lib/queries/{accounts,categories,tags,transactions}.ts`,
+  `components/transactions/{quick-add-provider,quick-add-dialog,
+  transaction-filters,transaction-list,transactions-view,
+  native-select}.tsx`, `app/(app)/transactions/page.tsx`,
+  `components/shell/{app-shell,sidebar}.tsx`. Concepts introduced:
+  `useInfiniteQuery` and cursor paging, mutation hooks that
+  invalidate several query keys, a React context that owns one
+  global dialog plus a `keydown` listener, filters kept in the URL
+  with `useSearchParams` and `router.replace`, a debounce with a
+  timer ref, the "adjust state while rendering" pattern, Base UI
+  combobox, native radio inputs styled as a segmented control,
+  `@NotNull` on response records so OpenAPI marks fields required.

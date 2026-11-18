@@ -141,11 +141,22 @@ the color tokens.
   and a count badge on the Dues nav item.
 - **Lists:** grouped by date with a daily total. Each
   row shows the category icon, note or party name,
-  account, and the amount right-aligned.
+  account, and the amount right-aligned. The daily total is
+  net: income minus expense, with a sign (`+₹2,000`,
+  `−₹1,250`); transfers are left out. A transfer is one row
+  ("Cash → HDFC Bank", neutral colour) even though it is two
+  records. A row opens its edit dialog on click or Enter, and
+  has an actions menu (Edit, Delete).
+- **Filters:** the Transactions page keeps its filters
+  (search, type, account, category, tag, date range) in the
+  URL, so a reload or shared link shows the same list. They
+  stay in a two-column grid on phones.
 - **Empty states:** one sentence and one primary action
   ("No transactions yet — Add your first expense").
-- **Destructive actions:** confirm dialog. Soft deletes
-  show an Undo toast.
+- **Destructive actions:** a confirm dialog for deletes that
+  cannot be undone. A soft delete (a transaction or transfer)
+  takes effect at once and shows an Undo toast for 8 seconds,
+  with no confirm dialog.
 - **Click/tap targets:** at least 44×44px, so phone use
   works later without redesign.
 - **Keyboard:** visible focus rings on every interactive
