@@ -298,53 +298,53 @@ export interface components {
     schemas: {
         TransferRequest: {
             /** Format: uuid */
-            fromAccountId: string;
+            from_account_id: string;
             /** Format: uuid */
-            toAccountId: string;
+            to_account_id: string;
             /** Format: int64 */
-            amountPaise: number;
+            amount_paise: number;
             /** Format: date */
-            occurredOn: string;
+            occurred_on: string;
             /** @enum {string} */
-            paymentMethod?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
+            payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
         };
         TransferResponse: {
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
-            fromAccountId?: string;
+            from_account_id?: string;
             /** Format: uuid */
-            toAccountId?: string;
+            to_account_id?: string;
             /** Format: int64 */
-            amountPaise?: number;
+            amount_paise?: number;
             /** Format: date */
-            occurredOn?: string;
+            occurred_on?: string;
             /** @enum {string} */
-            paymentMethod?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
+            payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
             /** Format: uuid */
-            outTransactionId?: string;
+            out_transaction_id?: string;
             /** Format: uuid */
-            inTransactionId?: string;
+            in_transaction_id?: string;
             /** Format: date-time */
-            createdAt?: string;
+            created_at?: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updated_at?: string;
         };
         TransactionRequest: {
             /** Format: uuid */
-            accountId: string;
+            account_id: string;
             /** @enum {string} */
             type: "expense" | "income" | "transfer_out" | "transfer_in";
             /** Format: int64 */
-            amountPaise: number;
+            amount_paise: number;
             /** Format: date */
-            occurredOn: string;
+            occurred_on: string;
             /** Format: uuid */
-            categoryId?: string;
+            category_id?: string;
             /** @enum {string} */
-            paymentMethod?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
+            payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
             tags?: string[];
         };
@@ -352,26 +352,26 @@ export interface components {
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
-            accountId?: string;
+            account_id?: string;
             /** @enum {string} */
             type?: "expense" | "income" | "transfer_out" | "transfer_in";
             /** Format: int64 */
-            amountPaise?: number;
+            amount_paise?: number;
             /** Format: date */
-            occurredOn?: string;
+            occurred_on?: string;
             /** Format: uuid */
-            categoryId?: string;
+            category_id?: string;
             /** @enum {string} */
-            paymentMethod?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
+            payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
             tags?: string[];
             /** Format: uuid */
-            transferGroupId?: string;
+            transfer_group_id?: string;
             source?: string;
             /** Format: date-time */
-            createdAt?: string;
+            created_at?: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updated_at?: string;
         };
         CreateWorkspaceRequest: {
             name: string;
@@ -380,38 +380,38 @@ export interface components {
         };
         WorkspaceSummary: {
             /** Format: uuid */
-            id?: string;
-            name?: string;
-            kind?: string;
-            role?: string;
+            id: string;
+            name: string;
+            kind: string;
+            role: string;
         };
         CreateCategoryRequest: {
             name: string;
             /** @enum {string} */
             kind: "expense" | "income";
             /** Format: uuid */
-            parentId?: string;
+            parent_id?: string;
         };
         CategoryResponse: {
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
-            parentId?: string;
+            parent_id?: string;
             name?: string;
             /** @enum {string} */
             kind?: "expense" | "income";
-            isSystem?: boolean;
+            is_system?: boolean;
             /** Format: date-time */
-            hiddenAt?: string;
+            hidden_at?: string;
             /** Format: int32 */
-            sortOrder?: number;
+            sort_order?: number;
         };
         CreateAccountRequest: {
             name: string;
             /** @enum {string} */
             type: "cash" | "bank" | "credit_card" | "wallet";
             /** Format: int64 */
-            openingBalancePaise?: number;
+            opening_balance_paise?: number;
         };
         AccountResponse: {
             /** Format: uuid */
@@ -420,11 +420,11 @@ export interface components {
             /** @enum {string} */
             type?: "cash" | "bank" | "credit_card" | "wallet";
             /** Format: int64 */
-            openingBalancePaise?: number;
+            opening_balance_paise?: number;
             /** Format: int64 */
-            balancePaise?: number;
+            balance_paise?: number;
             /** Format: date-time */
-            archivedAt?: string;
+            archived_at?: string;
         };
         SignupRequest: {
             /** Format: email */
@@ -434,14 +434,14 @@ export interface components {
         };
         MeResponse: {
             /** Format: uuid */
-            id?: string;
-            email?: string;
-            name?: string;
-            timezone?: string;
+            id: string;
+            email: string;
+            name: string;
+            timezone: string;
             /** Format: int32 */
-            periodStartDay?: number;
-            duesDigestEnabled?: boolean;
-            workspaces?: components["schemas"]["WorkspaceSummary"][];
+            period_start_day: number;
+            dues_digest_enabled: boolean;
+            workspaces: components["schemas"]["WorkspaceSummary"][];
         };
         LoginRequest: {
             email: string;
@@ -456,31 +456,31 @@ export interface components {
             /** @enum {string} */
             type?: "cash" | "bank" | "credit_card" | "wallet";
             /** Format: int64 */
-            openingBalancePaise?: number;
+            opening_balance_paise?: number;
             archived?: boolean;
         };
         UpdateSettingsRequest: {
             name?: string;
             timezone?: string;
             /** Format: int32 */
-            periodStartDay?: number;
-            duesDigestEnabled?: boolean;
+            period_start_day?: number;
+            dues_digest_enabled?: boolean;
         };
         ListResponseTransactionResponse: {
             items?: components["schemas"]["TransactionResponse"][];
-            nextCursor?: string;
+            next_cursor?: string;
         };
         ListResponseString: {
             items?: string[];
-            nextCursor?: string;
+            next_cursor?: string;
         };
         ListResponseCategoryResponse: {
             items?: components["schemas"]["CategoryResponse"][];
-            nextCursor?: string;
+            next_cursor?: string;
         };
         ListResponseAccountResponse: {
             items?: components["schemas"]["AccountResponse"][];
-            nextCursor?: string;
+            next_cursor?: string;
         };
         HealthResponse: {
             status: string;
