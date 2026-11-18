@@ -1,7 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { formatINR, formatINRCompact, paiseToRupeesInput, rupeesToPaise } from "./format";
+import {
+  formatINR,
+  formatINRCompact,
+  paiseToRupeesInput,
+  rupeesToPaise,
+  signedRupeesToPaise,
+} from "./format";
+
+describe("signedRupeesToPaise", () => {
+  it("reads a leading minus as money owed", () => {
+    expect(signedRupeesToPaise("-12000")).toBe(-1_200_000);
+    expect(signedRupeesToPaise("−1,000.50")).toBe(-100_050);
+    expect(signedRupeesToPaise(" -5 ")).toBe(-500);
+  });
+
+  it("matches rupeesToPaise for unsigned input and gives 0, not -0", () => {
+    expect(signedRupeesToPaise("250")).toBe(25_000);
+    expect(Object.is(signedRupeesToPaise("-0"), 0)).toBe(true);
+  });
+
+  it("rejects a bare or doubled minus and other invalid input", () => {
+    for (const bad of ["-", "--5", "", "-1.234", "abc"]) {
+      expect(signedRupeesToPaise(bad), `"${bad}"`).toBeNull();
+    }
+  });
+
+  it("round-trips negatives through paiseToRupeesInput", () => {
+    for (const paise of [-1, -12_345, -1_200_000]) {
+      expect(signedRupeesToPaise(paiseToRupeesInput(paise))).toBe(paise);
+    }
+  });
+});
 
 describe("paiseToRupeesInput", () => {
+  it("keeps the sign for negatives", () => {
+    expect(paiseToRupeesInput(-12_345)).toBe("-123.45");
+    expect(paiseToRupeesInput(-1_200_000)).toBe("-12000");
+  });
+
   it("writes whole rupees without decimals and keeps two digits for paise", () => {
     expect(paiseToRupeesInput(12_300)).toBe("123");
     expect(paiseToRupeesInput(12_345)).toBe("123.45");

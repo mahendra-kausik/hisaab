@@ -49,8 +49,12 @@ export function categoryItems(
     return i === -1 ? recentIds.length : i;
   };
 
+  // Hiding a parent hides its subcategories too.
+  const hidden = (c: (typeof categories)[number]) =>
+    !!c.hidden_at || (!!c.parent_id && !!byId.get(c.parent_id)?.hidden_at);
+
   return categories
-    .filter((c) => c.kind === kind && (includeHidden || !c.hidden_at || c.id === keepId))
+    .filter((c) => c.kind === kind && (includeHidden || !hidden(c) || c.id === keepId))
     .map((c) => {
       const parent = c.parent_id ? byId.get(c.parent_id) : undefined;
       return { id: c.id, label: parent ? `${parent.name} › ${c.name}` : c.name };

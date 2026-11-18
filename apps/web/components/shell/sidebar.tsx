@@ -10,6 +10,8 @@ import {
   PiggyBank,
   Plus,
   Settings,
+  Tags,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,8 @@ import { WorkspaceSwitcher } from "./workspace-switcher";
 const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Home", icon: House, href: "/" },
   { label: "Transactions", icon: ArrowLeftRight, href: "/transactions" },
+  { label: "Accounts", icon: Wallet, href: "/accounts" },
+  { label: "Categories", icon: Tags, href: "/categories" },
   { label: "Dues", icon: HandCoins },
   { label: "Reports", icon: ChartColumn },
   { label: "Budgets", icon: PiggyBank },

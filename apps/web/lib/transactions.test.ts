@@ -60,6 +60,13 @@ describe("categoryItems", () => {
     expect(items.map((i) => i.label)).toEqual(["Food", "Food › Groceries", "Fuel"]);
   });
 
+  it("hides a subcategory when its parent is hidden", () => {
+    const hiddenParent = categories.map((c) =>
+      c.id === "food" ? { ...c, hidden_at: "2026-01-01T00:00:00Z" } : c,
+    );
+    expect(categoryItems(hiddenParent, "expense").map((i) => i.id)).toEqual(["fuel"]);
+  });
+
   it("puts recently used categories first and keeps the rest in order", () => {
     const items = categoryItems(categories, "expense", { recentIds: ["fuel", "groc"] });
     expect(items.map((i) => i.id)).toEqual(["fuel", "groc", "food"]);

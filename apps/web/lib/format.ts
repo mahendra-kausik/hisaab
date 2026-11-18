@@ -60,9 +60,14 @@ export function formatINRCompact(paise: number): string {
  */
 export function paiseToRupeesInput(paise: number): string {
   assertPaise(paise);
-  const rupees = Math.floor(paise / 100);
-  const remainder = paise % 100;
-  return remainder === 0 ? String(rupees) : `${rupees}.${String(remainder).padStart(2, "0")}`;
+  // Work on the absolute value: Math.floor(-12345 / 100) would be -124, not -123.
+  const abs = Math.abs(paise);
+  const sign = paise < 0 ? "-" : "";
+  const rupees = Math.floor(abs / 100);
+  const remainder = abs % 100;
+  return remainder === 0
+    ? `${sign}${rupees}`
+    : `${sign}${rupees}.${String(remainder).padStart(2, "0")}`;
 }
 
 // Digits, optionally with comma grouping (1,000 or 12,34,567), then at most two
@@ -86,4 +91,16 @@ export function rupeesToPaise(input: string): number | null {
   const paise = rupees * 100 + Number(paisePart);
 
   return Number.isSafeInteger(paise) ? paise : null;
+}
+
+/**
+ * Like rupeesToPaise, but one leading "-" (or "−") makes it negative: for an opening balance
+ * that is money owed, such as a credit card. Returns null for the same invalid input.
+ */
+export function signedRupeesToPaise(input: string): number | null {
+  const text = input.trim();
+  const negative = text.startsWith("-") || text.startsWith("−");
+  const paise = rupeesToPaise(negative ? text.slice(1) : text);
+  // 0 - paise, not -paise, so "-0" gives 0 and not -0.
+  return paise === null ? null : negative ? 0 - paise : paise;
 }
