@@ -96,8 +96,12 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Extra semantic colors: bg-surface, bg-subtle, text-money-in, ... */
-  --color-base: var(--bg-base);
+  /*
+   * Extra semantic colors: bg-surface, bg-subtle, text-money-in, ...
+   * Do not add a color named "base": Tailwind would then treat `text-base`
+   * (the font size) as a text color too and paint text in that color. The page
+   * background is already `bg-background`.
+   */
   --color-surface: var(--bg-surface);
   --color-subtle: var(--bg-subtle);
   --color-success: var(--state-success);

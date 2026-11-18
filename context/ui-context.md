@@ -45,6 +45,11 @@ Rules:
   sign or label ("+₹2,000", "Paid", "Received"), and due
   states always show a text badge.
 - Text contrast meets WCAG AA in both modes.
+- Never name a Tailwind theme color `base` (or any name that
+  is also a font size or spacing key such as `sm`, `lg`,
+  `xs`): `--color-base` made `text-base` paint text in the
+  page-background color. The page background is
+  `bg-background`.
 
 ## Typography
 

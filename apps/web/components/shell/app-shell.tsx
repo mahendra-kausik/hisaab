@@ -60,7 +60,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="w-72 max-w-[85vw]">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <SheetDescription className="sr-only">Navigate and switch workspace</SheetDescription>
-              <Sidebar me={me.data} onNavigate={() => setMenuOpen(false)} />
+              {/* pt-11 leaves room for the sheet's own close button in the top-right corner. */}
+              <div className="h-full pt-11">
+                <Sidebar me={me.data} onNavigate={() => setMenuOpen(false)} />
+              </div>
             </SheetContent>
           </Sheet>
           <span className="font-semibold text-primary">Hisaab</span>

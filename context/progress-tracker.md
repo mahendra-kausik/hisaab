@@ -100,10 +100,15 @@ change.
   type was camelCase while the JSON is snake_case; `OpenApiConfig`
   fixes that, `schema.d.ts` was regenerated. 1 new API test (128
   total), 9 new web tests (23 total); `make check` passes. The
-  auth flow was run by hand with curl through the Next.js proxy.
-  Not checked in a browser (no browser tool in this session):
-  layout at 1280px and 360px, the slide-over menu, theme toggle
-  and switcher dialog still need a manual look.
+  auth flow was run by hand with curl through the Next.js proxy
+  and then in Chrome (Claude in Chrome): signup validation and
+  signup, login with a wrong and a right password, log out and the
+  redirect back to `/login?next=%2F`, the theme choice surviving a
+  reload, the workspace switcher and new-workspace dialog (the new
+  workspace stayed active after a reload), and the slide-over menu
+  in a 360px-wide frame (no horizontal overflow, Esc closes it and
+  focus returns to the menu button). The browser check found and
+  fixed three bugs, listed under "U6 decisions".
 
 ## In Progress
 
@@ -456,7 +461,22 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   default controls are 32px high, so shell controls add `h-11`
   for the 44px target. `MeResponse` marks every field `@NotNull`
   (including the two primitives) so the generated type has no
-  optional fields. Not done: a redirect away from `/login` when
+  optional fields. Found in the browser and fixed: (1) a U0 bug,
+  `--color-base` in `globals.css`, made Tailwind treat `text-base`
+  (the font size) as a text color too, so inputs, the select and
+  dialog titles had text in the page-background color (near-white
+  on white in light mode); the token was removed, and the page
+  background is `bg-background`, so never name a theme color
+  `base`; (2) the sheet's close button sat on top of the
+  workspace switcher's chevron, fixed with top padding in
+  `AppShell`; (3) Next's dev-only instant-navigation check
+  logged an error for every page in `(app)` (they wait for
+  `GET /me`, so they cannot be in the static shell), silenced for
+  the whole app with `instantInsights.validationLevel:
+  "manual-warning"` in `next.config.ts` (a layout-level
+  `instant = false` did not cover pages). The Next dev "Insight"
+  badge can cover the user menu in a short window; it is dev
+  only. Not done: a redirect away from `/login` when
   already signed in; the Add button (arrives with quick-add in
   U7).
 
