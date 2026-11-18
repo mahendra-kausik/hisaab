@@ -34,5 +34,12 @@ class OpenApiDocsTest extends PostgresTestBase {
 
     List<String> required = JsonPath.read(body, "$.components.schemas.MeResponse.required");
     assertThat(required).contains("id", "email", "workspaces");
+
+    // Never-null response fields are required (so the web types need no "!"); nullable ones are
+    // not.
+    List<String> txRequired =
+        JsonPath.read(body, "$.components.schemas.TransactionResponse.required");
+    assertThat(txRequired).contains("id", "amount_paise", "occurred_on", "tags");
+    assertThat(txRequired).doesNotContain("category_id", "note", "transfer_group_id");
   }
 }

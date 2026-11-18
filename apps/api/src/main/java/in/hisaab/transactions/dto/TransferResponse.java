@@ -1,6 +1,7 @@
 package in.hisaab.transactions.dto;
 
 import in.hisaab.transactions.PaymentMethod;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -11,17 +12,17 @@ import java.util.UUID;
  * in the transactions list.
  */
 public record TransferResponse(
-    UUID id,
-    UUID fromAccountId,
-    UUID toAccountId,
-    long amountPaise,
-    LocalDate occurredOn,
+    @NotNull UUID id,
+    @NotNull UUID fromAccountId,
+    @NotNull UUID toAccountId,
+    @NotNull long amountPaise,
+    @NotNull LocalDate occurredOn,
     PaymentMethod paymentMethod,
     String note,
-    UUID outTransactionId,
-    UUID inTransactionId,
-    Instant createdAt,
-    Instant updatedAt) {
+    @NotNull UUID outTransactionId,
+    @NotNull UUID inTransactionId,
+    @NotNull Instant createdAt,
+    @NotNull Instant updatedAt) {
 
   public static TransferResponse from(TransactionResponse out, TransactionResponse in) {
     return new TransferResponse(

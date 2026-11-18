@@ -2,18 +2,19 @@ package in.hisaab.categories.dto;
 
 import in.hisaab.categories.Category;
 import in.hisaab.categories.CategoryKind;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
 
 /** One category. Lists are flat; clients build the tree from {@code parentId}. */
 public record CategoryResponse(
-    UUID id,
+    @NotNull UUID id,
     UUID parentId,
-    String name,
-    CategoryKind kind,
-    boolean isSystem,
+    @NotNull String name,
+    @NotNull CategoryKind kind,
+    @NotNull boolean isSystem,
     Instant hiddenAt,
-    int sortOrder) {
+    @NotNull int sortOrder) {
 
   public static CategoryResponse from(Category c) {
     return new CategoryResponse(

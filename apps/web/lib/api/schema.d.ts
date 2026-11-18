@@ -311,26 +311,26 @@ export interface components {
         };
         TransferResponse: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            from_account_id?: string;
+            from_account_id: string;
             /** Format: uuid */
-            to_account_id?: string;
+            to_account_id: string;
             /** Format: int64 */
-            amount_paise?: number;
+            amount_paise: number;
             /** Format: date */
-            occurred_on?: string;
+            occurred_on: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
             /** Format: uuid */
-            out_transaction_id?: string;
+            out_transaction_id: string;
             /** Format: uuid */
-            in_transaction_id?: string;
+            in_transaction_id: string;
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
             /** Format: date-time */
-            updated_at?: string;
+            updated_at: string;
         };
         TransactionRequest: {
             /** Format: uuid */
@@ -350,28 +350,28 @@ export interface components {
         };
         TransactionResponse: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            account_id?: string;
+            account_id: string;
             /** @enum {string} */
-            type?: "expense" | "income" | "transfer_out" | "transfer_in";
+            type: "expense" | "income" | "transfer_out" | "transfer_in";
             /** Format: int64 */
-            amount_paise?: number;
+            amount_paise: number;
             /** Format: date */
-            occurred_on?: string;
+            occurred_on: string;
             /** Format: uuid */
             category_id?: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
-            tags?: string[];
+            tags: string[];
             /** Format: uuid */
             transfer_group_id?: string;
-            source?: string;
+            source: string;
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
             /** Format: date-time */
-            updated_at?: string;
+            updated_at: string;
         };
         CreateWorkspaceRequest: {
             name: string;
@@ -394,17 +394,17 @@ export interface components {
         };
         CategoryResponse: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
             parent_id?: string;
-            name?: string;
+            name: string;
             /** @enum {string} */
-            kind?: "expense" | "income";
-            is_system?: boolean;
+            kind: "expense" | "income";
+            is_system: boolean;
             /** Format: date-time */
             hidden_at?: string;
             /** Format: int32 */
-            sort_order?: number;
+            sort_order: number;
         };
         CreateAccountRequest: {
             name: string;
@@ -415,14 +415,14 @@ export interface components {
         };
         AccountResponse: {
             /** Format: uuid */
-            id?: string;
-            name?: string;
+            id: string;
+            name: string;
             /** @enum {string} */
-            type?: "cash" | "bank" | "credit_card" | "wallet";
+            type: "cash" | "bank" | "credit_card" | "wallet";
             /** Format: int64 */
-            opening_balance_paise?: number;
+            opening_balance_paise: number;
             /** Format: int64 */
-            balance_paise?: number;
+            balance_paise: number;
             /** Format: date-time */
             archived_at?: string;
         };
@@ -467,19 +467,19 @@ export interface components {
             dues_digest_enabled?: boolean;
         };
         ListResponseTransactionResponse: {
-            items?: components["schemas"]["TransactionResponse"][];
+            items: components["schemas"]["TransactionResponse"][];
             next_cursor?: string;
         };
         ListResponseString: {
-            items?: string[];
+            items: string[];
             next_cursor?: string;
         };
         ListResponseCategoryResponse: {
-            items?: components["schemas"]["CategoryResponse"][];
+            items: components["schemas"]["CategoryResponse"][];
             next_cursor?: string;
         };
         ListResponseAccountResponse: {
-            items?: components["schemas"]["AccountResponse"][];
+            items: components["schemas"]["AccountResponse"][];
             next_cursor?: string;
         };
         HealthResponse: {
