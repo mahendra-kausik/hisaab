@@ -5,12 +5,12 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U5 done)
+- Phase 1 (manual tracker) — in progress (U0–U6 done)
 
 ## Current Goal
 
-- U6: web shell — auth screens, app shell, workspace
-  switcher, theme toggle (see Next Up).
+- U7: web transactions — list, quick-add dialog (`N`
+  shortcut), edit, delete with Undo (see Next Up).
 
 ## Completed
 
@@ -87,6 +87,23 @@ change.
   `transfer_leg`. 14 new tests (127 total); the flow was run
   by hand against `make dev-api`, and `schema.d.ts` was
   regenerated.
+- **U6 — Web shell (18 Nov 2026):** `/login` and `/signup`
+  (Zod-validated, show the API's error messages), and a
+  signed-in shell for every other page: 240px sidebar on
+  desktop, slide-over menu under 768px, workspace switcher
+  with "New workspace", and a System / Light / Dark theme
+  choice in the user menu, plus log out. Home is a placeholder
+  greeting. All API calls go through `lib/api/client.ts`, which
+  refreshes an expired session once, shared across concurrent
+  requests. Before the web work, an API fix (commit `dad9411`):
+  springdoc ignored the snake_case setting, so every generated
+  type was camelCase while the JSON is snake_case; `OpenApiConfig`
+  fixes that, `schema.d.ts` was regenerated. 1 new API test (128
+  total), 9 new web tests (23 total); `make check` passes. The
+  auth flow was run by hand with curl through the Next.js proxy.
+  Not checked in a browser (no browser tool in this session):
+  layout at 1280px and 360px, the slide-over menu, theme toggle
+  and switcher dialog still need a manual look.
 
 ## In Progress
 
@@ -124,12 +141,16 @@ IDs are stable labels; build in the order listed here.
   pagination; tags. Also made account balances real.
 - [x] **U5 — Transfers API:** linked-pair create,
   update, delete, restore.
-- [ ] **U6 — Web shell:** auth screens, desktop app
+- [x] **U6 — Web shell:** auth screens, desktop app
   shell (sidebar, collapsing to a slide-over menu on
   narrow screens), workspace switcher, theme toggle.
 - [ ] **U7 — Web transactions:** list, quick-add dialog
   (`N` shortcut), edit, delete with Undo.
 - [ ] **U8 — Web accounts & categories management.**
+- [ ] **U24 — Web settings:** page for name, timezone,
+  period start day and the dues digest switch (`PATCH /me`
+  already exists); gives the "Settings" sidebar item its
+  `href`. Built after U8.
 - [ ] **U9 — Budgets:** API, then web progress view.
 - [ ] **U10 — Recurring:** job queue + `@Scheduled`
   poller + recurring rules API, then recurring UI.
@@ -185,12 +206,13 @@ IDs are stable labels; build in the order listed here.
   user may reach the API from Vercel's shared egress IPs and
   share one bucket. Options: trust a Vercel-set client-IP
   header, or also limit per email.
-- **Concurrent refresh logs the user out:** a strict
-  rotation has no grace window, so two refresh calls with
-  the same token at once count as reuse and revoke the
-  session. Matters once the web client refreshes
-  automatically (U6); the fix is to serialise refreshes
-  in the client.
+- **Two browser tabs can still log each other out:** the
+  web client serialises refreshes inside one tab, but two
+  tabs refreshing at the same moment send the same refresh
+  cookie twice, which the API treats as reuse. Rare (needs
+  both tabs to hit an expired access token together); fix
+  later with a short grace window in the API or a
+  cross-tab lock.
 
 ## Architecture Decisions
 
@@ -408,6 +430,33 @@ IDs are stable labels; build in the order listed here.
   Note for U7: the web must send edit, delete and Undo of a
   transfer row to `/transfers/{transfer_group_id}`.
 
+- **U6 decisions (18 Nov 2026)** — Confirmed with the
+  developer: the active workspace is kept in `localStorage`
+  (routes stay `/transactions`, `/dues`), the switcher can create
+  workspaces in U6, and the Settings page is a later unit (U24;
+  the nav shows it as "Soon"). Decided in the plan: the signed-in
+  check is client-side because the auth cookies' paths (`/api`,
+  `/api/v1/auth`) mean a page request never carries them, so a
+  Next `proxy.ts` cannot see the session; the shell shows a
+  skeleton until `GET /me` answers and redirects to
+  `/login?next=...` on 401. Zod validates the forms with a plain
+  `<form>` and `FormData`; react-hook-form waits for U7's
+  quick-add. The theme is read from the `<html>` class (set by a
+  script in `<head>` from `localStorage`), so it works even when
+  storage is blocked. The init-script constant lives in
+  `lib/theme-init.ts` apart from the `useTheme` hook, because the
+  server layout cannot import a file that uses a React hook.
+  The Next dev server leaves generated types in `.next/dev/types`;
+  after deleting a route, remove that folder or `typecheck`
+  fails on the missing page. shadcn here is the Base UI flavour:
+  triggers take `render={<Button />}` rather than `asChild`, and
+  default controls are 32px high, so shell controls add `h-11`
+  for the 44px target. `MeResponse` marks every field `@NotNull`
+  (including the two primitives) so the generated type has no
+  optional fields. Not done: a redirect away from `/login` when
+  already signed in; the Add button (arrives with quick-add in
+  U7).
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -495,3 +544,18 @@ introduced, so later explanations don't repeat them.
   factory method on an entity, a private `record` used as a
   local helper type, guarding an older endpoint against rows
   a newer feature owns (`transfer_leg`).
+- **18 Nov 2026 — Session 3, U6 done.** Key files:
+  `common/config/OpenApiConfig`, `OpenApiDocsTest`,
+  `lib/api/{client,schema.d}.ts`, `lib/{workspace.tsx,theme.ts,
+  theme-init.ts,safe-redirect.ts}`, `lib/queries/{me,auth,
+  workspaces}.ts`, `components/auth/auth-form.tsx`,
+  `components/shell/{app-shell,sidebar,workspace-switcher,
+  new-workspace-dialog,user-menu}.tsx`, `app/(auth)/*`,
+  `app/(app)/*`. Concepts introduced: a springdoc `ModelResolver`
+  bean (how the OpenAPI document gets field names), `@NotNull` to
+  mark response fields required; on the web: App Router route
+  groups and layouts, client vs server components
+  (`"use client"`), `<Suspense>` around `useSearchParams`,
+  TanStack Query mutations and cache seeding, React context,
+  `useSyncExternalStore`, a shared in-flight promise to serialise
+  token refreshes, Base UI / shadcn menus, dialogs and sheets.

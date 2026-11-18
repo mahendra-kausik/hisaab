@@ -113,6 +113,13 @@ the color tokens.
   collapses into a slide-over menu opened from a top app
   bar. Single-column content with 16px side padding and
   no horizontal overflow at 360px.
+- **Theme choice:** System, Light or Dark from the user
+  menu, kept in `localStorage` (`hisaab.theme`; System is
+  "no value"). A small script in `<head>` applies it before
+  first paint so there is no flash.
+- **Unbuilt pages:** sidebar items whose page does not exist
+  yet are shown muted with a "Soon" badge and are not links;
+  the unit that builds the page gives the item its `href`.
 - **Phone layout (later, U23):** bottom tab bar with
   Home, Transactions, Add (+), Dues, More; quick add as
   a bottom sheet.

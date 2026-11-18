@@ -340,6 +340,30 @@ direction comes from the type.
   filter chain.
 - Future mobile: the same endpoints; the API also
   accepts `Authorization: Bearer <access token>`.
+- Web client (U6): every API call goes through
+  `lib/api/client.ts` (`apiFetch`), which turns the error
+  body into an `ApiError`. On a 401 from a non-auth path it
+  calls `POST /auth/refresh` and retries once; all requests
+  share **one** in-flight refresh, because rotation treats
+  two refreshes with the same token as reuse and revokes the
+  session. The signed-in check is client-side
+  (`AppShell` calls `GET /me`, redirects to
+  `/login?next=...` on 401): the cookies' paths are `/api` and
+  `/api/v1/auth`, so a page request to Next.js never carries
+  them and a Next `proxy.ts` could not see the session.
+  `?next=` goes through `safeNext` so it can only be a path on
+  this site. The active workspace id is kept in
+  `localStorage` (`hisaab.workspace`) and read through
+  `useWorkspace()`; if it is not one of the user's workspaces
+  the personal one is used. It is not a secret, only a
+  preference.
+- OpenAPI names (U6): springdoc builds the document with its
+  own Jackson mapper, which ignores
+  `spring.jackson.property-naming-strategy`, so
+  `OpenApiConfig` supplies a `ModelResolver` with
+  `SNAKE_CASE`. `OpenApiDocsTest` guards it. Response DTO
+  fields that are always present carry `@NotNull`, which
+  makes the generated TypeScript fields required.
 - Data belongs to a workspace, not a user. Users reach a
   workspace through `workspace_members`. Signup creates
   a personal workspace with the user as owner.
