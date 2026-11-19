@@ -31,6 +31,7 @@ public class Transaction {
   private UUID categoryId;
   private UUID partyId;
   private UUID projectId;
+  private UUID dueId;
   private PaymentMethod paymentMethod;
   private String note;
   private UUID transferGroupId;
@@ -50,6 +51,7 @@ public class Transaction {
       UUID categoryId,
       UUID partyId,
       UUID projectId,
+      UUID dueId,
       PaymentMethod paymentMethod,
       String note,
       Instant now) {
@@ -62,6 +64,7 @@ public class Transaction {
     this.categoryId = categoryId;
     this.partyId = partyId;
     this.projectId = projectId;
+    this.dueId = dueId;
     this.paymentMethod = paymentMethod;
     this.note = note;
     this.updatedAt = now;
@@ -87,6 +90,7 @@ public class Transaction {
             type,
             amountPaise,
             occurredOn,
+            null,
             null,
             null,
             null,
@@ -129,6 +133,14 @@ public class Transaction {
     return projectId;
   }
 
+  public UUID getDueId() {
+    return dueId;
+  }
+
+  public long getAmountPaise() {
+    return amountPaise;
+  }
+
   public Instant getDeletedAt() {
     return deletedAt;
   }
@@ -142,6 +154,7 @@ public class Transaction {
       UUID categoryId,
       UUID partyId,
       UUID projectId,
+      UUID dueId,
       PaymentMethod paymentMethod,
       String note,
       Instant now) {
@@ -152,6 +165,7 @@ public class Transaction {
     this.categoryId = categoryId;
     this.partyId = partyId;
     this.projectId = projectId;
+    this.dueId = dueId;
     this.paymentMethod = paymentMethod;
     this.note = note;
     this.updatedAt = now;

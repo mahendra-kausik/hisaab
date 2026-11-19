@@ -209,7 +209,7 @@ direction comes from the type.
     `source`, `raw_description` and `merchant`. `party_id`,
     `project_id`, `due_id`, `recurring_rule_id` and
     `recurrence_date` are added by the units that create
-    the tables they point to (U11, U14–U16).
+    the tables they point to (U11, U14–U16; `due_id` in `V11`).
   - Composite foreign keys `(account_id, workspace_id)` and
     `(category_id, workspace_id)` make the database refuse
     a transaction that points at another workspace's
@@ -307,6 +307,36 @@ direction comes from the type.
   expense for a receivable, income for a payable),
   cancelled_at, created_by, created_at, updated_at,
   deleted_at.
+  - U16 (`V11`): composite FKs on `party_id`, `project_id`,
+    `category_id` and `origin_transaction_id` (workspace-safe),
+    RLS like the other tables. `transactions.due_id` (composite FK
+    to `dues`) marks a transaction as a **payment**; the origin
+    transaction does not carry it, so it is never a payment.
+  - Paid = sum of live transactions with that `due_id`;
+    outstanding = amount − paid; both are computed, never stored.
+    State is derived in `DueState.of`, first match wins: `cancelled`,
+    `settled` (outstanding 0), `overdue` (due date before today in
+    the caller's timezone), `partially_paid`, `open`.
+  - Endpoints: `GET|POST /workspaces/{id}/dues` (`GET` takes
+    `party_id`), `GET|PUT .../{dueId}`, `POST .../{dueId}/cancel|reopen`.
+    No delete yet. PUT replaces amount, reason, due date, project and
+    category; party and direction never change (cancel and recreate).
+    The category kind follows the direction (receivable: income,
+    payable: expense).
+  - Payments go through `POST|PUT /transactions` with `due_id`
+    (`GET /transactions` filters by `due_id`). `DuePayments`
+    locks the due row (`FOR UPDATE`) and rejects with 422
+    `invalid_due`, `due_cancelled`, `payment_type_mismatch`
+    (receivable needs income, payable needs expense) or
+    `overpayment` (`details.outstanding_paise`). The payment's
+    party is forced to the due's party. Editing a payment does not
+    count its old amount twice; restoring a deleted payment is
+    checked again. Editing a due below what is paid is 422
+    `amount_below_paid`.
+  - Create accepts an optional `origin` (account, date, category,
+    payment method, note): in the same database transaction it
+    makes an expense (receivable) or income (payable) for the due's
+    amount, party and project, and stores `origin_transaction_id`.
 - `dues_digests`: user_id, digest_date, sent_at. Unique
   (user_id, digest_date) so each user gets at most one
   digest per day. User-scoped and written only by the

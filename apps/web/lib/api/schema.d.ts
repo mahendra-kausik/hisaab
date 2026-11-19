@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/dues/{dueId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_2"];
+        put: operations["replace_3"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces/{workspaceId}/budgets/{categoryId}": {
         parameters: {
             query?: never;
@@ -228,7 +244,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/categories": {
+    "/api/v1/workspaces/{workspaceId}/dues": {
         parameters: {
             query?: never;
             header?: never;
@@ -244,7 +260,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/accounts": {
+    "/api/v1/workspaces/{workspaceId}/dues/{dueId}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/dues/{dueId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/categories": {
         parameters: {
             query?: never;
             header?: never;
@@ -254,6 +302,22 @@ export interface paths {
         get: operations["list_5"];
         put?: never;
         post: operations["create_7"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_6"];
+        put?: never;
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -427,7 +491,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -459,7 +523,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -539,6 +603,8 @@ export interface components {
             party_id?: string;
             /** Format: uuid */
             project_id?: string;
+            /** Format: uuid */
+            due_id?: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
@@ -561,6 +627,8 @@ export interface components {
             party_id?: string;
             /** Format: uuid */
             project_id?: string;
+            /** Format: uuid */
+            due_id?: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
@@ -623,6 +691,46 @@ export interface components {
             paused: boolean;
             upcoming: string[];
         };
+        UpdateDueRequest: {
+            /** Format: int64 */
+            amount_paise: number;
+            reason: string;
+            /** Format: date */
+            due_date?: string;
+            /** Format: uuid */
+            project_id?: string;
+            /** Format: uuid */
+            category_id?: string;
+        };
+        DueResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            party_id: string;
+            /** @enum {string} */
+            direction: "receivable" | "payable";
+            /** Format: int64 */
+            amount_paise: number;
+            /** Format: int64 */
+            paid_paise: number;
+            /** Format: int64 */
+            outstanding_paise: number;
+            reason: string;
+            /** Format: date */
+            due_date?: string;
+            /** Format: uuid */
+            project_id?: string;
+            /** Format: uuid */
+            category_id?: string;
+            /** Format: uuid */
+            origin_transaction_id?: string;
+            /** @enum {string} */
+            state: "open" | "partially_paid" | "settled" | "overdue" | "cancelled";
+            /** Format: date-time */
+            cancelled_at?: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
         SetBudgetRequest: {
             /** Format: int64 */
             amount_paise: number;
@@ -668,6 +776,33 @@ export interface components {
             notes?: string;
             /** Format: date-time */
             archived_at?: string;
+        };
+        CreateDueRequest: {
+            /** Format: uuid */
+            party_id: string;
+            /** @enum {string} */
+            direction: "receivable" | "payable";
+            /** Format: int64 */
+            amount_paise: number;
+            reason: string;
+            /** Format: date */
+            due_date?: string;
+            /** Format: uuid */
+            project_id?: string;
+            /** Format: uuid */
+            category_id?: string;
+            origin?: components["schemas"]["OriginTransactionRequest"];
+        };
+        OriginTransactionRequest: {
+            /** Format: uuid */
+            account_id: string;
+            /** Format: date */
+            occurred_on: string;
+            /** Format: uuid */
+            category_id?: string;
+            /** @enum {string} */
+            payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
+            note?: string;
         };
         CreateCategoryRequest: {
             name: string;
@@ -823,6 +958,10 @@ export interface components {
         };
         ListResponsePartyResponse: {
             items: components["schemas"]["PartyResponse"][];
+            next_cursor?: string;
+        };
+        ListResponseDueResponse: {
+            items: components["schemas"]["DueResponse"][];
             next_cursor?: string;
         };
         ListResponseCategoryResponse: {
@@ -1052,6 +1191,56 @@ export interface operations {
             };
         };
     };
+    get_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                dueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DueResponse"];
+                };
+            };
+        };
+    };
+    replace_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                dueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDueRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DueResponse"];
+                };
+            };
+        };
+    };
     set: {
         parameters: {
             query?: never;
@@ -1160,6 +1349,7 @@ export interface operations {
                 category_id?: string;
                 party_id?: string;
                 project_id?: string;
+                due_id?: string;
                 tag?: string;
                 q?: string;
                 cursor?: string;
@@ -1425,6 +1615,102 @@ export interface operations {
     };
     list_4: {
         parameters: {
+            query?: {
+                party_id?: string;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ListResponseDueResponse"];
+                };
+            };
+        };
+    };
+    create_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDueRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DueResponse"];
+                };
+            };
+        };
+    };
+    reopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                dueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DueResponse"];
+                };
+            };
+        };
+    };
+    cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                dueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DueResponse"];
+                };
+            };
+        };
+    };
+    list_5: {
+        parameters: {
             query?: never;
             header?: never;
             path: {
@@ -1445,7 +1731,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1471,7 +1757,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1493,7 +1779,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -1812,7 +2098,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1858,7 +2144,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: {
                 period?: string;

@@ -56,6 +56,7 @@ public class TransactionController {
       @RequestParam(name = "category_id", required = false) UUID categoryId,
       @RequestParam(name = "party_id", required = false) UUID partyId,
       @RequestParam(name = "project_id", required = false) UUID projectId,
+      @RequestParam(name = "due_id", required = false) UUID dueId,
       @RequestParam(name = "tag", required = false) String tag,
       @RequestParam(name = "q", required = false) String q,
       @RequestParam(name = "cursor", required = false) String cursor,
@@ -69,6 +70,7 @@ public class TransactionController {
             categoryId,
             partyId,
             projectId,
+            dueId,
             blankToNull(tag),
             blankToNull(q));
     return transactionService.list(workspaceId, filter, blankToNull(cursor), limit);
@@ -99,6 +101,7 @@ public class TransactionController {
             categoryId,
             partyId,
             projectId,
+            null,
             blankToNull(tag),
             blankToNull(q));
     byte[] body = ("﻿" + exports.csv(workspaceId, filter)).getBytes(StandardCharsets.UTF_8);

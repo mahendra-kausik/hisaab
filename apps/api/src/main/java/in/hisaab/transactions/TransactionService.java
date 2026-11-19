@@ -7,6 +7,7 @@ import in.hisaab.common.security.CurrentUser;
 import in.hisaab.common.web.ListResponse;
 import in.hisaab.common.web.NotFoundException;
 import in.hisaab.common.web.ValidationException;
+import in.hisaab.dues.DuePayments;
 import in.hisaab.parties.PartyService;
 import in.hisaab.projects.ProjectService;
 import in.hisaab.transactions.dto.TransactionFilter;
@@ -34,6 +35,7 @@ public class TransactionService {
   private final CategoryService categories;
   private final PartyService parties;
   private final ProjectService projects;
+  private final DuePayments duePayments;
   private final WorkspaceAccess access;
   private final CurrentUser currentUser;
   private final Clock clock;
@@ -46,6 +48,7 @@ public class TransactionService {
       CategoryService categories,
       PartyService parties,
       ProjectService projects,
+      DuePayments duePayments,
       WorkspaceAccess access,
       CurrentUser currentUser,
       Clock clock) {
@@ -56,6 +59,7 @@ public class TransactionService {
     this.categories = categories;
     this.parties = parties;
     this.projects = projects;
+    this.duePayments = duePayments;
     this.access = access;
     this.currentUser = currentUser;
     this.clock = clock;
@@ -87,8 +91,14 @@ public class TransactionService {
     requireManualType(request.type());
     accounts.requireOpen(workspaceId, request.accountId());
     requireCategory(workspaceId, request);
-    if (request.partyId() != null) {
-      parties.requireOpen(workspaceId, request.partyId());
+    UUID partyId = request.partyId();
+    if (request.dueId() != null) {
+      // A payment carries its due's party, whatever the request says.
+      partyId =
+          duePayments.requireAcceptsPayment(
+              workspaceId, request.dueId(), request.type(), request.amountPaise(), 0);
+    } else if (partyId != null) {
+      parties.requireOpen(workspaceId, partyId);
     }
     if (request.projectId() != null) {
       projects.requireOpen(workspaceId, request.projectId());
@@ -103,8 +113,9 @@ public class TransactionService {
             request.amountPaise(),
             request.occurredOn(),
             request.categoryId(),
-            request.partyId(),
+            partyId,
             request.projectId(),
+            request.dueId(),
             request.paymentMethod(),
             blankToNull(request.note()),
             Instant.now(clock));
@@ -126,9 +137,17 @@ public class TransactionService {
       accounts.requireOpen(workspaceId, request.accountId());
     }
     requireCategory(workspaceId, request);
-    // Same rule for parties: an archived party can stay linked, but not be newly linked.
-    if (request.partyId() != null && !request.partyId().equals(transaction.getPartyId())) {
-      parties.requireOpen(workspaceId, request.partyId());
+    UUID partyId = request.partyId();
+    if (request.dueId() != null) {
+      // Editing a payment on the same due: its old amount is already counted, so don't count twice.
+      long alreadyCounted =
+          request.dueId().equals(transaction.getDueId()) ? transaction.getAmountPaise() : 0;
+      partyId =
+          duePayments.requireAcceptsPayment(
+              workspaceId, request.dueId(), request.type(), request.amountPaise(), alreadyCounted);
+    } else if (partyId != null && !partyId.equals(transaction.getPartyId())) {
+      // Same rule for parties: an archived party can stay linked, but not be newly linked.
+      parties.requireOpen(workspaceId, partyId);
     }
     if (request.projectId() != null && !request.projectId().equals(transaction.getProjectId())) {
       projects.requireOpen(workspaceId, request.projectId());
@@ -140,8 +159,9 @@ public class TransactionService {
         request.amountPaise(),
         request.occurredOn(),
         request.categoryId(),
-        request.partyId(),
+        partyId,
         request.projectId(),
+        request.dueId(),
         request.paymentMethod(),
         blankToNull(request.note()),
         Instant.now(clock));
@@ -169,6 +189,15 @@ public class TransactionService {
             .orElseThrow(TransactionService::notFound);
     requireNotTransferLeg(transaction);
     if (transaction.getDeletedAt() != null) {
+      // A deleted payment no longer counts, so bringing it back must still fit the due.
+      if (transaction.getDueId() != null) {
+        duePayments.requireAcceptsPayment(
+            workspaceId,
+            transaction.getDueId(),
+            transaction.getType(),
+            transaction.getAmountPaise(),
+            0);
+      }
       transaction.restore(Instant.now(clock));
       transactions.saveAndFlush(transaction);
     }

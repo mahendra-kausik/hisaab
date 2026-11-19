@@ -27,7 +27,7 @@ public class TransactionQueries {
   private static final String SELECT =
       """
       SELECT t.id, t.account_id, t.type, t.amount_paise, t.occurred_on, t.category_id,
-             t.party_id, t.project_id, t.payment_method, t.note, t.transfer_group_id, t.source, t.created_at, t.updated_at,
+             t.party_id, t.project_id, t.due_id, t.payment_method, t.note, t.transfer_group_id, t.source, t.created_at, t.updated_at,
              array(SELECT g.name FROM transaction_tags tt JOIN tags g ON g.id = tt.tag_id
                    WHERE tt.transaction_id = t.id ORDER BY lower(g.name)) AS tags
       FROM transactions t
@@ -102,6 +102,10 @@ public class TransactionQueries {
       sql.append(" AND t.project_id = ?");
       args.add(filter.projectId());
     }
+    if (filter.dueId() != null) {
+      sql.append(" AND t.due_id = ?");
+      args.add(filter.dueId());
+    }
     if (filter.tag() != null) {
       sql.append(
           " AND EXISTS (SELECT 1 FROM transaction_tags tt JOIN tags g ON g.id = tt.tag_id"
@@ -141,6 +145,7 @@ public class TransactionQueries {
         rs.getObject("category_id", UUID.class),
         rs.getObject("party_id", UUID.class),
         rs.getObject("project_id", UUID.class),
+        rs.getObject("due_id", UUID.class),
         paymentMethod == null ? null : PaymentMethod.valueOf(paymentMethod.toUpperCase()),
         rs.getString("note"),
         List.of((String[]) rs.getArray("tags").getArray()),

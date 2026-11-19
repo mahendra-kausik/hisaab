@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U16 Dues API (see Next Up).
+- Phase 1.5: U17 Web dues (see Next Up).
 
 ## Completed
 
@@ -309,6 +309,22 @@ change.
   port 8080 and I did not stop it, so the new build ran on 8081 just
   to regenerate `schema.d.ts`. Stop the old one, run `make dev` and
   click through `/projects`, the picker, the filter and the CSV.
+- **U16 — Dues API (20 Nov 2026):** API only. `V11__dues.sql` (`dues`
+  with RLS and composite FKs to parties, projects, categories and the
+  origin transaction; `transactions.due_id`), package `in.hisaab.dues`
+  (`Due`, `DueDirection`, `DueState`, `DueRepository`, `DuePayments`,
+  `DueService`, `DueController`, DTOs). Endpoints
+  `GET|POST /workspaces/{id}/dues`, `GET|PUT .../{dueId}`,
+  `POST .../{dueId}/cancel|reopen`. Payments are ordinary transactions
+  sent with `due_id` (`GET /transactions?due_id=` lists them); the
+  origin transaction ("money handed over") is created with the due and
+  is not a payment. Paid, outstanding and state are computed. 7 new
+  API tests (`DuesApiTest`; 171 total) cover spec checks 6 and 8;
+  `RlsIsolationTest` lists `dues`. Decisions (20 Nov): payments via
+  `due_id` on `/transactions`; party and direction fixed after create;
+  cancel and reopen, no delete yet; the client picks the origin's
+  category. Web types regenerated; no web code (U17).
+
 
 ## In Progress
 
@@ -372,7 +388,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U14 — Parties:** API, then web.
 - [x] **U15 — Projects (properties/sites):** API, then
   web; project filter on transactions.
-- [ ] **U16 — Dues API:** create, update, cancel;
+- [x] **U16 — Dues API:** create, update, cancel;
   optional origin transaction for lending/borrowing;
   payments linked to dues; computed outstanding and
   state.
@@ -989,3 +1005,23 @@ introduced, so later explanations don't repeat them.
   Projects, add one, tag a transaction, click the project to see its
   transactions. Read next: `V10__projects.sql`'s foreign keys, then
   U16 (dues), which links to both parties and projects.
+
+- **20 Nov 2026 — U16 done (dues API).** Key files: `V11__dues.sql`,
+  `dues/{Due,DueState,DueRepository,DuePayments,DueService,DueController}`
+  + `dto/`, `DuesApiTest`; `TransactionService` now calls
+  `DuePayments` when a request has `due_id`.
+  Concepts used: pessimistic locking (`@Lock(PESSIMISTIC_WRITE)`, a
+  `SELECT ... FOR UPDATE`) so two simultaneous payments cannot both pass
+  the overpayment check; a small `@Component` split out of the service to
+  avoid a circular dependency (`DueService` creates transactions,
+  `TransactionService` checks dues); a derived state (`DueState.of`)
+  instead of a stored column.
+
+  *What to know (how it works):* `POST /transactions` with `due_id` ->
+  `TransactionService.create` -> `DuePayments.requireAcceptsPayment`
+  locks the due row, checks cancelled / type / outstanding and returns
+  the due's party -> row saved with that party and `due_id` ->
+  `GET /dues/{id}` sums live linked transactions into `paid_paise`,
+  `outstanding_paise` and `state`. Try it: `make test-api`, or `make
+  dev` and `POST /dues` with an `origin`. Read next: `DuePayments`, then
+  `DueService.create`, then `DuesApiTest.partPaymentsOverdueAndOverpayment`.

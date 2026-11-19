@@ -22,6 +22,7 @@ public record TransactionRequest(
     UUID categoryId,
     UUID partyId,
     UUID projectId,
+    UUID dueId,
     PaymentMethod paymentMethod,
     @Size(max = 500) String note,
     @Size(max = 20) List<@NotBlank @Size(max = 50) String> tags) {}
