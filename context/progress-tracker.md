@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U12 done)
+- Phase 1 (manual tracker) — code complete (U0–U13 done)
 
 ## Current Goal
 
-- U13: CSV export (see Next Up).
+- Phase 1.5: U14 Parties (see Next Up).
 
 ## Completed
 
@@ -244,6 +244,19 @@ change.
   horizontal overflow, cards stack, chart fits. That pass found the
   daily chart's Y-axis labels clipped, fixed by widening the axis
   (`width={76}`). Not clicked through: the donut tooltip, light theme.
+- **U13 — CSV export (19 Nov 2026):** `GET
+  /workspaces/{id}/transactions/export.csv` takes the same filters as
+  the list and returns `text/csv` (UTF-8 BOM, CRLF, RFC 4180 quoting,
+  amount in rupees from paise via `BigDecimal`, cells starting with
+  `= + - @` get a leading `'` against spreadsheet formulas). Built by
+  `TransactionExportService`, which pages through
+  `TransactionService.list` (so access checks, RLS and soft-delete
+  rules are reused) and looks up account/category names once. Web:
+  "Export CSV" link on the Transactions page carrying the current
+  filters. 2 new API tests (filter + quoting + formula guard; other
+  workspace's rows and non-members excluded). `make check` passes
+  (154 API, 57 web tests). **Not yet done:** a browser click-through
+  of the download.
 
 ## In Progress
 
@@ -300,7 +313,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   poller + recurring rules API, then recurring UI.
 - [x] **U12 — Monthly report:** period-aware report API,
   then report page with charts.
-- [ ] **U13 — CSV export.**
+- [x] **U13 — CSV export.**
 
 ### Phase 1.5 — People & dues
 
@@ -854,3 +867,27 @@ introduced, so later explanations don't repeat them.
   web types. Types for this unit were generated from a second API
   instance on port 8081 because the dev API on 8080 was still running
   the old build.
+- **19 Nov 2026 — U13 done (CSV export).** API:
+  `transactions/TransactionExportService` + one endpoint in
+  `TransactionController`; test `TransactionExportApiTest`. Web:
+  `components/transactions/transactions-view.tsx` (download link).
+  Concepts: `ResponseEntity` to control headers and body, a literal
+  path (`/export.csv`) winning over `/{transactionId}`, a service
+  calling another service's paged `list` in a do/while on
+  `nextCursor`, `BigDecimal.valueOf(unscaled, 2)` for paise to
+  rupees, a plain `<a download>` instead of a fetch because the cookie
+  rides along through the proxy. Skipped on purpose: streaming (whole
+  CSV is built in memory, fine until ~100k rows) and 401 refresh on
+  the link.
+
+  *What to know (how it works):* click "Export CSV" -> browser GETs
+  `/api/v1/workspaces/{id}/transactions/export.csv?<current filters>`
+  -> Next proxies to Spring -> `TransactionController.exportCsv` builds
+  a `TransactionFilter` (same parsing as the list) ->
+  `TransactionExportService.csv` loads account and category names, then
+  calls `TransactionService.list` 200 rows at a time (that call does
+  the viewer check and runs under RLS) -> rows become CSV text ->
+  response with `Content-Disposition: attachment`. Try it: `make dev`,
+  open Transactions, set a date range, click Export CSV, open the file
+  in Excel. Read next: `TransactionService.list` and
+  `TransactionQueries.page` to see the paging this reuses.

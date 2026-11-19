@@ -8,11 +8,15 @@ import in.hisaab.transactions.dto.TransactionResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,8 +34,12 @@ public class TransactionController {
 
   private final TransactionService transactionService;
 
-  public TransactionController(TransactionService transactionService) {
+  private final TransactionExportService exports;
+
+  public TransactionController(
+      TransactionService transactionService, TransactionExportService exports) {
     this.transactionService = transactionService;
+    this.exports = exports;
   }
 
   // Query parameter names are spelled out because Jackson's snake_case setting only applies to
@@ -54,6 +62,31 @@ public class TransactionController {
         new TransactionFilter(
             from, to, parseType(type), accountId, categoryId, blankToNull(tag), blankToNull(q));
     return transactionService.list(workspaceId, filter, blankToNull(cursor), limit);
+  }
+
+  // Same filters as list, no paging. The BOM makes Excel read the file as UTF-8 (₹, Hindi notes).
+  // A literal path beats the {transactionId} pattern below, so "export.csv" is never an id.
+  @GetMapping("/export.csv")
+  public ResponseEntity<byte[]> exportCsv(
+      @PathVariable UUID workspaceId,
+      @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate from,
+      @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate to,
+      @RequestParam(name = "type", required = false) String type,
+      @RequestParam(name = "account_id", required = false) UUID accountId,
+      @RequestParam(name = "category_id", required = false) UUID categoryId,
+      @RequestParam(name = "tag", required = false) String tag,
+      @RequestParam(name = "q", required = false) String q) {
+    var filter =
+        new TransactionFilter(
+            from, to, parseType(type), accountId, categoryId, blankToNull(tag), blankToNull(q));
+    byte[] body = ("﻿" + exports.csv(workspaceId, filter)).getBytes(StandardCharsets.UTF_8);
+    String name = "hisaab-" + (from == null ? "start" : from) + "-" + (to == null ? "now" : to);
+    return ResponseEntity.ok()
+        .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + name + ".csv\"")
+        .body(body);
   }
 
   @GetMapping("/{transactionId}")

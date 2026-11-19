@@ -1,7 +1,10 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import type { TransactionFilters } from "@/lib/queries/transactions";
+import { useWorkspace } from "@/lib/workspace";
 import { TransactionFilterBar } from "./transaction-filters";
 import { TransactionList } from "./transaction-list";
 
@@ -15,6 +18,7 @@ export function TransactionsView() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const { active } = useWorkspace();
 
   const filters: TransactionFilters = {};
   for (const key of FILTER_KEYS) {
@@ -34,8 +38,19 @@ export function TransactionsView() {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
+  // A plain link: the browser downloads the file with the session cookie, and the API applies the
+  // same filters as the list. ponytail: no 401 refresh here; the page just loaded, so the session is
+  // fresh. Add apiFetch blob support if long idle tabs hit it.
+  const exportParams = new URLSearchParams(filters as Record<string, string>);
+  const exportHref = `/api/v1/workspaces/${active.id}/transactions/export.csv?${exportParams}`;
+
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <a href={exportHref} download className={buttonVariants({ variant: "outline" })}>
+          <Download className="size-4" /> Export CSV
+        </a>
+      </div>
       <TransactionFilterBar filters={filters} onChange={update} />
       <TransactionList
         filters={filters}
