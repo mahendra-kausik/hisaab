@@ -5,12 +5,13 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U11 done)
+- Phase 1 (manual tracker) — in progress (U0–U12 done)
 
 ## Current Goal
 
-- U12: monthly report (see Next Up). Also owed: a browser pass
-  over `/recurring` at 1280px and 360px.
+- U13: CSV export (see Next Up). Also owed: a browser pass over
+  `/reports` at 1280px and 360px (U12 was verified by API tests and
+  `make check` only).
 
 ## Completed
 
@@ -217,6 +218,26 @@ change.
   transactions via the poller, row text "Every week · Next 26 Nov
   2026, then …", pause (badge + toast). Edit, resume and delete
   were not clicked through in the browser (covered by API tests).
+- **U12 — Monthly report (19 Nov 2026):** `in.hisaab.reports`:
+  `ReportQueries` (JdbcTemplate; four queries that all count only
+  live `income`/`expense` rows dated in `[start, end)`, so transfers
+  and soft-deleted rows can never enter a total), `ReportService`
+  (reuses `budgets.Period` for the period and the previous one;
+  zero-fills every day so the bar chart has no gaps), `ReportController`
+  (`GET /workspaces/{id}/reports/monthly?period=YYYY-MM-DD`, any date
+  inside the wanted period, omitted = current) and `dto/MonthlyReport`
+  (totals, previous totals, `by_category`, `daily`, `top_expenses`).
+  Subcategories roll up into their top-level category; expenses with
+  no category appear as "Uncategorized", so `by_category` always sums
+  to the expense total. Web: `/reports` page with period navigation,
+  income / expense / net cards with % change vs the previous period
+  (`lib/reports.ts`, tested), Recharts donut + table, daily bar chart
+  and top-5 list; sidebar link active. Added dependency: `recharts`.
+  5 new API tests (152 total: reconciliation with a transfer and a
+  deleted row excluded, leap vs non-leap February, start day 15
+  boundary, top-5 cap, other workspace 404) and 1 new web test file;
+  `make check` passes. **Not verified in a browser:** the page has not
+  been opened in Chrome at 1280px or 360px yet.
 
 ## In Progress
 
@@ -271,7 +292,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U10 — Budgets:** API, then web progress view.
 - [x] **U11 — Recurring:** job queue + `@Scheduled`
   poller + recurring rules API, then recurring UI.
-- [ ] **U12 — Monthly report:** period-aware report API,
+- [x] **U12 — Monthly report:** period-aware report API,
   then report page with charts.
 - [ ] **U13 — CSV export.**
 
@@ -813,3 +834,17 @@ introduced, so later explanations don't repeat them.
   `@ConditionalOnProperty`, `ON DELETE SET NULL (column)`. Lesson: the
   JVM and database clocks can disagree (2.5 s in Docker here), so "run
   now" jobs are stamped with the database's `now()`.
+- **19 Nov 2026 — U12 done (monthly report).** API: `reports/
+  {ReportQueries,ReportService,ReportController}` + `dto/MonthlyReport`;
+  test `ReportsApiTest`. Web: `lib/reports.ts`, `lib/queries/reports.ts`,
+  `components/reports/report-view.tsx`, `app/(app)/reports/page.tsx`.
+  Concepts: aggregate SQL with `SUM(...) FILTER (WHERE ...)`, grouping
+  a child category under its parent with `COALESCE(parent.id, id)`,
+  `LEFT JOIN` for the optional category, filling gaps in a series in
+  Java rather than SQL, nested records as one response DTO, Recharts'
+  `ResponsiveContainer` (needs a parent with a fixed height). Lesson:
+  OpenAPI marks a primitive `long` as optional unless it has
+  `@NotNull`, which made every money field `number | undefined` in the
+  web types. Types for this unit were generated from a second API
+  instance on port 8081 because the dev API on 8080 was still running
+  the old build.

@@ -356,6 +356,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/reports/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["monthly"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces/{workspaceId}/budgets": {
         parameters: {
             query?: never;
@@ -615,6 +631,48 @@ export interface components {
         ListResponseString: {
             items: string[];
             next_cursor?: string;
+        };
+        CategorySpend: {
+            /** Format: uuid */
+            category_id?: string;
+            category_name: string;
+            /** Format: int64 */
+            spent_paise: number;
+        };
+        DaySpend: {
+            /** Format: date */
+            day: string;
+            /** Format: int64 */
+            spent_paise: number;
+        };
+        MonthlyReport: {
+            /** Format: date */
+            period_start: string;
+            /** Format: date */
+            period_end: string;
+            totals: components["schemas"]["Totals"];
+            previous: components["schemas"]["Totals"];
+            by_category: components["schemas"]["CategorySpend"][];
+            daily: components["schemas"]["DaySpend"][];
+            top_expenses: components["schemas"]["TopExpense"][];
+        };
+        TopExpense: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            occurred_on: string;
+            /** Format: int64 */
+            amount_paise: number;
+            category_name?: string;
+            note?: string;
+        };
+        Totals: {
+            /** Format: int64 */
+            income_paise: number;
+            /** Format: int64 */
+            expense_paise: number;
+            /** Format: int64 */
+            net_paise: number;
         };
         ListResponseRecurringRuleResponse: {
             items: components["schemas"]["RecurringRuleResponse"][];
@@ -1441,6 +1499,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ListResponseString"];
+                };
+            };
+        };
+    };
+    monthly: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyReport"];
                 };
             };
         };
