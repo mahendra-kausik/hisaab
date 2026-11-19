@@ -258,8 +258,19 @@ direction comes from the type.
 - `recurring_rules`: id, workspace_id, account_id, type
   (`expense` | `income`), amount_paise, category_id,
   party_id, project_id, note, frequency (`weekly` |
-  `monthly` | `yearly`), interval, anchor_date,
-  next_run_on, ends_on, paused_at.
+  `monthly` | `yearly`), interval_count, anchor_date,
+  next_run_on, ends_on, paused_at, created_by.
+  - U11 (`V8`): `party_id` and `project_id` are added by U14/U15.
+    Occurrences are `anchor_date + k * interval`, counted from
+    the anchor (no drift past short months). The job creates
+    each due occurrence with `INSERT ... ON CONFLICT
+    (recurring_rule_id, recurrence_date) DO NOTHING`, so a
+    re-run or a catch-up never doubles an entry. A past
+    anchor is caught up; resume and a changed schedule skip
+    the past. Deleting a rule keeps its transactions (link
+    cleared with `ON DELETE SET NULL (recurring_rule_id)`).
+  - Endpoints: `GET|POST /workspaces/{id}/recurring`, `PUT|DELETE
+    .../{ruleId}`, `POST .../{ruleId}/pause|resume`.
 - `dues`: id, workspace_id, party_id, direction
   (`receivable` | `payable`), amount_paise, reason,
   due_date (nullable), project_id, category_id,
@@ -280,6 +291,17 @@ direction comes from the type.
   `running` | `done` | `failed`), attempts, last_error,
   locked_at, created_at. Claimed with
   `SELECT ... FOR UPDATE SKIP LOCKED`.
+  - U11 (`V8`): `jobs` has **no RLS and no `workspace_id`**: it
+    is a system table like `refresh_tokens`, because the poller
+    claims a job before it knows whose it is. It has `user_id`
+    instead (the worker runs the handler inside
+    `CurrentUser.runAs(user_id)`, so business tables stay under
+    RLS) and a nullable `dedupe_key` (unique while `queued`) so
+    a rule never has two job chains. The payload is a single
+    value (an id). Failures retry after attempts² minutes and
+    become `failed` after 5. Jobs due "now" are stamped with the
+    database clock. `app.jobs.enabled=false` (test profile)
+    turns the poller off.
 - `audit_log`: id, workspace_id, user_id, action,
   entity_type, entity_id, at.
 

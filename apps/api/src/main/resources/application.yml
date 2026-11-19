@@ -49,6 +49,9 @@ spring:
 # Database settings are injected by the Testcontainers base class.
 app:
   web-origin: http://localhost:3000
+  # Tests run the job poller by hand so they are deterministic.
+  jobs:
+    enabled: false
   # Test-only key; not a secret.
   jwt-secret: test-only-jwt-secret-0123456789-abcdefghijklmnopqrstuvwxyz
 

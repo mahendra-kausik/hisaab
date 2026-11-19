@@ -9,6 +9,7 @@ import {
   House,
   PiggyBank,
   Plus,
+  Repeat,
   Settings,
   Tags,
   Wallet,
@@ -30,6 +31,7 @@ const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Dues", icon: HandCoins },
   { label: "Reports", icon: ChartColumn },
   { label: "Budgets", icon: PiggyBank, href: "/budgets" },
+  { label: "Recurring", icon: Repeat, href: "/recurring" },
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 

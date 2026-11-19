@@ -5,11 +5,12 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U10 done)
+- Phase 1 (manual tracker) — in progress (U0–U11 done)
 
 ## Current Goal
 
-- U11: recurring entries (see Next Up).
+- U12: monthly report (see Next Up). Also owed: a browser pass
+  over `/recurring` at 1280px and 360px.
 
 ## Completed
 
@@ -184,6 +185,33 @@ change.
   subcategory expense rolling up into its parent, prev period
   read-only and empty, inline edit prefilled and saved, no console
   errors. Not verified: 360px layout, light theme.
+- **U11 — Recurring (19 Nov 2026):** `V8__jobs_recurring.sql`:
+  `jobs` (system table, **no RLS and no `workspace_id`**, so
+  `RlsIsolationTest` still finds only workspace tables),
+  `recurring_rules` (RLS, composite FKs), and
+  `transactions.recurring_rule_id` / `recurrence_date` with
+  `UNIQUE (recurring_rule_id, recurrence_date)`. `in.hisaab.jobs`:
+  `JobQueue` (JdbcTemplate: enqueue with a dedupe key, claim with
+  `FOR UPDATE SKIP LOCKED`, done, retry after attempts² minutes,
+  `failed` after 5, requeue stale), `JobHandler`, `JobPoller`
+  (`@Scheduled` every 5 s, runs each job inside
+  `CurrentUser.runAs(job.userId)`), `JobsConfig` (`@EnableScheduling`,
+  off in tests via `app.jobs.enabled=false`). `in.hisaab.recurring`:
+  `Recurrence` (dates counted from the anchor, so a monthly rule on
+  the 31st does not drift), `RecurringRule`, `RecurringService`
+  (CRUD, pause/resume, and the `recurring.materialize` job handler),
+  `RecurringController`. Endpoints under
+  `/workspaces/{id}/recurring`: `GET`, `POST`, `PUT /{id}`,
+  `POST /{id}/pause|resume`, `DELETE /{id}`. A past first date is
+  caught up by the job; resume and a changed schedule do not
+  backfill; delete keeps the transactions already made. Web:
+  `/recurring` list (frequency, next dates, paused badge, edit /
+  pause / resume / delete) and add/edit dialog; sidebar link active.
+  9 new API tests (147 total) and 3 new web tests; `make check`
+  passes. Smoke-tested the real `@Scheduled` poller against the dev
+  API: a weekly rule starting 14 days ago produced 3 transactions
+  within 9 s and the next dates moved forward. **Not verified:**
+  the web pages in a browser (no 1280px / 360px pass yet).
 
 ## In Progress
 
@@ -236,7 +264,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   already exists); gives the "Settings" sidebar item its
   `href`.
 - [x] **U10 — Budgets:** API, then web progress view.
-- [ ] **U11 — Recurring:** job queue + `@Scheduled`
+- [x] **U11 — Recurring:** job queue + `@Scheduled`
   poller + recurring rules API, then recurring UI.
 - [ ] **U12 — Monthly report:** period-aware report API,
   then report page with charts.
@@ -765,3 +793,18 @@ introduced, so later explanations don't repeat them.
   `@RequestParam` + `@DateTimeFormat`, and `useSearchParams` behind
   `<Suspense>`. Validation: bean validation (`@Min`) answers 400,
   domain `ValidationException` answers 422.
+- **19 Nov 2026 — U11 done (recurring + job queue).** API:
+  `V8__jobs_recurring.sql`, `jobs/{JobQueue,JobHandler,JobPoller,
+  JobsConfig}`, `recurring/{Frequency,Recurrence,RecurringRule,
+  RecurringRuleRepository,RecurringService,RecurringController}` +
+  `dto/`; tests `RecurrenceTest`, `RecurringApiTest`. Web:
+  `lib/recurring.ts`, `lib/queries/recurring.ts`,
+  `components/recurring/{recurring-view,rule-dialog}.tsx`,
+  `app/(app)/recurring/page.tsx`. Concepts: `@Scheduled` +
+  `@EnableScheduling`, `FOR UPDATE SKIP LOCKED` claiming, a job chain
+  (each run queues the next), idempotency from a unique constraint plus
+  `ON CONFLICT DO NOTHING`, `CurrentUser.runAs` in a background thread
+  so RLS still applies, a partial unique index as a dedupe key,
+  `@ConditionalOnProperty`, `ON DELETE SET NULL (column)`. Lesson: the
+  JVM and database clocks can disagree (2.5 s in Docker here), so "run
+  now" jobs are stamped with the database's `now()`.
