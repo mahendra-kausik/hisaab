@@ -29,7 +29,7 @@ const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Categories", icon: Tags, href: "/categories" },
   { label: "Dues", icon: HandCoins },
   { label: "Reports", icon: ChartColumn },
-  { label: "Budgets", icon: PiggyBank },
+  { label: "Budgets", icon: PiggyBank, href: "/budgets" },
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 

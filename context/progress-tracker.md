@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U9 done)
+- Phase 1 (manual tracker) — in progress (U0–U10 done)
 
 ## Current Goal
 
-- U10: budgets (see Next Up).
+- U11: recurring entries (see Next Up).
 
 ## Completed
 
@@ -165,6 +165,21 @@ change.
   change, ticking the digest back on, light theme. Known gap: the
   browser's timezone list may hold zone names the Java API rejects
   (400 `invalid_timezone`); the form shows the error.
+- **U10 — Budgets (19 Nov 2026):** `V7__budgets.sql` (RLS, composite
+  FK to categories with `ON DELETE CASCADE`), `in.hisaab.budgets`
+  (`Period` maths, `Budget`, `BudgetRepository.usage` native query,
+  `BudgetService`, `BudgetController`). `GET /workspaces/{id}/budgets
+  ?period=<any date>` returns the period (from the caller's timezone
+  and period start day) with each budgeted top-level expense
+  category's amount and spent paise (children roll up; income,
+  transfers and deleted rows excluded). `PUT .../budgets/{categoryId}`
+  `{amount_paise}` writes the row for the current period (0 removes;
+  earlier periods keep their amounts, later ones inherit). Web:
+  `/budgets` with prev/next period arrows (`?period=`), progress
+  bars (amber from 80%, red over 100%, "Over by ₹x"), inline edit,
+  "No budget yet" list; sidebar link active. 10 new API tests (138
+  total, all pass) and 9 new web tests (51 total); lint and
+  typecheck pass. Browser pass not done yet.
 
 ## In Progress
 
@@ -216,7 +231,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   period start day and the dues digest switch (`PATCH /me`
   already exists); gives the "Settings" sidebar item its
   `href`.
-- [ ] **U10 — Budgets:** API, then web progress view.
+- [x] **U10 — Budgets:** API, then web progress view.
 - [ ] **U11 — Recurring:** job queue + `@Scheduled`
   poller + recurring rules API, then recurring UI.
 - [ ] **U12 — Monthly report:** period-aware report API,
@@ -735,3 +750,14 @@ introduced, so later explanations don't repeat them.
   and seeds the `me` cache with the answer; `lib/settings.ts`
   `changedSettings` sends only changed fields (tested). Sidebar
   Settings now links to `/settings`. No API change.
+- **19 Nov 2026 — U10 done (budgets).** API: `V7__budgets.sql`,
+  `budgets/{Period,Budget,BudgetRepository,BudgetService,
+  BudgetController}` + `dto/`; tests `PeriodTest`, `BudgetsApiTest`.
+  Web: `lib/budgets.ts`, `lib/queries/budgets.ts`,
+  `components/budgets/budgets-view.tsx`, `app/(app)/budgets/page.tsx`.
+  Concepts: Spring Data interface projections for a native query,
+  `JOIN LATERAL` for "latest row at or before", a derived value
+  (usage) computed per request, `Clock.withZone` for the user's today,
+  `@RequestParam` + `@DateTimeFormat`, and `useSearchParams` behind
+  `<Suspense>`. Validation: bean validation (`@Min`) answers 400,
+  domain `ValidationException` answers 422.

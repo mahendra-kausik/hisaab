@@ -242,6 +242,19 @@ direction comes from the type.
   amount_paise, effective_from (a period start date),
   created_at. The budget in effect for a period is the
   latest one with `effective_from` on or before it.
+  - U10 (`V7`): `UNIQUE (workspace_id, category_id,
+    effective_from)`, composite FK `(category_id,
+    workspace_id)` with `ON DELETE CASCADE` (so budgets never
+    block a category delete), RLS like the other tables.
+    `amount_paise = 0` means "no budget from this period on".
+  - `GET /workspaces/{id}/budgets?period=YYYY-MM-DD` (any date
+    in the wanted period; default today in the caller's
+    timezone) lists budgeted visible top-level expense
+    categories with `amount_paise` and `spent_paise`
+    (children roll up; only live `expense` rows). `PUT
+    /workspaces/{id}/budgets/{categoryId}` sets the amount
+    from the current period on (204). Periods come from the
+    caller's `period_start_day` via `Period.containing`.
 - `recurring_rules`: id, workspace_id, account_id, type
   (`expense` | `income`), amount_paise, category_id,
   party_id, project_id, note, frequency (`weekly` |

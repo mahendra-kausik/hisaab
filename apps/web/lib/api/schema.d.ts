@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/budgets/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces": {
         parameters: {
             query?: never;
@@ -276,6 +292,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -372,6 +404,10 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        SetBudgetRequest: {
+            /** Format: int64 */
+            amount_paise: number;
         };
         CreateWorkspaceRequest: {
             name: string;
@@ -477,6 +513,22 @@ export interface components {
         ListResponseCategoryResponse: {
             items: components["schemas"]["CategoryResponse"][];
             next_cursor?: string;
+        };
+        BudgetItem: {
+            /** Format: uuid */
+            category_id: string;
+            category_name: string;
+            /** Format: int64 */
+            amount_paise: number;
+            /** Format: int64 */
+            spent_paise: number;
+        };
+        BudgetsResponse: {
+            /** Format: date */
+            period_start: string;
+            /** Format: date */
+            period_end: string;
+            items: components["schemas"]["BudgetItem"][];
         };
         ListResponseAccountResponse: {
             items: components["schemas"]["AccountResponse"][];
@@ -627,6 +679,31 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetBudgetRequest"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {
@@ -1112,6 +1189,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ListResponseString"];
+                };
+            };
+        };
+    };
+    list_4: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BudgetsResponse"];
                 };
             };
         };
