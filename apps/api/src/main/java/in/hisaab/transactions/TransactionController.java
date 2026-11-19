@@ -54,13 +54,21 @@ public class TransactionController {
       @RequestParam(name = "type", required = false) String type,
       @RequestParam(name = "account_id", required = false) UUID accountId,
       @RequestParam(name = "category_id", required = false) UUID categoryId,
+      @RequestParam(name = "party_id", required = false) UUID partyId,
       @RequestParam(name = "tag", required = false) String tag,
       @RequestParam(name = "q", required = false) String q,
       @RequestParam(name = "cursor", required = false) String cursor,
       @RequestParam(name = "limit", defaultValue = "50") @Min(1) @Max(200) int limit) {
     var filter =
         new TransactionFilter(
-            from, to, parseType(type), accountId, categoryId, blankToNull(tag), blankToNull(q));
+            from,
+            to,
+            parseType(type),
+            accountId,
+            categoryId,
+            partyId,
+            blankToNull(tag),
+            blankToNull(q));
     return transactionService.list(workspaceId, filter, blankToNull(cursor), limit);
   }
 
@@ -76,11 +84,19 @@ public class TransactionController {
       @RequestParam(name = "type", required = false) String type,
       @RequestParam(name = "account_id", required = false) UUID accountId,
       @RequestParam(name = "category_id", required = false) UUID categoryId,
+      @RequestParam(name = "party_id", required = false) UUID partyId,
       @RequestParam(name = "tag", required = false) String tag,
       @RequestParam(name = "q", required = false) String q) {
     var filter =
         new TransactionFilter(
-            from, to, parseType(type), accountId, categoryId, blankToNull(tag), blankToNull(q));
+            from,
+            to,
+            parseType(type),
+            accountId,
+            categoryId,
+            partyId,
+            blankToNull(tag),
+            blankToNull(q));
     byte[] body = ("﻿" + exports.csv(workspaceId, filter)).getBytes(StandardCharsets.UTF_8);
     String name = "hisaab-" + (from == null ? "start" : from) + "-" + (to == null ? "now" : to);
     return ResponseEntity.ok()

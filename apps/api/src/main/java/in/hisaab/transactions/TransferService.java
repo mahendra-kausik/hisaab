@@ -118,6 +118,7 @@ public class TransferService {
             request.amountPaise(),
             request.occurredOn(),
             null,
+            null,
             request.paymentMethod(),
             note,
             now);
@@ -127,6 +128,7 @@ public class TransferService {
             TransactionType.TRANSFER_IN,
             request.amountPaise(),
             request.occurredOn(),
+            null,
             null,
             request.paymentMethod(),
             note,

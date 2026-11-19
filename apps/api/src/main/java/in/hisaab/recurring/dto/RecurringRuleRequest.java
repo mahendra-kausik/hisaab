@@ -19,6 +19,7 @@ public record RecurringRuleRequest(
     @NotNull TransactionType type,
     @NotNull @Positive Long amountPaise,
     UUID categoryId,
+    UUID partyId,
     @Size(max = 500) String note,
     @NotNull Frequency frequency,
     @NotNull @Min(1) @Max(52) Integer intervalCount,

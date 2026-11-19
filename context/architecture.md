@@ -162,6 +162,23 @@ direction comes from the type.
   `GET .../tags` lists names for autocomplete.
 - `parties`: id, workspace_id, name, phone, role, notes,
   archived_at, created_at, updated_at.
+  - U14 (`V9`): role is one of `buyer`, `seller`, `contractor`,
+    `broker`, `supplier`, `tenant`, `friend_family`, `other`;
+    names unique per workspace ignoring case (409 `name_taken`);
+    RLS like the other tables. Archive only, no delete, so the
+    foreign keys from `transactions.party_id` and
+    `recurring_rules.party_id` (composite with `workspace_id`)
+    need no `ON DELETE` action.
+  - Endpoints: `GET|POST /workspaces/{id}/parties` (list
+    includes archived ones), `PATCH .../{partyId}` (null = keep,
+    empty string clears phone/notes, `archived` flag).
+  - Linking: setting a party that is not in the workspace is
+    422 `invalid_party`; newly setting an archived one is 422
+    `party_archived`, but a link that is already there may stay
+    (same rule as archived accounts). Transfers have no party.
+    `GET /transactions` and `export.csv` take `party_id`; the
+    CSV has a `party` column. The recurring job copies the
+    rule's party into each transaction it makes.
 - `projects`: id, workspace_id, name, notes,
   archived_at, created_at, updated_at.
 - `transactions`: id, workspace_id, account_id, type
@@ -260,7 +277,8 @@ direction comes from the type.
   party_id, project_id, note, frequency (`weekly` |
   `monthly` | `yearly`), interval_count, anchor_date,
   next_run_on, ends_on, paused_at, created_by.
-  - U11 (`V8`): `party_id` and `project_id` are added by U14/U15.
+  - U11 (`V8`): `party_id` (added by U14, `V9`) and `project_id`
+    (U15) come later.
     Occurrences are `anchor_date + k * interval`, counted from
     the anchor (no drift past short months). The job creates
     each due occurrence with `INSERT ... ON CONFLICT

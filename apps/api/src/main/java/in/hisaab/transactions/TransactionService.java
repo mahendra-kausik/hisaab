@@ -7,6 +7,7 @@ import in.hisaab.common.security.CurrentUser;
 import in.hisaab.common.web.ListResponse;
 import in.hisaab.common.web.NotFoundException;
 import in.hisaab.common.web.ValidationException;
+import in.hisaab.parties.PartyService;
 import in.hisaab.transactions.dto.TransactionFilter;
 import in.hisaab.transactions.dto.TransactionRequest;
 import in.hisaab.transactions.dto.TransactionResponse;
@@ -30,6 +31,7 @@ public class TransactionService {
   private final TagRepository tags;
   private final AccountService accounts;
   private final CategoryService categories;
+  private final PartyService parties;
   private final WorkspaceAccess access;
   private final CurrentUser currentUser;
   private final Clock clock;
@@ -40,6 +42,7 @@ public class TransactionService {
       TagRepository tags,
       AccountService accounts,
       CategoryService categories,
+      PartyService parties,
       WorkspaceAccess access,
       CurrentUser currentUser,
       Clock clock) {
@@ -48,6 +51,7 @@ public class TransactionService {
     this.tags = tags;
     this.accounts = accounts;
     this.categories = categories;
+    this.parties = parties;
     this.access = access;
     this.currentUser = currentUser;
     this.clock = clock;
@@ -79,6 +83,9 @@ public class TransactionService {
     requireManualType(request.type());
     accounts.requireOpen(workspaceId, request.accountId());
     requireCategory(workspaceId, request);
+    if (request.partyId() != null) {
+      parties.requireOpen(workspaceId, request.partyId());
+    }
 
     var transaction =
         new Transaction(
@@ -89,6 +96,7 @@ public class TransactionService {
             request.amountPaise(),
             request.occurredOn(),
             request.categoryId(),
+            request.partyId(),
             request.paymentMethod(),
             blankToNull(request.note()),
             Instant.now(clock));
@@ -110,6 +118,10 @@ public class TransactionService {
       accounts.requireOpen(workspaceId, request.accountId());
     }
     requireCategory(workspaceId, request);
+    // Same rule for parties: an archived party can stay linked, but not be newly linked.
+    if (request.partyId() != null && !request.partyId().equals(transaction.getPartyId())) {
+      parties.requireOpen(workspaceId, request.partyId());
+    }
 
     transaction.replace(
         request.accountId(),
@@ -117,6 +129,7 @@ public class TransactionService {
         request.amountPaise(),
         request.occurredOn(),
         request.categoryId(),
+        request.partyId(),
         request.paymentMethod(),
         blankToNull(request.note()),
         Instant.now(clock));

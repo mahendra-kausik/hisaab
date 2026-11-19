@@ -20,6 +20,7 @@ public record TransactionRequest(
     @NotNull @Positive Long amountPaise,
     @NotNull LocalDate occurredOn,
     UUID categoryId,
+    UUID partyId,
     PaymentMethod paymentMethod,
     @Size(max = 500) String note,
     @Size(max = 20) List<@NotBlank @Size(max = 50) String> tags) {}

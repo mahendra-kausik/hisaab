@@ -11,5 +11,6 @@ public record TransactionFilter(
     TransactionType type,
     UUID accountId,
     UUID categoryId,
+    UUID partyId,
     String tag,
     String q) {}

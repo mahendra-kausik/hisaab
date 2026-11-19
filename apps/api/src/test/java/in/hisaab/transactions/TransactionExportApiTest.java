@@ -47,8 +47,8 @@ class TransactionExportApiTest extends PostgresTestBase {
             .getResponse()
             .getContentAsString(StandardCharsets.UTF_8);
 
-    assertThat(csv).startsWith("﻿date,type,amount,account,category,payment_method,note,tags");
-    assertThat(csv).contains("2026-03-10,expense,123.45,Cash,,,\"Lunch, \"\"special\"\"\",");
+    assertThat(csv).startsWith("﻿date,type,amount,account,category,party,payment_method,note,tags");
+    assertThat(csv).contains("2026-03-10,expense,123.45,Cash,,,,\"Lunch, \"\"special\"\"\",");
     assertThat(csv).contains(",'=SUM(A1),");
     assertThat(csv).doesNotContain("outside range");
   }

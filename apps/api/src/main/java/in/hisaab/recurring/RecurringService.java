@@ -9,6 +9,7 @@ import in.hisaab.common.web.NotFoundException;
 import in.hisaab.common.web.ValidationException;
 import in.hisaab.jobs.JobHandler;
 import in.hisaab.jobs.JobQueue;
+import in.hisaab.parties.PartyService;
 import in.hisaab.recurring.dto.RecurringRuleRequest;
 import in.hisaab.recurring.dto.RecurringRuleResponse;
 import in.hisaab.users.UserRepository;
@@ -38,6 +39,7 @@ public class RecurringService implements JobHandler {
   private final RecurringRuleRepository rules;
   private final AccountService accounts;
   private final CategoryService categories;
+  private final PartyService parties;
   private final UserRepository users;
   private final WorkspaceAccess access;
   private final CurrentUser currentUser;
@@ -49,6 +51,7 @@ public class RecurringService implements JobHandler {
       RecurringRuleRepository rules,
       AccountService accounts,
       CategoryService categories,
+      PartyService parties,
       UserRepository users,
       WorkspaceAccess access,
       CurrentUser currentUser,
@@ -58,6 +61,7 @@ public class RecurringService implements JobHandler {
     this.rules = rules;
     this.accounts = accounts;
     this.categories = categories;
+    this.parties = parties;
     this.users = users;
     this.access = access;
     this.currentUser = currentUser;
@@ -78,13 +82,14 @@ public class RecurringService implements JobHandler {
   @Transactional
   public RecurringRuleResponse create(UUID workspaceId, RecurringRuleRequest request) {
     access.require(workspaceId, WorkspaceRole.EDITOR);
-    validate(workspaceId, request);
+    validate(workspaceId, request, null);
     var rule = new RecurringRule(workspaceId, currentUser.require());
     rule.replace(
         request.accountId(),
         request.type(),
         request.amountPaise(),
         request.categoryId(),
+        request.partyId(),
         blankToNull(request.note()),
         request.frequency(),
         request.intervalCount(),
@@ -103,7 +108,7 @@ public class RecurringService implements JobHandler {
   public RecurringRuleResponse replace(UUID workspaceId, UUID id, RecurringRuleRequest request) {
     access.require(workspaceId, WorkspaceRole.EDITOR);
     var rule = find(workspaceId, id);
-    validate(workspaceId, request);
+    validate(workspaceId, request, rule.getPartyId());
     boolean sameSchedule =
         rule.getFrequency() == request.frequency()
             && rule.getIntervalCount() == request.intervalCount()
@@ -113,6 +118,7 @@ public class RecurringService implements JobHandler {
         request.type(),
         request.amountPaise(),
         request.categoryId(),
+        request.partyId(),
         blankToNull(request.note()),
         request.frequency(),
         request.intervalCount(),
@@ -177,8 +183,8 @@ public class RecurringService implements JobHandler {
     while (!next.isAfter(today) && !pastEnd(rule, next)) {
       jdbc.update(
           "INSERT INTO transactions (workspace_id, account_id, type, amount_paise, occurred_on,"
-              + " category_id, note, created_by, recurring_rule_id, recurrence_date)"
-              + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+              + " category_id, party_id, note, created_by, recurring_rule_id, recurrence_date)"
+              + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
               + " ON CONFLICT (recurring_rule_id, recurrence_date) DO NOTHING",
           rule.getWorkspaceId(),
           rule.getAccountId(),
@@ -186,6 +192,7 @@ public class RecurringService implements JobHandler {
           rule.getAmountPaise(),
           next,
           rule.getCategoryId(),
+          rule.getPartyId(),
           rule.getNote(),
           rule.getCreatedBy(),
           rule.getId(),
@@ -230,7 +237,8 @@ public class RecurringService implements JobHandler {
     return ZoneId.of(users.findById(rule.getCreatedBy()).orElseThrow().getTimezone());
   }
 
-  private void validate(UUID workspaceId, RecurringRuleRequest request) {
+  /** {@code currentPartyId}: the rule's party before this edit; it may stay even if archived. */
+  private void validate(UUID workspaceId, RecurringRuleRequest request, UUID currentPartyId) {
     if (request.type().isTransfer()) {
       throw new ValidationException(
           "invalid_type",
@@ -247,6 +255,9 @@ public class RecurringService implements JobHandler {
     if (request.categoryId() != null) {
       categories.requireForType(
           workspaceId, request.categoryId(), CategoryKind.valueOf(request.type().name()));
+    }
+    if (request.partyId() != null && !request.partyId().equals(currentPartyId)) {
+      parties.requireOpen(workspaceId, request.partyId());
     }
   }
 

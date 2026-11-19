@@ -155,7 +155,8 @@ class RlsIsolationTest extends PostgresTestBase {
             "tags",
             "transaction_tags",
             "budgets",
-            "recurring_rules");
+            "recurring_rules",
+            "parties");
     assertThat(tables)
         .allSatisfy(t ->
             assertThat(t)
