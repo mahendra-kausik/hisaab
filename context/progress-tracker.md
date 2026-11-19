@@ -150,6 +150,21 @@ change.
   without the hidden Food group, and no horizontal overflow at 360px
   (same-origin iframe) on both pages. Only the dark theme was seen;
   light was not compared.
+- **U9 — Web settings (19 Nov 2026):** `/settings` page (sidebar
+  link now active) with name, timezone (native select from
+  `Intl.supportedValuesOf`), "Month starts on day" (1–28) and the
+  dues digest checkbox. Saving sends only the changed fields
+  (`changedSettings`, `lib/settings.ts`) through `useUpdateSettings`,
+  which seeds the `me` cache from the PATCH answer. Web only, no API
+  change. 2 new web tests (45 total); lint and typecheck pass.
+  `make check` was not run. Checked by hand in Chrome: defaults
+  shown, change all four fields and save (toast, sidebar name
+  updates), values persist after reload, empty name shows "Enter a
+  name", no console errors. Not verified: 360px layout (the window
+  resize did not narrow the page), "Today" shifting after a timezone
+  change, ticking the digest back on, light theme. Known gap: the
+  browser's timezone list may hold zone names the Java API rejects
+  (400 `invalid_timezone`); the form shows the error.
 
 ## In Progress
 
