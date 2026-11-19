@@ -255,8 +255,15 @@ change.
   "Export CSV" link on the Transactions page carrying the current
   filters. 2 new API tests (filter + quoting + formula guard; other
   workspace's rows and non-members excluded). `make check` passes
-  (154 API, 57 web tests). **Not yet done:** a browser click-through
-  of the download.
+  (154 API, 57 web tests). **Browser pass (Chrome, dev API + web):**
+  the Export CSV link's URL, fetched from the page, returned 200 with
+  all 8 seeded rows matching the list (names resolved, amounts in
+  rupees); `?from=2026-11-10&to=2026-11-15` returned only the 2 rows in
+  range; raw bytes start with the UTF-8 BOM. The first try returned 400
+  because the dev API on 8080 was an old build without the route;
+  restarting it fixed that. Not checked: the real file save from
+  clicking the button, the `Content-Disposition` header (the browser
+  tool hides headers; the API test covers it), opening in Excel.
 
 ## In Progress
 
