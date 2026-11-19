@@ -142,9 +142,14 @@ change.
   was not run (no API files changed). Checked by hand in Chrome:
   signup, add a credit card with `-12000`, archive, hide a parent
   (badge and muted children), add and delete a custom category,
-  no console errors. Not checked by hand: the duplicate-name
-  and in-use error messages, edit, unarchive, the quick-add picker
-  after hiding, dark/light comparison and the 360px frame.
+  no console errors. In a second pass: the duplicate-name error
+  (case-insensitive), edit with the negative opening balance
+  prefilled, unarchive, the row link opening Transactions filtered
+  to the account, the "in use" message when deleting a category a
+  transaction uses, Esc closing a dialog, the quick-add picker
+  without the hidden Food group, and no horizontal overflow at 360px
+  (same-origin iframe) on both pages. Only the dark theme was seen;
+  light was not compared.
 
 ## In Progress
 
