@@ -179,7 +179,11 @@ change.
   bars (amber from 80%, red over 100%, "Over by ₹x"), inline edit,
   "No budget yet" list; sidebar link active. 10 new API tests (138
   total, all pass) and 9 new web tests (51 total); lint and
-  typecheck pass. Browser pass not done yet.
+  typecheck and `npm run build` pass. Checked by hand in Chrome at
+  1280px: warning (amber, 85%) and over (red, "Over by") states, a
+  subcategory expense rolling up into its parent, prev period
+  read-only and empty, inline edit prefilled and saved, no console
+  errors. Not verified: 360px layout, light theme.
 
 ## In Progress
 
