@@ -30,7 +30,7 @@ const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Dues", icon: HandCoins },
   { label: "Reports", icon: ChartColumn },
   { label: "Budgets", icon: PiggyBank },
-  { label: "Settings", icon: Settings },
+  { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
 const ITEM = "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium";

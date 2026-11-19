@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U8 done)
+- Phase 1 (manual tracker) — in progress (U0–U9 done)
 
 ## Current Goal
 
-- U9: web settings (see Next Up).
+- U10: budgets (see Next Up).
 
 ## Completed
 
@@ -197,7 +197,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   (`N` shortcut), edit, delete with Undo; also all list
   filters and note search.
 - [x] **U8 — Web accounts & categories management.**
-- [ ] **U9 — Web settings:** page for name, timezone,
+- [x] **U9 — Web settings:** page for name, timezone,
   period start day and the dues digest switch (`PATCH /me`
   already exists); gives the "Settings" sidebar item its
   `href`.
@@ -714,3 +714,9 @@ introduced, so later explanations don't repeat them.
   shows the API's 409 message, a two-level tree built from a flat
   list, signed money input, and the React lint rule against
   components created during render.
+- **19 Nov 2026 — U9 done (web settings).** `/settings` page: name,
+  timezone (native select from `Intl.supportedValuesOf`), period start
+  day (1–28), dues digest checkbox. `useUpdateSettings` PATCHes `/me`
+  and seeds the `me` cache with the answer; `lib/settings.ts`
+  `changedSettings` sends only changed fields (tested). Sidebar
+  Settings now links to `/settings`. No API change.
