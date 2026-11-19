@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAccounts } from "@/lib/queries/accounts";
 import { useCategories } from "@/lib/queries/categories";
 import { useParties } from "@/lib/queries/parties";
+import { useProjects } from "@/lib/queries/projects";
 import { useTags } from "@/lib/queries/tags";
 import type { TransactionFilters } from "@/lib/queries/transactions";
 import { categoryItems } from "@/lib/transactions";
@@ -51,6 +52,7 @@ export function TransactionFilterBar({
   const categories = useCategories(active.id);
   const tags = useTags(active.id);
   const parties = useParties(active.id);
+  const projects = useProjects(active.id);
 
   // The box keeps what is being typed; the URL only gets it after a short pause.
   const [search, setSearch] = useState(filters.q ?? "");
@@ -77,6 +79,7 @@ export function TransactionFilterBar({
       account_id: "",
       category_id: "",
       party_id: "",
+      project_id: "",
       tag: "",
       from: "",
       to: "",
@@ -107,7 +110,7 @@ export function TransactionFilterBar({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-8">
         <Field label="Type" htmlFor="filter-type">
           <NativeSelect {...select("type")}>
             <option value="">All types</option>
@@ -149,6 +152,17 @@ export function TransactionFilterBar({
           <NativeSelect {...select("party_id")}>
             <option value="">All parties</option>
             {(parties.data ?? []).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
+
+        <Field label="Project" htmlFor="filter-project_id">
+          <NativeSelect {...select("project_id")}>
+            <option value="">All projects</option>
+            {(projects.data ?? []).map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>

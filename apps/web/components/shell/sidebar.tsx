@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Building2,
   ArrowLeftRight,
   ChartColumn,
   HandCoins,
@@ -30,6 +31,7 @@ const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Accounts", icon: Wallet, href: "/accounts" },
   { label: "Categories", icon: Tags, href: "/categories" },
   { label: "Parties", icon: Users, href: "/parties" },
+  { label: "Projects", icon: Building2, href: "/projects" },
   { label: "Dues", icon: HandCoins },
   { label: "Reports", icon: ChartColumn, href: "/reports" },
   { label: "Budgets", icon: PiggyBank, href: "/budgets" },

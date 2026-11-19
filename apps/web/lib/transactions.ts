@@ -20,6 +20,7 @@ export type Row = {
   toAccountId?: string;
   categoryId?: string;
   partyId?: string;
+  projectId?: string;
   note?: string;
   tags: string[];
   paymentMethod?: PaymentMethod;
@@ -87,6 +88,7 @@ export function toRows(items: TransactionItem[]): Row[] {
         accountId: t.account_id,
         categoryId: t.category_id,
         partyId: t.party_id,
+        projectId: t.project_id,
         note: t.note,
         tags: t.tags,
         paymentMethod: t.payment_method,

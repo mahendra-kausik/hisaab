@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PartySelect } from "@/components/parties/party-select";
+import { ProjectSelect } from "@/components/projects/project-select";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -92,6 +93,7 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
   const [amount, setAmount] = useState(editing ? paiseToRupeesInput(editing.amountPaise) : "");
   const [categoryId, setCategoryId] = useState(editing?.categoryId ?? "");
   const [partyId, setPartyId] = useState(editing?.partyId ?? "");
+  const [projectId, setProjectId] = useState(editing?.projectId ?? "");
   const [accountId, setAccountId] = useState(editing?.accountId ?? editing?.fromAccountId ?? "");
   const [toAccountId, setToAccountId] = useState(editing?.toAccountId ?? "");
   const [date, setDate] = useState(
@@ -185,6 +187,7 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
           occurred_on: v.occurredOn,
           category_id: v.categoryId || undefined,
           party_id: partyId || undefined,
+          project_id: projectId || undefined,
           payment_method: editing?.paymentMethod,
           note: v.note || undefined,
           tags: v.tags,
@@ -312,6 +315,12 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
             value={partyId}
             onChange={setPartyId}
             keepId={editing?.partyId}
+          />
+          <ProjectSelect
+            id="entry-project"
+            value={projectId}
+            onChange={setProjectId}
+            keepId={editing?.projectId}
           />
         </>
       )}

@@ -15,6 +15,7 @@ export type TransactionFilters = {
   account_id?: string;
   category_id?: string;
   party_id?: string;
+  project_id?: string;
   tag?: string;
   from?: string;
   to?: string;

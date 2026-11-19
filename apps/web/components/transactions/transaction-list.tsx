@@ -19,6 +19,7 @@ import { useAccounts } from "@/lib/queries/accounts";
 import { useCategories } from "@/lib/queries/categories";
 import { useMe } from "@/lib/queries/me";
 import { useParties } from "@/lib/queries/parties";
+import { useProjects } from "@/lib/queries/projects";
 import {
   useDeleteEntry,
   useRestoreEntry,
@@ -58,6 +59,7 @@ export function TransactionList({
   const accounts = useAccounts(active.id);
   const categories = useCategories(active.id);
   const parties = useParties(active.id);
+  const projects = useProjects(active.id);
   const deleteEntry = useDeleteEntry(active.id);
   const restoreEntry = useRestoreEntry(active.id);
 
@@ -70,6 +72,7 @@ export function TransactionList({
   const accountName = new Map((accounts.data ?? []).map((a) => [a.id, a.name]));
   const categoryById = new Map((categories.data ?? []).map((c) => [c.id, c]));
   const partyName = new Map((parties.data ?? []).map((p) => [p.id, p.name]));
+  const projectName = new Map((projects.data ?? []).map((p) => [p.id, p.name]));
   const today = todayIn(me.data?.timezone ?? "Asia/Kolkata");
   const hasFilters = Object.values(filters).some(Boolean);
 
@@ -183,6 +186,7 @@ export function TransactionList({
                     ? categoryLabel
                     : undefined,
                 row.note ? party : undefined,
+                row.projectId ? projectName.get(row.projectId) : undefined,
                 row.kind === "transfer" ? undefined : accountName.get(row.accountId ?? ""),
                 ...row.tags.map((t) => `#${t}`),
               ].filter(Boolean);

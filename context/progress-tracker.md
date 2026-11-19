@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U15 Projects (see Next Up).
+- Phase 1.5: U16 Dues API (see Next Up).
 
 ## Completed
 
@@ -288,6 +288,27 @@ change.
   errors; at 360px (same-origin iframe) the Parties and Transactions
   pages had no horizontal overflow. Not clicked through: the recurring
   dialog's party select (covered by an API test), light theme.
+- **U15 — Projects (19 Nov 2026):** a near-copy of U14 minus phone and
+  role. API: `V10__projects.sql` (`projects` with RLS, unique name per
+  workspace ignoring case; `project_id` with a composite FK on
+  `transactions` and `recurring_rules`), package `in.hisaab.projects`
+  (`Project`, `ProjectRepository`, `ProjectService` with
+  `requireOpen`, `ProjectController`, DTOs). Endpoints
+  `GET|POST /workspaces/{id}/projects`, `PATCH .../{projectId}`
+  (archive only). Transactions and recurring rules accept
+  `project_id` (422 `invalid_project` / `project_archived`; an
+  archived project already linked may stay); `GET /transactions` and
+  `export.csv` filter by `project_id`; the CSV gained a `project`
+  column after `party`; the recurring job copies the project. Web:
+  `/projects` page, `ProjectSelect` in quick-add and the recurring
+  dialog, Project filter, project name chip on list rows, sidebar
+  link. 5 new API tests (`ProjectsApiTest`; 164 total), `RlsIsolationTest`
+  lists `projects`, CSV test updated. API tests, web lint, typecheck,
+  57 web tests and the production build pass. **Not done: browser
+  pass.** An older dev API (started before U15) was still holding
+  port 8080 and I did not stop it, so the new build ran on 8081 just
+  to regenerate `schema.d.ts`. Stop the old one, run `make dev` and
+  click through `/projects`, the picker, the filter and the CSV.
 
 ## In Progress
 
@@ -349,7 +370,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 ### Phase 1.5 — People & dues
 
 - [x] **U14 — Parties:** API, then web.
-- [ ] **U15 — Projects (properties/sites):** API, then
+- [x] **U15 — Projects (properties/sites):** API, then
   web; project filter on transactions.
 - [ ] **U16 — Dues API:** create, update, cancel;
   optional origin transaction for lending/borrowing;
@@ -945,3 +966,26 @@ introduced, so later explanations don't repeat them.
   `make dev`, open Parties, add one, add a transaction for them, click
   the party to see their transactions. Read next: `PartyService` beside
   `AccountService` (same shape), then the `V9` migration's foreign keys.
+- **19 Nov 2026 — U15 done (projects), browser pass pending.** Key files:
+  `V10__projects.sql`, `projects/{Project,ProjectRepository,ProjectService,
+  ProjectController}` + `dto/`, `ProjectsApiTest`; changed the same
+  `transactions/*` and `recurring/*` classes U14 touched. Web:
+  `lib/queries/projects.ts`, `components/projects/{projects-view,
+  project-dialog,project-select}.tsx`, `app/(app)/projects/page.tsx`, plus
+  the transaction list, filters, quick-add and recurring dialog.
+  Concepts used: nothing new. This unit repeats U14's patterns (composite
+  foreign key so a link cannot cross workspaces; one service called by
+  two others to share a validation rule; "keep if unchanged" for archived
+  links; one shared React select used by two forms). Seeing the same
+  shape twice is the point: compare `PartyService` and `ProjectService`
+  side by side.
+
+  *What to know (how it works):* picking a project in quick-add ->
+  `POST/PUT /transactions` with `project_id` -> `TransactionService`
+  calls `ProjectService.requireOpen` (422 if not in the workspace or
+  newly archived) -> row saved -> `TransactionQueries` returns
+  `project_id` -> the list maps it to a name with `useProjects`. Try it
+  (after stopping any old dev API on port 8080): `make dev`, open
+  Projects, add one, tag a transaction, click the project to see its
+  transactions. Read next: `V10__projects.sql`'s foreign keys, then
+  U16 (dues), which links to both parties and projects.

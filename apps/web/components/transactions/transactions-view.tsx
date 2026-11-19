@@ -14,6 +14,7 @@ const FILTER_KEYS = [
   "account_id",
   "category_id",
   "party_id",
+  "project_id",
   "tag",
   "from",
   "to",

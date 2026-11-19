@@ -196,7 +196,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/parties": {
+    "/api/v1/workspaces/{workspaceId}/projects": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/categories": {
+    "/api/v1/workspaces/{workspaceId}/parties": {
         parameters: {
             query?: never;
             header?: never;
@@ -228,7 +228,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/accounts": {
+    "/api/v1/workspaces/{workspaceId}/categories": {
         parameters: {
             query?: never;
             header?: never;
@@ -238,6 +238,22 @@ export interface paths {
         get: operations["list_4"];
         put?: never;
         post: operations["create_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_5"];
+        put?: never;
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -308,7 +324,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/parties/{partyId}": {
+    "/api/v1/workspaces/{workspaceId}/projects/{projectId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -324,6 +340,22 @@ export interface paths {
         patch: operations["update"];
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/parties/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update_1"];
+        trace?: never;
+    };
     "/api/v1/workspaces/{workspaceId}/categories/{categoryId}": {
         parameters: {
             query?: never;
@@ -337,7 +369,7 @@ export interface paths {
         delete: operations["delete_3"];
         options?: never;
         head?: never;
-        patch: operations["update_1"];
+        patch: operations["update_2"];
         trace?: never;
     };
     "/api/v1/workspaces/{workspaceId}/accounts/{accountId}": {
@@ -353,7 +385,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_2"];
+        patch: operations["update_3"];
         trace?: never;
     };
     "/api/v1/me": {
@@ -395,7 +427,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -427,7 +459,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -505,6 +537,8 @@ export interface components {
             category_id?: string;
             /** Format: uuid */
             party_id?: string;
+            /** Format: uuid */
+            project_id?: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
@@ -525,6 +559,8 @@ export interface components {
             category_id?: string;
             /** Format: uuid */
             party_id?: string;
+            /** Format: uuid */
+            project_id?: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
@@ -548,6 +584,8 @@ export interface components {
             category_id?: string;
             /** Format: uuid */
             party_id?: string;
+            /** Format: uuid */
+            project_id?: string;
             note?: string;
             /** @enum {string} */
             frequency: "weekly" | "monthly" | "yearly";
@@ -571,6 +609,8 @@ export interface components {
             category_id?: string;
             /** Format: uuid */
             party_id?: string;
+            /** Format: uuid */
+            project_id?: string;
             note?: string;
             /** @enum {string} */
             frequency: "weekly" | "monthly" | "yearly";
@@ -598,6 +638,18 @@ export interface components {
             name: string;
             kind: string;
             role: string;
+        };
+        CreateProjectRequest: {
+            name: string;
+            notes?: string;
+        };
+        ProjectResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            notes?: string;
+            /** Format: date-time */
+            archived_at?: string;
         };
         CreatePartyRequest: {
             name: string;
@@ -679,6 +731,11 @@ export interface components {
             email: string;
             password: string;
         };
+        UpdateProjectRequest: {
+            name?: string;
+            notes?: string;
+            archived?: boolean;
+        };
         UpdatePartyRequest: {
             name?: string;
             phone?: string;
@@ -758,6 +815,10 @@ export interface components {
         };
         ListResponseRecurringRuleResponse: {
             items: components["schemas"]["RecurringRuleResponse"][];
+            next_cursor?: string;
+        };
+        ListResponseProjectResponse: {
+            items: components["schemas"]["ProjectResponse"][];
             next_cursor?: string;
         };
         ListResponsePartyResponse: {
@@ -1098,6 +1159,7 @@ export interface operations {
                 account_id?: string;
                 category_id?: string;
                 party_id?: string;
+                project_id?: string;
                 tag?: string;
                 q?: string;
                 cursor?: string;
@@ -1282,12 +1344,60 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ListResponsePartyResponse"];
+                    "*/*": components["schemas"]["ListResponseProjectResponse"];
                 };
             };
         };
     };
     create_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProjectRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProjectResponse"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ListResponsePartyResponse"];
+                };
+            };
+        };
+    };
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1313,7 +1423,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1335,7 +1445,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1361,7 +1471,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1383,7 +1493,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1503,6 +1613,33 @@ export interface operations {
             header?: never;
             path: {
                 workspaceId: string;
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProjectRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProjectResponse"];
+                };
+            };
+        };
+    };
+    update_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
                 partyId: string;
             };
             cookie?: never;
@@ -1545,7 +1682,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1572,7 +1709,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1652,6 +1789,7 @@ export interface operations {
                 account_id?: string;
                 category_id?: string;
                 party_id?: string;
+                project_id?: string;
                 tag?: string;
                 q?: string;
             };
@@ -1674,7 +1812,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1720,7 +1858,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: {
                 period?: string;

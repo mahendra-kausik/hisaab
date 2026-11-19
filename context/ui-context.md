@@ -148,7 +148,7 @@ the color tokens.
   records. A row opens its edit dialog on click or Enter, and
   has an actions menu (Edit, Delete).
 - **Filters:** the Transactions page keeps its filters
-  (search, type, account, category, party, tag, date range) in the
+  (search, type, account, category, party, project, tag, date range) in the
   URL, so a reload or shared link shows the same list. They
   stay in a two-column grid on phones.
 - **Accounts page (`/accounts`):** a list of open accounts, then an
@@ -163,6 +163,12 @@ the color tokens.
   with dues). The transaction and recurring forms show an optional
   "Party" select only once the workspace has a party; an archived
   party is listed there only while it is the saved choice.
+- **Projects page (`/projects`):** the same layout as Parties, minus
+  role and phone: the row shows the name and notes and links to
+  `/transactions?project_id=…`. The transaction and recurring forms
+  show an optional "Project" select under the party one, only once
+  the workspace has a project. Transaction rows list the project
+  name among the detail chips.
 - **Categories page (`/categories`):** Expense and Income sections,
   parents with their subcategories indented. Row menu: Rename, Add
   subcategory (parents only), Hide / Show, Delete (custom categories

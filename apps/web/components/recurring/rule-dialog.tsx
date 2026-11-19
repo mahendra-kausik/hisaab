@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PartySelect } from "@/components/parties/party-select";
+import { ProjectSelect } from "@/components/projects/project-select";
 import { NativeSelect } from "@/components/transactions/native-select";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,7 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
   const [amount, setAmount] = useState(editing ? paiseToRupeesInput(editing.amount_paise) : "");
   const [categoryId, setCategoryId] = useState(editing?.category_id ?? "");
   const [partyId, setPartyId] = useState(editing?.party_id ?? "");
+  const [projectId, setProjectId] = useState(editing?.project_id ?? "");
   const [accountId, setAccountId] = useState(editing?.account_id ?? "");
   const [frequency, setFrequency] = useState<Frequency>(editing?.frequency ?? "monthly");
   const [interval, setInterval] = useState(String(editing?.interval_count ?? 1));
@@ -104,6 +106,7 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
           amount_paise: v.amountPaise,
           category_id: categoryId || undefined,
           party_id: partyId || undefined,
+          project_id: projectId || undefined,
           note: v.note || undefined,
           frequency,
           interval_count: v.interval,
@@ -197,6 +200,12 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
       </div>
 
       <PartySelect id="rule-party" value={partyId} onChange={setPartyId} keepId={editing?.party_id} />
+      <ProjectSelect
+        id="rule-project"
+        value={projectId}
+        onChange={setProjectId}
+        keepId={editing?.project_id}
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
