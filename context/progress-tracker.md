@@ -935,8 +935,7 @@ introduced, so later explanations don't repeat them.
   a link can never cross workspaces; one service (`PartyService`)
   called by two others to share a validation rule; "keep if unchanged"
   on edit for archived links; one small shared React component used by
-  two forms. The API commit was made locally; the push was blocked by
-  the session's permission check, so both U14 commits wait to be pushed.
+  two forms. Both U14 commits are pushed to `origin/main`.
 
   *What to know (how it works):* picking a party in quick-add ->
   `PUT/POST /transactions` with `party_id` -> `TransactionService`
