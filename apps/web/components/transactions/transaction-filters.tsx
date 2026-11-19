@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAccounts } from "@/lib/queries/accounts";
 import { useCategories } from "@/lib/queries/categories";
+import { useParties } from "@/lib/queries/parties";
 import { useTags } from "@/lib/queries/tags";
 import type { TransactionFilters } from "@/lib/queries/transactions";
 import { categoryItems } from "@/lib/transactions";
@@ -49,6 +50,7 @@ export function TransactionFilterBar({
   const accounts = useAccounts(active.id);
   const categories = useCategories(active.id);
   const tags = useTags(active.id);
+  const parties = useParties(active.id);
 
   // The box keeps what is being typed; the URL only gets it after a short pause.
   const [search, setSearch] = useState(filters.q ?? "");
@@ -69,7 +71,16 @@ export function TransactionFilterBar({
   function clear() {
     clearTimeout(timer.current);
     setSearch("");
-    onChange({ q: "", type: "", account_id: "", category_id: "", tag: "", from: "", to: "" });
+    onChange({
+      q: "",
+      type: "",
+      account_id: "",
+      category_id: "",
+      party_id: "",
+      tag: "",
+      from: "",
+      to: "",
+    });
   }
 
   const categoryList = categories.data ?? [];
@@ -96,7 +107,7 @@ export function TransactionFilterBar({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
         <Field label="Type" htmlFor="filter-type">
           <NativeSelect {...select("type")}>
             <option value="">All types</option>
@@ -130,6 +141,17 @@ export function TransactionFilterBar({
                   </option>
                 ))}
               </optgroup>
+            ))}
+          </NativeSelect>
+        </Field>
+
+        <Field label="Party" htmlFor="filter-party_id">
+          <NativeSelect {...select("party_id")}>
+            <option value="">All parties</option>
+            {(parties.data ?? []).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </NativeSelect>
         </Field>

@@ -196,7 +196,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/categories": {
+    "/api/v1/workspaces/{workspaceId}/parties": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/workspaces/{workspaceId}/accounts": {
+    "/api/v1/workspaces/{workspaceId}/categories": {
         parameters: {
             query?: never;
             header?: never;
@@ -222,6 +222,22 @@ export interface paths {
         get: operations["list_3"];
         put?: never;
         post: operations["create_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_4"];
+        put?: never;
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -292,6 +308,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/parties/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update"];
+        trace?: never;
+    };
     "/api/v1/workspaces/{workspaceId}/categories/{categoryId}": {
         parameters: {
             query?: never;
@@ -305,7 +337,7 @@ export interface paths {
         delete: operations["delete_3"];
         options?: never;
         head?: never;
-        patch: operations["update"];
+        patch: operations["update_1"];
         trace?: never;
     };
     "/api/v1/workspaces/{workspaceId}/accounts/{accountId}": {
@@ -321,7 +353,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_1"];
+        patch: operations["update_2"];
         trace?: never;
     };
     "/api/v1/me": {
@@ -340,6 +372,22 @@ export interface paths {
         patch: operations["updateSettings"];
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/transactions/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exportCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces/{workspaceId}/tags": {
         parameters: {
             query?: never;
@@ -347,7 +395,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -379,7 +427,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -455,6 +503,8 @@ export interface components {
             occurred_on: string;
             /** Format: uuid */
             category_id?: string;
+            /** Format: uuid */
+            party_id?: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
@@ -473,6 +523,8 @@ export interface components {
             occurred_on: string;
             /** Format: uuid */
             category_id?: string;
+            /** Format: uuid */
+            party_id?: string;
             /** @enum {string} */
             payment_method?: "cash" | "upi" | "card" | "bank_transfer" | "cheque" | "other";
             note?: string;
@@ -494,6 +546,8 @@ export interface components {
             amount_paise: number;
             /** Format: uuid */
             category_id?: string;
+            /** Format: uuid */
+            party_id?: string;
             note?: string;
             /** @enum {string} */
             frequency: "weekly" | "monthly" | "yearly";
@@ -515,6 +569,8 @@ export interface components {
             amount_paise: number;
             /** Format: uuid */
             category_id?: string;
+            /** Format: uuid */
+            party_id?: string;
             note?: string;
             /** @enum {string} */
             frequency: "weekly" | "monthly" | "yearly";
@@ -542,6 +598,24 @@ export interface components {
             name: string;
             kind: string;
             role: string;
+        };
+        CreatePartyRequest: {
+            name: string;
+            phone?: string;
+            /** @enum {string} */
+            role: "buyer" | "seller" | "contractor" | "broker" | "supplier" | "tenant" | "friend_family" | "other";
+            notes?: string;
+        };
+        PartyResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            phone?: string;
+            /** @enum {string} */
+            role: "buyer" | "seller" | "contractor" | "broker" | "supplier" | "tenant" | "friend_family" | "other";
+            notes?: string;
+            /** Format: date-time */
+            archived_at?: string;
         };
         CreateCategoryRequest: {
             name: string;
@@ -604,6 +678,14 @@ export interface components {
         LoginRequest: {
             email: string;
             password: string;
+        };
+        UpdatePartyRequest: {
+            name?: string;
+            phone?: string;
+            /** @enum {string} */
+            role?: "buyer" | "seller" | "contractor" | "broker" | "supplier" | "tenant" | "friend_family" | "other";
+            notes?: string;
+            archived?: boolean;
         };
         UpdateCategoryRequest: {
             name?: string;
@@ -676,6 +758,10 @@ export interface components {
         };
         ListResponseRecurringRuleResponse: {
             items: components["schemas"]["RecurringRuleResponse"][];
+            next_cursor?: string;
+        };
+        ListResponsePartyResponse: {
+            items: components["schemas"]["PartyResponse"][];
             next_cursor?: string;
         };
         ListResponseCategoryResponse: {
@@ -1011,6 +1097,7 @@ export interface operations {
                 type?: string;
                 account_id?: string;
                 category_id?: string;
+                party_id?: string;
                 tag?: string;
                 q?: string;
                 cursor?: string;
@@ -1195,12 +1282,60 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ListResponseCategoryResponse"];
+                    "*/*": components["schemas"]["ListResponsePartyResponse"];
                 };
             };
         };
     };
     create_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePartyRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartyResponse"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ListResponseCategoryResponse"];
+                };
+            };
+        };
+    };
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1226,7 +1361,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1248,7 +1383,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1362,6 +1497,33 @@ export interface operations {
             };
         };
     };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                partyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePartyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartyResponse"];
+                };
+            };
+        };
+    };
     delete_3: {
         parameters: {
             query?: never;
@@ -1383,7 +1545,7 @@ export interface operations {
             };
         };
     };
-    update: {
+    update_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1410,7 +1572,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1481,7 +1643,38 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    exportCsv: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                type?: string;
+                account_id?: string;
+                category_id?: string;
+                party_id?: string;
+                tag?: string;
+                q?: string;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1527,7 +1720,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: {
                 period?: string;

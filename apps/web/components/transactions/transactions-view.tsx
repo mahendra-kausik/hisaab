@@ -8,7 +8,16 @@ import { useWorkspace } from "@/lib/workspace";
 import { TransactionFilterBar } from "./transaction-filters";
 import { TransactionList } from "./transaction-list";
 
-const FILTER_KEYS = ["q", "type", "account_id", "category_id", "tag", "from", "to"] as const;
+const FILTER_KEYS = [
+  "q",
+  "type",
+  "account_id",
+  "category_id",
+  "party_id",
+  "tag",
+  "from",
+  "to",
+] as const;
 
 /**
  * The Transactions page body. The filters live in the URL (`?type=expense&q=petrol`), so a
@@ -54,9 +63,7 @@ export function TransactionsView() {
       <TransactionFilterBar filters={filters} onChange={update} />
       <TransactionList
         filters={filters}
-        onClear={() =>
-          update({ q: "", type: "", account_id: "", category_id: "", tag: "", from: "", to: "" })
-        }
+        onClear={() => update(Object.fromEntries(FILTER_KEYS.map((k) => [k, ""])))}
       />
     </div>
   );

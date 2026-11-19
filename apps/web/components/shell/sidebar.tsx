@@ -12,6 +12,7 @@ import {
   Repeat,
   Settings,
   Tags,
+  Users,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Transactions", icon: ArrowLeftRight, href: "/transactions" },
   { label: "Accounts", icon: Wallet, href: "/accounts" },
   { label: "Categories", icon: Tags, href: "/categories" },
+  { label: "Parties", icon: Users, href: "/parties" },
   { label: "Dues", icon: HandCoins },
   { label: "Reports", icon: ChartColumn, href: "/reports" },
   { label: "Budgets", icon: PiggyBank, href: "/budgets" },

@@ -148,7 +148,7 @@ the color tokens.
   records. A row opens its edit dialog on click or Enter, and
   has an actions menu (Edit, Delete).
 - **Filters:** the Transactions page keeps its filters
-  (search, type, account, category, tag, date range) in the
+  (search, type, account, category, party, tag, date range) in the
   URL, so a reload or shared link shows the same list. They
   stay in a two-column grid on phones.
 - **Accounts page (`/accounts`):** a list of open accounts, then an
@@ -157,6 +157,12 @@ the color tokens.
   menu has Edit and Archive / Unarchive (no confirm: both reverse).
   A negative balance (money owed) shows `−₹12,000` in the money-out
   colour. The opening balance field accepts a leading minus.
+- **Parties page (`/parties`):** the same layout as Accounts: open
+  parties, then "Archived". Each row shows the name, role and phone
+  and links to `/transactions?party_id=…` (the full party ledger comes
+  with dues). The transaction and recurring forms show an optional
+  "Party" select only once the workspace has a party; an archived
+  party is listed there only while it is the saved choice.
 - **Categories page (`/categories`):** Expense and Income sections,
   parents with their subcategories indented. Row menu: Rename, Add
   subcategory (parents only), Hide / Show, Delete (custom categories

@@ -14,6 +14,7 @@ export type TransactionFilters = {
   type?: string;
   account_id?: string;
   category_id?: string;
+  party_id?: string;
   tag?: string;
   from?: string;
   to?: string;

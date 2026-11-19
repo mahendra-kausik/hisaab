@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { PartySelect } from "@/components/parties/party-select";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -90,6 +91,7 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
   const [kind, setKind] = useState<Kind>(editing?.kind ?? "expense");
   const [amount, setAmount] = useState(editing ? paiseToRupeesInput(editing.amountPaise) : "");
   const [categoryId, setCategoryId] = useState(editing?.categoryId ?? "");
+  const [partyId, setPartyId] = useState(editing?.partyId ?? "");
   const [accountId, setAccountId] = useState(editing?.accountId ?? editing?.fromAccountId ?? "");
   const [toAccountId, setToAccountId] = useState(editing?.toAccountId ?? "");
   const [date, setDate] = useState(
@@ -108,7 +110,6 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
   // An archived account stays in the list only while it is the current choice.
   const optionsFor = (selected: string) =>
     allAccounts.filter((a) => !a.archived_at || a.id === selected);
-
   const recentCategoryIds = [
     ...new Set(
       (recent.data?.pages[0]?.items ?? []).flatMap((t) =>
@@ -183,6 +184,7 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
           amount_paise: v.amountPaise,
           occurred_on: v.occurredOn,
           category_id: v.categoryId || undefined,
+          party_id: partyId || undefined,
           payment_method: editing?.paymentMethod,
           note: v.note || undefined,
           tags: v.tags,
@@ -305,6 +307,12 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
               ))}
             </NativeSelect>
           </div>
+          <PartySelect
+            id="entry-party"
+            value={partyId}
+            onChange={setPartyId}
+            keepId={editing?.partyId}
+          />
         </>
       )}
 

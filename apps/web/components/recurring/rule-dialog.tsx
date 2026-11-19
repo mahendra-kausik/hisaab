@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { PartySelect } from "@/components/parties/party-select";
 import { NativeSelect } from "@/components/transactions/native-select";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +60,7 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
   const [kind, setKind] = useState<Kind>((editing?.type as Kind) ?? "expense");
   const [amount, setAmount] = useState(editing ? paiseToRupeesInput(editing.amount_paise) : "");
   const [categoryId, setCategoryId] = useState(editing?.category_id ?? "");
+  const [partyId, setPartyId] = useState(editing?.party_id ?? "");
   const [accountId, setAccountId] = useState(editing?.account_id ?? "");
   const [frequency, setFrequency] = useState<Frequency>(editing?.frequency ?? "monthly");
   const [interval, setInterval] = useState(String(editing?.interval_count ?? 1));
@@ -101,6 +103,7 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
           type: kind,
           amount_paise: v.amountPaise,
           category_id: categoryId || undefined,
+          party_id: partyId || undefined,
           note: v.note || undefined,
           frequency,
           interval_count: v.interval,
@@ -192,6 +195,8 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
           ))}
         </NativeSelect>
       </div>
+
+      <PartySelect id="rule-party" value={partyId} onChange={setPartyId} keepId={editing?.party_id} />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">

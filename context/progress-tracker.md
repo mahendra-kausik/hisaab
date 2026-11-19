@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U14 Parties (see Next Up).
+- Phase 1.5: U15 Projects (see Next Up).
 
 ## Completed
 
@@ -264,6 +264,30 @@ change.
   restarting it fixed that. Not checked: the real file save from
   clicking the button, the `Content-Disposition` header (the browser
   tool hides headers; the API test covers it), opening in Excel.
+- **U14 — Parties (19 Nov 2026):** API: `V9__parties.sql` (`parties`
+  with RLS, unique name per workspace ignoring case; `party_id` with a
+  composite FK on `transactions` and `recurring_rules`), package
+  `in.hisaab.parties` (`PartyRole`, `Party`, `PartyRepository`,
+  `PartyService` with `requireOpen`, `PartyController`, DTOs).
+  Endpoints `GET|POST /workspaces/{id}/parties`, `PATCH .../{partyId}`
+  (archive only, no delete). Transactions and recurring rules accept
+  `party_id` (422 `invalid_party` / `party_archived`; an archived party
+  already linked may stay); `GET /transactions` and `export.csv` filter
+  by `party_id`; the CSV gained a `party` column; the recurring job
+  copies the party. Web: `/parties` page (add, edit, archive), shared
+  `PartySelect` in quick-add and the recurring dialog, Party filter,
+  list rows show the party name when there is no note; sidebar link.
+  5 new API tests (`PartiesApiTest`; 159 total), `RlsIsolationTest`
+  now lists `parties`, CSV test updated for the new column. `make
+  check` passes (159 API, 57 web). **Browser pass (Chrome, dev API +
+  web):** added a party in the dialog, archived one (moved to
+  "Archived" with a toast), clicking a party opened Transactions
+  filtered to it, the row showed the party name, the edit dialog had
+  the party preselected and left out the archived one, the export link
+  returned the row with `Ramesh Kumar` in the party column; no console
+  errors; at 360px (same-origin iframe) the Parties and Transactions
+  pages had no horizontal overflow. Not clicked through: the recurring
+  dialog's party select (covered by an API test), light theme.
 
 ## In Progress
 
@@ -324,7 +348,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 ### Phase 1.5 — People & dues
 
-- [ ] **U14 — Parties:** API, then web.
+- [x] **U14 — Parties:** API, then web.
 - [ ] **U15 — Projects (properties/sites):** API, then
   web; project filter on transactions.
 - [ ] **U16 — Dues API:** create, update, cancel;
@@ -898,3 +922,27 @@ introduced, so later explanations don't repeat them.
   open Transactions, set a date range, click Export CSV, open the file
   in Excel. Read next: `TransactionService.list` and
   `TransactionQueries.page` to see the paging this reuses.
+- **19 Nov 2026 — U14 done (parties).** Key files: `V9__parties.sql`,
+  `parties/{PartyRole,Party,PartyRepository,PartyService,
+  PartyController}` + `dto/`, `PartiesApiTest`; changed
+  `transactions/{Transaction,TransactionService,TransactionQueries,
+  TransactionController,TransactionExportService,TransferService}` and
+  `recurring/{RecurringRule,RecurringService}` + DTOs. Web:
+  `lib/queries/parties.ts`, `components/parties/{parties-view,
+  party-dialog,party-select}.tsx`, `app/(app)/parties/page.tsx`, plus
+  the transaction list, filters, quick-add and recurring dialog.
+  Concepts used: a composite foreign key `(party_id, workspace_id)` so
+  a link can never cross workspaces; one service (`PartyService`)
+  called by two others to share a validation rule; "keep if unchanged"
+  on edit for archived links; one small shared React component used by
+  two forms. The API commit was made locally; the push was blocked by
+  the session's permission check, so both U14 commits wait to be pushed.
+
+  *What to know (how it works):* picking a party in quick-add ->
+  `PUT/POST /transactions` with `party_id` -> `TransactionService`
+  calls `PartyService.requireOpen` (422 if not in the workspace or
+  newly archived) -> row saved -> `TransactionQueries` returns
+  `party_id` -> the list maps it to a name with `useParties`. Try it:
+  `make dev`, open Parties, add one, add a transaction for them, click
+  the party to see their transactions. Read next: `PartyService` beside
+  `AccountService` (same shape), then the `V9` migration's foreign keys.

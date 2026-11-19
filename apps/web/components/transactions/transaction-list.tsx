@@ -18,6 +18,7 @@ import { formatINR } from "@/lib/format";
 import { useAccounts } from "@/lib/queries/accounts";
 import { useCategories } from "@/lib/queries/categories";
 import { useMe } from "@/lib/queries/me";
+import { useParties } from "@/lib/queries/parties";
 import {
   useDeleteEntry,
   useRestoreEntry,
@@ -56,6 +57,7 @@ export function TransactionList({
   const query = useTransactions(active.id, filters);
   const accounts = useAccounts(active.id);
   const categories = useCategories(active.id);
+  const parties = useParties(active.id);
   const deleteEntry = useDeleteEntry(active.id);
   const restoreEntry = useRestoreEntry(active.id);
 
@@ -67,6 +69,7 @@ export function TransactionList({
 
   const accountName = new Map((accounts.data ?? []).map((a) => [a.id, a.name]));
   const categoryById = new Map((categories.data ?? []).map((c) => [c.id, c]));
+  const partyName = new Map((parties.data ?? []).map((p) => [p.id, p.name]));
   const today = todayIn(me.data?.timezone ?? "Asia/Kolkata");
   const hasFilters = Object.values(filters).some(Boolean);
 
@@ -161,8 +164,11 @@ export function TransactionList({
 
               const from = row.fromAccountId ? accountName.get(row.fromAccountId) : undefined;
               const to = row.toAccountId ? accountName.get(row.toAccountId) : undefined;
+              const party = row.partyId ? partyName.get(row.partyId) : undefined;
+              // Note, else party name, else category (ui-context "Lists").
               const title =
                 row.note ??
+                party ??
                 (row.kind === "transfer" ? "Transfer" : (categoryLabel ?? "Uncategorized"));
               const details = [
                 row.kind === "transfer"
@@ -173,9 +179,10 @@ export function TransactionList({
                       : to
                         ? `To ${to}`
                         : undefined
-                  : row.note && categoryLabel
+                  : title !== categoryLabel
                     ? categoryLabel
                     : undefined,
+                row.note ? party : undefined,
                 row.kind === "transfer" ? undefined : accountName.get(row.accountId ?? ""),
                 ...row.tags.map((t) => `#${t}`),
               ].filter(Boolean);
