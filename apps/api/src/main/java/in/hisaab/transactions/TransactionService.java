@@ -8,6 +8,7 @@ import in.hisaab.common.web.ListResponse;
 import in.hisaab.common.web.NotFoundException;
 import in.hisaab.common.web.ValidationException;
 import in.hisaab.parties.PartyService;
+import in.hisaab.projects.ProjectService;
 import in.hisaab.transactions.dto.TransactionFilter;
 import in.hisaab.transactions.dto.TransactionRequest;
 import in.hisaab.transactions.dto.TransactionResponse;
@@ -32,6 +33,7 @@ public class TransactionService {
   private final AccountService accounts;
   private final CategoryService categories;
   private final PartyService parties;
+  private final ProjectService projects;
   private final WorkspaceAccess access;
   private final CurrentUser currentUser;
   private final Clock clock;
@@ -43,6 +45,7 @@ public class TransactionService {
       AccountService accounts,
       CategoryService categories,
       PartyService parties,
+      ProjectService projects,
       WorkspaceAccess access,
       CurrentUser currentUser,
       Clock clock) {
@@ -52,6 +55,7 @@ public class TransactionService {
     this.accounts = accounts;
     this.categories = categories;
     this.parties = parties;
+    this.projects = projects;
     this.access = access;
     this.currentUser = currentUser;
     this.clock = clock;
@@ -86,6 +90,9 @@ public class TransactionService {
     if (request.partyId() != null) {
       parties.requireOpen(workspaceId, request.partyId());
     }
+    if (request.projectId() != null) {
+      projects.requireOpen(workspaceId, request.projectId());
+    }
 
     var transaction =
         new Transaction(
@@ -97,6 +104,7 @@ public class TransactionService {
             request.occurredOn(),
             request.categoryId(),
             request.partyId(),
+            request.projectId(),
             request.paymentMethod(),
             blankToNull(request.note()),
             Instant.now(clock));
@@ -122,6 +130,9 @@ public class TransactionService {
     if (request.partyId() != null && !request.partyId().equals(transaction.getPartyId())) {
       parties.requireOpen(workspaceId, request.partyId());
     }
+    if (request.projectId() != null && !request.projectId().equals(transaction.getProjectId())) {
+      projects.requireOpen(workspaceId, request.projectId());
+    }
 
     transaction.replace(
         request.accountId(),
@@ -130,6 +141,7 @@ public class TransactionService {
         request.occurredOn(),
         request.categoryId(),
         request.partyId(),
+        request.projectId(),
         request.paymentMethod(),
         blankToNull(request.note()),
         Instant.now(clock));

@@ -181,6 +181,16 @@ direction comes from the type.
     rule's party into each transaction it makes.
 - `projects`: id, workspace_id, name, notes,
   archived_at, created_at, updated_at.
+  - U15 (`V10`): same shape as parties, minus phone and role.
+    Names are unique per workspace, ignoring case (409
+    `name_taken`). Linking from a transaction or recurring
+    rule follows the party rules: not in the workspace is 422
+    `invalid_project`; newly setting an archived one is 422
+    `project_archived`, an existing link may stay. Transfers
+    have no project. `GET /transactions` and `export.csv` take
+    `project_id`; the CSV has a `project` column (after
+    `party`). The recurring job copies the rule's project into
+    each transaction it makes.
 - `transactions`: id, workspace_id, account_id, type
   (`expense` | `income` | `transfer_out` |
   `transfer_in`), amount_paise (> 0), occurred_on (date,
@@ -278,7 +288,7 @@ direction comes from the type.
   `monthly` | `yearly`), interval_count, anchor_date,
   next_run_on, ends_on, paused_at, created_by.
   - U11 (`V8`): `party_id` (added by U14, `V9`) and `project_id`
-    (U15) come later.
+    (U15, `V10`) were added later.
     Occurrences are `anchor_date + k * interval`, counted from
     the anchor (no drift past short months). The job creates
     each due occurrence with `INSERT ... ON CONFLICT

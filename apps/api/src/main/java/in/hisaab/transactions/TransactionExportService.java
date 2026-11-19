@@ -6,6 +6,8 @@ import in.hisaab.categories.CategoryService;
 import in.hisaab.categories.dto.CategoryResponse;
 import in.hisaab.parties.PartyService;
 import in.hisaab.parties.dto.PartyResponse;
+import in.hisaab.projects.ProjectService;
+import in.hisaab.projects.dto.ProjectResponse;
 import in.hisaab.transactions.dto.TransactionFilter;
 import in.hisaab.transactions.dto.TransactionResponse;
 import java.math.BigDecimal;
@@ -19,22 +21,25 @@ import org.springframework.stereotype.Service;
 public class TransactionExportService {
 
   private static final String HEADER =
-      "date,type,amount,account,category,party,payment_method,note,tags\r\n";
+      "date,type,amount,account,category,party,project,payment_method,note,tags\r\n";
 
   private final TransactionService transactions;
   private final AccountService accounts;
   private final CategoryService categories;
   private final PartyService parties;
+  private final ProjectService projects;
 
   public TransactionExportService(
       TransactionService transactions,
       AccountService accounts,
       CategoryService categories,
-      PartyService parties) {
+      PartyService parties,
+      ProjectService projects) {
     this.transactions = transactions;
     this.accounts = accounts;
     this.categories = categories;
     this.parties = parties;
+    this.projects = projects;
   }
 
   // ponytail: whole CSV is built in memory; stream it if workspaces reach ~100k rows.
@@ -48,6 +53,9 @@ public class TransactionExportService {
     Map<UUID, String> partyNames =
         parties.list(workspaceId).stream()
             .collect(Collectors.toMap(PartyResponse::id, PartyResponse::name));
+    Map<UUID, String> projectNames =
+        projects.list(workspaceId).stream()
+            .collect(Collectors.toMap(ProjectResponse::id, ProjectResponse::name));
 
     var out = new StringBuilder(HEADER);
     String cursor = null;
@@ -62,6 +70,7 @@ public class TransactionExportService {
             accountNames.getOrDefault(t.accountId(), ""),
             t.categoryId() == null ? "" : categoryNames.getOrDefault(t.categoryId(), ""),
             t.partyId() == null ? "" : partyNames.getOrDefault(t.partyId(), ""),
+            t.projectId() == null ? "" : projectNames.getOrDefault(t.projectId(), ""),
             t.paymentMethod() == null ? "" : t.paymentMethod().json(),
             t.note() == null ? "" : t.note(),
             String.join(";", t.tags()));

@@ -25,6 +25,7 @@ public class RecurringRule {
   private long amountPaise;
   private UUID categoryId;
   private UUID partyId;
+  private UUID projectId;
   private String note;
   private Frequency frequency;
   private int intervalCount;
@@ -49,6 +50,7 @@ public class RecurringRule {
       long amountPaise,
       UUID categoryId,
       UUID partyId,
+      UUID projectId,
       String note,
       Frequency frequency,
       int intervalCount,
@@ -60,6 +62,7 @@ public class RecurringRule {
     this.amountPaise = amountPaise;
     this.categoryId = categoryId;
     this.partyId = partyId;
+    this.projectId = projectId;
     this.note = note;
     this.frequency = frequency;
     this.intervalCount = intervalCount;
@@ -94,6 +97,10 @@ public class RecurringRule {
 
   public UUID getPartyId() {
     return partyId;
+  }
+
+  public UUID getProjectId() {
+    return projectId;
   }
 
   public String getNote() {

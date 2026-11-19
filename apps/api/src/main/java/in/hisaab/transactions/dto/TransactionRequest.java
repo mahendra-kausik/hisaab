@@ -21,6 +21,7 @@ public record TransactionRequest(
     @NotNull LocalDate occurredOn,
     UUID categoryId,
     UUID partyId,
+    UUID projectId,
     PaymentMethod paymentMethod,
     @Size(max = 500) String note,
     @Size(max = 20) List<@NotBlank @Size(max = 50) String> tags) {}

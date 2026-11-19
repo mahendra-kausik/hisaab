@@ -55,6 +55,7 @@ public class TransactionController {
       @RequestParam(name = "account_id", required = false) UUID accountId,
       @RequestParam(name = "category_id", required = false) UUID categoryId,
       @RequestParam(name = "party_id", required = false) UUID partyId,
+      @RequestParam(name = "project_id", required = false) UUID projectId,
       @RequestParam(name = "tag", required = false) String tag,
       @RequestParam(name = "q", required = false) String q,
       @RequestParam(name = "cursor", required = false) String cursor,
@@ -67,6 +68,7 @@ public class TransactionController {
             accountId,
             categoryId,
             partyId,
+            projectId,
             blankToNull(tag),
             blankToNull(q));
     return transactionService.list(workspaceId, filter, blankToNull(cursor), limit);
@@ -85,6 +87,7 @@ public class TransactionController {
       @RequestParam(name = "account_id", required = false) UUID accountId,
       @RequestParam(name = "category_id", required = false) UUID categoryId,
       @RequestParam(name = "party_id", required = false) UUID partyId,
+      @RequestParam(name = "project_id", required = false) UUID projectId,
       @RequestParam(name = "tag", required = false) String tag,
       @RequestParam(name = "q", required = false) String q) {
     var filter =
@@ -95,6 +98,7 @@ public class TransactionController {
             accountId,
             categoryId,
             partyId,
+            projectId,
             blankToNull(tag),
             blankToNull(q));
     byte[] body = ("﻿" + exports.csv(workspaceId, filter)).getBytes(StandardCharsets.UTF_8);

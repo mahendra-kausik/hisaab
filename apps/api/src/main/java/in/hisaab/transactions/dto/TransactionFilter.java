@@ -12,5 +12,6 @@ public record TransactionFilter(
     UUID accountId,
     UUID categoryId,
     UUID partyId,
+    UUID projectId,
     String tag,
     String q) {}

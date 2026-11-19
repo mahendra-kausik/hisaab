@@ -11,8 +11,8 @@ import java.util.UUID;
 /**
  * Built straight from the list query (see TransactionQueries), not from the entity. transferGroupId
  * is set only on the two legs of a transfer; it is the id to use with the transfers endpoints.
- * categoryId, partyId, paymentMethod, note and transferGroupId can be null, so they are not marked
- * {@code @NotNull} and the generated TypeScript type keeps them optional.
+ * categoryId, partyId, projectId, paymentMethod, note and transferGroupId can be null, so they are
+ * not marked {@code @NotNull} and the generated TypeScript type keeps them optional.
  */
 public record TransactionResponse(
     @NotNull UUID id,
@@ -22,6 +22,7 @@ public record TransactionResponse(
     @NotNull LocalDate occurredOn,
     UUID categoryId,
     UUID partyId,
+    UUID projectId,
     PaymentMethod paymentMethod,
     String note,
     @NotNull List<String> tags,

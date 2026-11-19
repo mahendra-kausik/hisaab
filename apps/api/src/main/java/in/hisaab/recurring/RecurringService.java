@@ -10,6 +10,7 @@ import in.hisaab.common.web.ValidationException;
 import in.hisaab.jobs.JobHandler;
 import in.hisaab.jobs.JobQueue;
 import in.hisaab.parties.PartyService;
+import in.hisaab.projects.ProjectService;
 import in.hisaab.recurring.dto.RecurringRuleRequest;
 import in.hisaab.recurring.dto.RecurringRuleResponse;
 import in.hisaab.users.UserRepository;
@@ -40,6 +41,7 @@ public class RecurringService implements JobHandler {
   private final AccountService accounts;
   private final CategoryService categories;
   private final PartyService parties;
+  private final ProjectService projects;
   private final UserRepository users;
   private final WorkspaceAccess access;
   private final CurrentUser currentUser;
@@ -52,6 +54,7 @@ public class RecurringService implements JobHandler {
       AccountService accounts,
       CategoryService categories,
       PartyService parties,
+      ProjectService projects,
       UserRepository users,
       WorkspaceAccess access,
       CurrentUser currentUser,
@@ -62,6 +65,7 @@ public class RecurringService implements JobHandler {
     this.accounts = accounts;
     this.categories = categories;
     this.parties = parties;
+    this.projects = projects;
     this.users = users;
     this.access = access;
     this.currentUser = currentUser;
@@ -82,7 +86,7 @@ public class RecurringService implements JobHandler {
   @Transactional
   public RecurringRuleResponse create(UUID workspaceId, RecurringRuleRequest request) {
     access.require(workspaceId, WorkspaceRole.EDITOR);
-    validate(workspaceId, request, null);
+    validate(workspaceId, request, null, null);
     var rule = new RecurringRule(workspaceId, currentUser.require());
     rule.replace(
         request.accountId(),
@@ -90,6 +94,7 @@ public class RecurringService implements JobHandler {
         request.amountPaise(),
         request.categoryId(),
         request.partyId(),
+        request.projectId(),
         blankToNull(request.note()),
         request.frequency(),
         request.intervalCount(),
@@ -108,7 +113,7 @@ public class RecurringService implements JobHandler {
   public RecurringRuleResponse replace(UUID workspaceId, UUID id, RecurringRuleRequest request) {
     access.require(workspaceId, WorkspaceRole.EDITOR);
     var rule = find(workspaceId, id);
-    validate(workspaceId, request, rule.getPartyId());
+    validate(workspaceId, request, rule.getPartyId(), rule.getProjectId());
     boolean sameSchedule =
         rule.getFrequency() == request.frequency()
             && rule.getIntervalCount() == request.intervalCount()
@@ -119,6 +124,7 @@ public class RecurringService implements JobHandler {
         request.amountPaise(),
         request.categoryId(),
         request.partyId(),
+        request.projectId(),
         blankToNull(request.note()),
         request.frequency(),
         request.intervalCount(),
@@ -183,8 +189,8 @@ public class RecurringService implements JobHandler {
     while (!next.isAfter(today) && !pastEnd(rule, next)) {
       jdbc.update(
           "INSERT INTO transactions (workspace_id, account_id, type, amount_paise, occurred_on,"
-              + " category_id, party_id, note, created_by, recurring_rule_id, recurrence_date)"
-              + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+              + " category_id, party_id, project_id, note, created_by, recurring_rule_id, recurrence_date)"
+              + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
               + " ON CONFLICT (recurring_rule_id, recurrence_date) DO NOTHING",
           rule.getWorkspaceId(),
           rule.getAccountId(),
@@ -193,6 +199,7 @@ public class RecurringService implements JobHandler {
           next,
           rule.getCategoryId(),
           rule.getPartyId(),
+          rule.getProjectId(),
           rule.getNote(),
           rule.getCreatedBy(),
           rule.getId(),
@@ -237,8 +244,11 @@ public class RecurringService implements JobHandler {
     return ZoneId.of(users.findById(rule.getCreatedBy()).orElseThrow().getTimezone());
   }
 
-  /** {@code currentPartyId}: the rule's party before this edit; it may stay even if archived. */
-  private void validate(UUID workspaceId, RecurringRuleRequest request, UUID currentPartyId) {
+  /**
+   * {@code current*Id}: the rule's party/project before this edit; they may stay even if archived.
+   */
+  private void validate(
+      UUID workspaceId, RecurringRuleRequest request, UUID currentPartyId, UUID currentProjectId) {
     if (request.type().isTransfer()) {
       throw new ValidationException(
           "invalid_type",
@@ -258,6 +268,9 @@ public class RecurringService implements JobHandler {
     }
     if (request.partyId() != null && !request.partyId().equals(currentPartyId)) {
       parties.requireOpen(workspaceId, request.partyId());
+    }
+    if (request.projectId() != null && !request.projectId().equals(currentProjectId)) {
+      projects.requireOpen(workspaceId, request.projectId());
     }
   }
 
