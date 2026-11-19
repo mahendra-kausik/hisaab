@@ -99,7 +99,9 @@ insights, and later tax and business features.
   for expense and income.
 - Default categories seeded per workspace by kind (see
   Default Data). Users can rename, add, and hide
-  categories. Categories in use cannot be hard-deleted.
+  categories. Hiding a parent category also hides its
+  subcategories in pickers. Categories in use cannot be
+  hard-deleted.
   Default (seeded) categories can be renamed or hidden but
   never deleted; categories the user adds can be deleted
   while unused. Sibling names are unique, ignoring case.

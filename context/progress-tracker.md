@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 (manual tracker) — in progress (U0–U7 done)
+- Phase 1 (manual tracker) — in progress (U0–U8 done)
 
 ## Current Goal
 
-- U8: web accounts & categories management (see Next Up).
+- U9: web settings (see Next Up).
 
 ## Completed
 
@@ -129,6 +129,23 @@ change.
   messages, dark theme, and a 360px-wide frame (no horizontal
   overflow); the console had no errors.
 
+- **U8 — Web accounts & categories (19 Nov 2026):** two new pages
+  with their own sidebar links. `/accounts` lists open accounts and
+  an "Archived" section with balances (a negative one shows
+  `−₹12,000`), add and edit in one dialog, Archive / Unarchive from
+  the row menu, and each row links to the Transactions page filtered
+  to that account. `/categories` shows Expense and Income as
+  parent/subcategory lists with add, rename, add subcategory, Hide /
+  Show and Delete (custom categories only, through a confirm
+  dialog). Web only, no API change. 7 new web tests (43 total);
+  lint, typecheck and `npm run build` pass. `make check` as a whole
+  was not run (no API files changed). Checked by hand in Chrome:
+  signup, add a credit card with `-12000`, archive, hide a parent
+  (badge and muted children), add and delete a custom category,
+  no console errors. Not checked by hand: the duplicate-name
+  and in-use error messages, edit, unarchive, the quick-add picker
+  after hiding, dark/light comparison and the 360px frame.
+
 ## In Progress
 
 - None yet.
@@ -174,7 +191,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U7 — Web transactions:** list, quick-add dialog
   (`N` shortcut), edit, delete with Undo; also all list
   filters and note search.
-- [ ] **U8 — Web accounts & categories management.**
+- [x] **U8 — Web accounts & categories management.**
 - [ ] **U9 — Web settings:** page for name, timezone,
   period start day and the dues digest switch (`PATCH /me`
   already exists); gives the "Settings" sidebar item its
@@ -539,6 +556,24 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   automated component tests (only helper tests), per the standards
   that ask for Vitest on helpers.
 
+- **U8 decisions (19 Nov 2026)** — Confirmed with the developer:
+  Accounts and Categories each get their own sidebar link (after
+  Transactions), and an opening balance may be negative (money
+  owed, e.g. a credit card). Decided in the plan: web only, because
+  the U3 endpoints already cover everything; `signedRupeesToPaise`
+  (new, `lib/format.ts`) reads one leading `-` or `−`, and
+  `paiseToRupeesInput` now handles negatives; hiding a parent also
+  hides its subcategories in pickers (`categoryItems`), the API
+  still stores `hidden_at` on the parent only; archive and hide have
+  no confirm dialog because both reverse, while a category delete
+  does; dialogs are mounted only while open, so their form state
+  starts fresh without a `session` key; the category icon is drawn
+  with `createElement` because the React lint rule rejects `<Icon>`
+  when the component comes from a function call (`categoryIcon`).
+  `"- 5"` (a space after the minus) is accepted, since the space is
+  trimmed. Not done: reordering categories (no API), moving a
+  category to another parent (no API), a total-balance headline.
+
 ## Session Notes
 
 After each session, add a dated entry (3–5 lines): units
@@ -663,3 +698,14 @@ introduced, so later explanations don't repeat them.
   timer ref, the "adjust state while rendering" pattern, Base UI
   combobox, native radio inputs styled as a segmented control,
   `@NotNull` on response records so OpenAPI marks fields required.
+- **19 Nov 2026 — Session 3 (continued), U8 done.** Key files:
+  `lib/{categories,format}.ts` (+ tests), `lib/queries/{accounts,
+  categories}.ts`, `components/accounts/{accounts-view,account-dialog,
+  account-types}`, `components/categories/{categories-view,
+  category-dialog,delete-category-dialog}.tsx`, `app/(app)/{accounts,
+  categories}/page.tsx`, `components/shell/sidebar.tsx`. Concepts
+  introduced: a PATCH mutation hook per resource, one dialog serving
+  both add and edit (mounted only while open), a confirm dialog that
+  shows the API's 409 message, a two-level tree built from a flat
+  list, signed money input, and the React lint rule against
+  components created during render.

@@ -111,8 +111,8 @@ the color tokens.
 
 - **Desktop (≥ 768px, primary):** fixed 240px left
   sidebar with the workspace switcher at the top, a
-  prominent Add button, then Home, Transactions, Dues,
-  Reports, Budgets, Settings. Content max width 1100px.
+  prominent Add button, then Home, Transactions, Accounts,
+  Categories, Dues, Reports, Budgets, Settings. Content max width 1100px.
   Design and verify at 1280px first.
 - **Narrow screens (< 768px, for now):** the sidebar
   collapses into a slide-over menu opened from a top app
@@ -151,6 +151,18 @@ the color tokens.
   (search, type, account, category, tag, date range) in the
   URL, so a reload or shared link shows the same list. They
   stay in a two-column grid on phones.
+- **Accounts page (`/accounts`):** a list of open accounts, then an
+  "Archived" section. Each row shows a type icon, the name, the type
+  and the balance, and links to `/transactions?account_id=…`; the row
+  menu has Edit and Archive / Unarchive (no confirm: both reverse).
+  A negative balance (money owed) shows `−₹12,000` in the money-out
+  colour. The opening balance field accepts a leading minus.
+- **Categories page (`/categories`):** Expense and Income sections,
+  parents with their subcategories indented. Row menu: Rename, Add
+  subcategory (parents only), Hide / Show, Delete (custom categories
+  only, through a confirm dialog). A hidden category carries a
+  "Hidden" text badge; hiding a parent also hides its subcategories
+  in the pickers.
 - **Empty states:** one sentence and one primary action
   ("No transactions yet — Add your first expense").
 - **Destructive actions:** a confirm dialog for deletes that
