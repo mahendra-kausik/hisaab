@@ -211,7 +211,12 @@ change.
   passes. Smoke-tested the real `@Scheduled` poller against the dev
   API: a weekly rule starting 14 days ago produced 3 transactions
   within 9 s and the next dates moved forward. **Not verified:**
-  the web pages in a browser (no 1280px / 360px pass yet).
+  the 360px layout (the browser window would not shrink below
+  desktop width). Checked by hand in Chrome on the desktop layout:
+  empty state, add dialog, weekly rule with a past date created 3
+  transactions via the poller, row text "Every week · Next 26 Nov
+  2026, then …", pause (badge + toast). Edit, resume and delete
+  were not clicked through in the browser (covered by API tests).
 
 ## In Progress
 
