@@ -9,9 +9,7 @@ change.
 
 ## Current Goal
 
-- U13: CSV export (see Next Up). Also owed: a browser pass over
-  `/reports` at 1280px and 360px (U12 was verified by API tests and
-  `make check` only).
+- U13: CSV export (see Next Up).
 
 ## Completed
 
@@ -236,8 +234,16 @@ change.
   5 new API tests (152 total: reconciliation with a transfer and a
   deleted row excluded, leap vs non-leap February, start day 15
   boundary, top-5 cap, other workspace 404) and 1 new web test file;
-  `make check` passes. **Not verified in a browser:** the page has not
-  been opened in Chrome at 1280px or 360px yet.
+  `make check` passes. **Browser pass (Chrome, dev API + web, seeded
+  Nov/Oct data):** at 1280px the cards, donut + table, daily bars and
+  top 5 all matched the seeded transactions (₹80,000 / ₹49,900 /
+  ₹30,100; +7% / +150% / −45% vs October); the previous-period button
+  loaded October correctly with "Nothing in the previous period"
+  for September; no console errors. 360px was checked in a 360px
+  same-origin iframe because the browser window will not shrink: no
+  horizontal overflow, cards stack, chart fits. That pass found the
+  daily chart's Y-axis labels clipped, fixed by widening the axis
+  (`width={76}`). Not clicked through: the donut tooltip, light theme.
 
 ## In Progress
 

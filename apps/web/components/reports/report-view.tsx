@@ -117,7 +117,7 @@ function DailySection({ report }: { report: MonthlyReport }) {
           <BarChart data={report.daily} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
             {/* "2026-11-05" → "5": the day of the month. */}
             <XAxis dataKey="day" tickFormatter={(d: string) => String(Number(d.slice(8)))} interval="preserveStartEnd" />
-            <YAxis width={48} tickFormatter={(v) => formatINRCompact(Number(v))} />
+            <YAxis width={76} tickFormatter={(v) => formatINRCompact(Number(v))} />
             <Tooltip
               formatter={(value) => formatINR(Number(value))}
               labelFormatter={(d) => periodLabel(String(d), String(d)).split(" – ")[0]}
