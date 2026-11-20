@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U18 Due reminders (see Next Up). U15 and U17 still need a browser pass.
+- Phase 1.5: U18 Due reminders (see Next Up). U15 still needs a browser pass.
 
 ## Completed
 
@@ -339,15 +339,21 @@ change.
   it back. Any transaction change now also refetches `dues`. A dynamic
   route broke `next build` (the shell's `usePathname()` is unknown at
   build time), so `app/(app)/layout.tsx` wraps `AppShell` in `<Suspense>`.
-  Lint, typecheck, 63 web tests and the production build pass. **Not
-  done: browser pass and `make check`** (Docker was not running, so no
-  API or Postgres). Click through: add a party; add a receivable of
-  ₹10,000 with "handed over" (an expense appears, the balance drops);
-  record ₹4,000 (income, ₹6,000 outstanding, "Partially paid"); try to
-  overpay; a due dated yesterday lands in Overdue; edit that payment in
-  quick-add and check it stays linked; cancel and reopen; the ledger shows
-  paid ₹10,000, received ₹4,000, "They owe you ₹6,000"; 360px has no
-  horizontal overflow.
+  `make check` passes (171 API, 63 web, production build). **Browser pass
+  (Chrome, dev API + web, 20 Nov):** added a receivable of ₹10,000 due
+  yesterday with "handed over" (landed in Overdue, "1 day overdue"; Cash
+  went to −₹10,000); an overpayment of ₹20,000 showed "Payment is more
+  than the outstanding amount"; a ₹4,000 payment left "They owe you
+  ₹6,000 of ₹10,000"; the party ledger showed paid ₹10,000, received
+  ₹4,000, net "They owe you ₹6,000" and Parties stayed highlighted in
+  the sidebar; editing the payment with no change kept it linked
+  (outstanding still ₹6,000, one linked payment); cancel moved the due
+  to Cancelled with the amount struck through and reopen brought it
+  back; no console errors (tracked from the first check, so earlier page
+  loads are not covered); `/dues` and the ledger had no horizontal
+  overflow at 360px (same-origin iframe). Not clicked through: editing a
+  due, the payable direction, the project select, light theme. U15's
+  browser pass is still open.
 
 
 ## In Progress
@@ -1050,7 +1056,7 @@ introduced, so later explanations don't repeat them.
   dev` and `POST /dues` with an `origin`. Read next: `DuePayments`, then
   `DueService.create`, then `DuesApiTest.partPaymentsOverdueAndOverpayment`.
 
-- **20 Nov 2026 — U17 done (web dues), browser pass pending.** Key files:
+- **20 Nov 2026 — U17 done (web dues).** Key files:
   `lib/dues.ts` (+ test), `lib/queries/dues.ts`, `components/dues/{dues-view,
   due-row,due-dialog,payment-dialog}.tsx`, `components/parties/party-ledger.tsx`,
   `app/(app)/dues/page.tsx`, `app/(app)/parties/[partyId]/page.tsx`,
