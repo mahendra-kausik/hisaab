@@ -35,18 +35,26 @@ public class JobPoller {
   @Scheduled(fixedDelayString = "${app.jobs.poll-ms:5000}")
   public void runDue() {
     queue.requeueStale();
-    for (var job : queue.claim(BATCH)) {
-      try {
-        var handler = handlers.get(job.kind());
-        if (handler == null) {
-          throw new IllegalStateException("No handler for job kind " + job.kind());
-        }
-        currentUser.runAs(job.userId(), () -> handler.handle(job.payload()));
-        queue.done(job.id());
-      } catch (Exception e) {
-        log.warn("Job {} ({}) failed: {}", job.id(), job.kind(), e.toString());
-        queue.fail(job.id(), e.toString());
+    // Keep going while batches come back full, so a backlog (many jobs due after the instance
+    // slept) is cleared in one pass. Jobs re-queue themselves for later, so this ends.
+    List<JobQueue.Job> batch;
+    do {
+      batch = queue.claim(BATCH);
+      batch.forEach(this::run);
+    } while (batch.size() == BATCH);
+  }
+
+  private void run(JobQueue.Job job) {
+    try {
+      var handler = handlers.get(job.kind());
+      if (handler == null) {
+        throw new IllegalStateException("No handler for job kind " + job.kind());
       }
+      currentUser.runAs(job.userId(), () -> handler.handle(job.payload()));
+      queue.done(job.id());
+    } catch (Exception e) {
+      log.warn("Job {} ({}) failed: {}", job.id(), job.kind(), e.toString());
+      queue.fail(job.id(), e.toString());
     }
   }
 }

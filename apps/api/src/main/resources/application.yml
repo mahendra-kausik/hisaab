@@ -21,10 +21,27 @@ spring:
       ddl-auto: validate
   jackson:
     property-naming-strategy: SNAKE_CASE
+  # Outbound email over SMTP (Brevo in production; see .env.example). Nothing connects until the
+  # digest actually sends, which needs app.mail.from below.
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      # Without timeouts a dead mail server would hold a job (and its transaction) open.
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
 
 app:
   web-origin: ${WEB_ORIGIN}
   jwt-secret: ${JWT_SECRET}
+  mail:
+    # The sender of the dues digest. Blank = the digest is not sent (local dev default).
+    from: ${MAIL_FROM:}
 
 server:
   # "native": Tomcat honours X-Forwarded-For only when the request comes from a

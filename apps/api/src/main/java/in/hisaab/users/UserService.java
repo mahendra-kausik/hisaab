@@ -3,6 +3,8 @@ package in.hisaab.users;
 import in.hisaab.common.security.CurrentUser;
 import in.hisaab.common.web.UnauthorizedException;
 import in.hisaab.common.web.ValidationException;
+import in.hisaab.dues.DuesDigestJob;
+import in.hisaab.jobs.JobQueue;
 import in.hisaab.users.dto.MeResponse;
 import in.hisaab.users.dto.UpdateSettingsRequest;
 import in.hisaab.workspaces.WorkspaceService;
@@ -21,23 +23,30 @@ public class UserService {
   private final UserRepository users;
   private final WorkspaceService workspaceService;
   private final CurrentUser currentUser;
+  private final JobQueue queue;
   private final Clock clock;
 
   public UserService(
       UserRepository users,
       WorkspaceService workspaceService,
       CurrentUser currentUser,
+      JobQueue queue,
       Clock clock) {
     this.users = users;
     this.workspaceService = workspaceService;
     this.currentUser = currentUser;
+    this.queue = queue;
     this.clock = clock;
   }
 
   /** Joins the caller's transaction (signup runs this and the workspace insert as one unit). */
   @Transactional
   public User create(UUID id, String email, String passwordHash, String name) {
-    return users.save(new User(id, email, passwordHash, name, Instant.now(clock)));
+    // Flushed so the row exists before the job's foreign key to it is checked.
+    var user = users.saveAndFlush(new User(id, email, passwordHash, name, Instant.now(clock)));
+    // Starts this user's daily dues digest chain; the job re-queues itself after each run.
+    queue.enqueue(id, DuesDigestJob.KIND, id.toString(), DuesDigestJob.dedupeKey(id), null);
+    return user;
   }
 
   /** Expects an already lowercased email. {@code users} has no RLS, so no current user needed. */

@@ -17,7 +17,7 @@
 | Database        | PostgreSQL 16 (local: Docker; hosted: Neon)                       | All structured data; row-level security                      |
 | Background jobs | Postgres-backed `jobs` table, polled by a `@Scheduled` worker inside the same Spring Boot app | Recurring entries, dues digests, exports, later imports |
 | Rate limiting   | Bucket4j (in-memory)                                              | Login and signup throttling                                  |
-| Outbound email  | Spring Mail (SMTP); provider to be chosen (see `progress-tracker.md`) | Daily dues digest to the user; later verification and resets |
+| Outbound email  | Spring Mail (SMTP); Brevo, single verified sender (no domain) | Daily dues digest to the user; later verification and resets |
 | Documents       | Apache PDFBox (PDF statements), Apache POI (Excel export)         | Phase 1.5 exports                                            |
 | File storage    | Cloudflare R2 via AWS SDK for Java v2 (S3 client)                 | Attachments, exports, database backups (Phase 1.5)           |
 | Web framework   | Next.js (App Router) + TypeScript (strict)                        | Web UI and PWA; proxies `/api` to the API                    |
@@ -340,7 +340,13 @@ direction comes from the type.
 - `dues_digests`: user_id, digest_date, sent_at. Unique
   (user_id, digest_date) so each user gets at most one
   digest per day. User-scoped and written only by the
-  worker.
+  worker. RLS policy: `user_id = app_current_user_id()`. The
+  `dues.digest` job (`DuesDigestJob`) is one per user, queued at
+  signup (and by V12 for existing users) and re-queued for the
+  next 08:00 in the user's timezone after each run. It claims the
+  day by inserting here, then sends, in one transaction: a failed
+  send rolls the claim back so the retry sends. Sending needs
+  `MAIL_FROM`; blank means the job runs but sends nothing.
 - `attachments`: id, workspace_id, transaction_id or
   due_id, object_key, mime_type, size_bytes, created_by,
   created_at.

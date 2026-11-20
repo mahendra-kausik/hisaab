@@ -426,9 +426,12 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   upcoming / settled), party ledger page, and the "record
   money handed over" option when creating a due.
 - [ ] **U18 — Due reminders for the user:** Home banner
-  and Dues badge done (20 Nov 2026, web only); the daily
-  email digest job is still open (blocked on the email
-  provider decision).
+  and Dues badge done (20 Nov 2026, web only). Daily email
+  digest built (`V12__dues_digests.sql`, `DuesDigestJob`, Spring
+  Mail config); 5 new API tests and `make check` pass (21 Nov
+  2026). `JobPoller.runDue` now loops until a batch is not full,
+  so a backlog clears in one pass. Still to do: one real send
+  through Brevo (credentials in `apps/api/.env`).
 - [ ] **U19 — Attachments (R2)** on transactions and
   dues.
 - [ ] **U20 — Per-party PDF statement** (PDFBox).
