@@ -11,7 +11,9 @@ export class ApiError extends Error {
   }
 }
 
-type Options = Omit<RequestInit, "body"> & { json?: unknown };
+// `json` is sent as a JSON body. A raw `body` (a File, for attachment uploads) is sent as is, with
+// whatever Content-Type the caller puts in `headers`. Pass one or the other, not both.
+type Options = RequestInit & { json?: unknown };
 
 // All requests share ONE refresh at a time. The API rotates the refresh token on every
 // use, so two refreshes with the same token look like token theft and revoke the whole
@@ -48,13 +50,13 @@ async function toApiError(response: Response): Promise<ApiError> {
   return new ApiError(response.status, code, message, details);
 }
 
-function send(path: string, { json, headers, ...init }: Options): Promise<Response> {
+function send(path: string, { json, headers, body, ...init }: Options): Promise<Response> {
   const merged = new Headers(headers);
   if (json !== undefined) merged.set("Content-Type", "application/json");
   return fetch(path, {
     ...init,
     headers: merged,
-    body: json === undefined ? undefined : JSON.stringify(json),
+    body: json === undefined ? body : JSON.stringify(json),
   });
 }
 

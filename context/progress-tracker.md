@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U18 in-app reminders built and browser-checked; the email digest waits on the email provider.
+- Phase 1.5: U19 attachments done; next is U20 (per-party PDF statement).
 
 ## Completed
 
@@ -379,6 +379,31 @@ change.
   `auto`); the API will not start without them, so copy the new block from
   `.env.example`. Not verified: a real R2 bucket (deploy-time env vars only);
   real R2 may differ from s3mock on error details.
+- **U19 (web half) — Attachments UI (21 Nov 2026):** web only.
+  `components/attachments/attachment-list.tsx` is an "Attachments" section
+  in the transaction edit dialog (not for transfers) and the due edit dialog:
+  list (name, size, link that opens the file in a new tab), "Attach file"
+  and a Remove button with an inline Keep / Remove confirm. Files upload and
+  delete at once, not on Save. Create mode shows "Save first, then edit to
+  attach photos or PDFs." `lib/queries/attachments.ts` (hooks and
+  `attachmentUrl`), `lib/attachments.ts` (type and 10 MB checks, same limits
+  as the API, tested), `formatBytes` in `lib/format.ts` (tested), and
+  `apiFetch` now accepts a raw `body` (a `File`). 9 new web tests (72 total).
+  **Browser pass (Chrome, dev API + web, 21 Nov):** attached a PDF to an
+  expense and it listed with its size; a file of exactly 10 MB went through
+  the Next proxy and downloaded back as all 10,485,760 bytes with `nosniff`;
+  a text file and one 10 MB + 1 byte were refused in the form with the
+  expected messages and added nothing; Remove then Keep left the file,
+  Remove then Remove deleted it; one more upload added exactly one row;
+  a due got a JPEG that opens inline (200, `image/jpeg`); create mode shows
+  the hint and no button; the Transfer form shows no section; at 360px
+  (same-origin iframe) the dialog has no horizontal overflow and the buttons
+  are 44px; no console errors (tracked only from the last third of the pass).
+  Not checked: the real OS file picker (the pass handed the input in-page
+  `File` objects, which runs the same change handler), HEIC with an empty
+  type in a real browser, the light theme, clicking the link to see the new
+  tab. A duplicate row seen once came from the browser tool re-running a
+  script, not from the app (a controlled single upload added one row).
 
 
 ## In Progress
@@ -456,9 +481,9 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   5 API tests, `make check`, and one real send received. The first
   real digest landed in Gmail spam (see Open Questions).
   `JobPoller.runDue` now loops until a batch is not full.
-- [ ] **U19 — Attachments (R2)** on transactions and
-  dues. API done 21 Nov 2026 (see Completed); web (edit
-  dialogs) still to do.
+- [x] **U19 — Attachments (R2)** on transactions and
+  dues. Done 21 Nov 2026: API, then web (attach, open and
+  remove in the edit dialogs); see Completed.
 - [ ] **U20 — Per-party PDF statement** (PDFBox).
 - [ ] **U21 — Excel export** for a workspace (Apache POI).
 - [ ] **U22 — Nightly database backup** to R2.
@@ -1165,3 +1190,15 @@ introduced, so later explanations don't repeat them.
   console errors. Not checked: editing a project's name/notes, an
   archived project staying on an already-linked transaction (covered by
   API tests).
+- **21 Nov 2026 — U19 done (attachments).** Key files:
+  `V13__attachments.sql`, `attachments/{ObjectStorage,AttachmentService,
+  AttachmentController,Attachment,StorageProperties}`, `AttachmentsApiTest`,
+  `PostgresTestBase` (s3mock container), `docker-compose.yml` (`s3`),
+  `components/attachments/attachment-list.tsx`, `lib/queries/attachments.ts`.
+  Concepts introduced: an S3 client (AWS SDK v2) as the one gateway to object
+  storage, streaming a request body with `HttpServletRequest.getInputStream()`
+  instead of multipart, `TransactionSynchronization.afterCommit` (do the side
+  effect only after the database commit), `CHECK num_nonnulls(...) = 1`
+  (exactly one parent), a `GenericContainer` in Testcontainers, response
+  headers that make a download safe (`nosniff`, `sandbox`), and on the web an
+  invisible `<input type="file">` driven from a button.

@@ -1,11 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatBytes,
   formatINR,
   formatINRCompact,
   paiseToRupeesInput,
   rupeesToPaise,
   signedRupeesToPaise,
 } from "./format";
+
+describe("formatBytes", () => {
+  it("uses bytes, KB and MB with at most one decimal", () => {
+    expect(formatBytes(27)).toBe("27 B");
+    expect(formatBytes(1536)).toBe("1.5 KB");
+    expect(formatBytes(2_621_440)).toBe("2.5 MB");
+    expect(formatBytes(10 * 1024 * 1024)).toBe("10 MB");
+  });
+
+  it("never shows 1024 KB", () => {
+    expect(formatBytes(1_048_575)).toBe("1 MB");
+  });
+});
 
 describe("signedRupeesToPaise", () => {
   it("reads a leading minus as money owed", () => {

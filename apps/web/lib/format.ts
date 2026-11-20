@@ -93,6 +93,19 @@ export function rupeesToPaise(input: string): number | null {
   return Number.isSafeInteger(paise) ? paise : null;
 }
 
+/** A file size for people: "27 B", "1.5 KB", "10 MB". One decimal at most, never "1024 KB". */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB"];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (Math.round(value * 10) / 10 >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${Math.round(value * 10) / 10} ${units[unit]}`;
+}
+
 /**
  * Like rupeesToPaise, but one leading "-" (or "−") makes it negative: for an opening balance
  * that is money owed, such as a credit card. Returns null for the same invalid input.

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AttachmentList } from "@/components/attachments/attachment-list";
 import { PartySelect } from "@/components/parties/party-select";
 import { ProjectSelect } from "@/components/projects/project-select";
 import { Button } from "@/components/ui/button";
@@ -361,6 +362,10 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
             className="h-11"
           />
         </div>
+      )}
+
+      {kind !== "transfer" && (
+        <AttachmentList parent={editing ? { kind: "transaction", id: editing.id } : null} />
       )}
 
       {error && (

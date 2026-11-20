@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AttachmentList } from "@/components/attachments/attachment-list";
 import { ProjectSelect } from "@/components/projects/project-select";
 import { NativeSelect } from "@/components/transactions/native-select";
 import { Button } from "@/components/ui/button";
@@ -363,6 +364,8 @@ export function DueDialog({
               )}
             </div>
           )}
+
+          <AttachmentList parent={editing ? { kind: "due", id: editing.id } : null} />
 
           {error && (
             <p role="alert" className="text-sm text-destructive">
