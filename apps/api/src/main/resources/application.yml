@@ -42,7 +42,7 @@ app:
   mail:
     # The sender of the dues digest. Blank = the digest is not sent (local dev default).
     from: ${MAIL_FROM:}
-  # Attachment files live in any S3-compatible store: Cloudflare R2 in production, MinIO locally.
+  # Attachment files live in any S3-compatible store: Cloudflare R2 in production, s3mock locally.
   storage:
     endpoint: ${STORAGE_ENDPOINT}
     region: ${STORAGE_REGION:auto}

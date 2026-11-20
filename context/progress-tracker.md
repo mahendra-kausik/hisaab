@@ -6,6 +6,7 @@ change.
 ## Current Phase
 
 - Phase 1 (manual tracker) — code complete (U0–U13 done)
+- Phase 1.5 (people & dues) — in progress (U14–U19 done; U20–U22 left)
 
 ## Current Goal
 
@@ -496,6 +497,22 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 ## Open Questions
 
+- **Real R2 bucket before deploy (U19):** create a Cloudflare R2
+  bucket and an API token, then set `STORAGE_ENDPOINT`
+  (`https://<account-id>.r2.cloudflarestorage.com`), `STORAGE_REGION=auto`,
+  `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY` and `STORAGE_SECRET_KEY` on the API
+  host. The code was only run against s3mock, so do one real upload,
+  download and delete against R2 (the client already turns off the SDK's
+  default checksum headers, which R2 can reject).
+- **Upload size behind Vercel (U19):** a 10 MB file passed through the local
+  Next.js `/api` proxy, but Vercel may cap request bodies on the hosted
+  proxy. Check a 10 MB upload on the deployed site; if it fails, lower the
+  limit (`MAX_BYTES` in `AttachmentService`, `MAX_ATTACHMENT_BYTES` in
+  `lib/attachments.ts`, the `size_bytes` CHECK in a new migration) or send
+  uploads straight to the API origin.
+- **Orphaned files (U19):** if removing a file from storage fails after
+  its row was deleted, the file stays in the bucket and is only logged.
+  Add a sweep job (list keys, drop those with no row) if it ever matters.
 - **Digest lands in spam:** the sender is a personal Gmail
   address sent through Brevo, which Gmail's DMARC policy
   distrusts. Mark "Not spam" once, or later use a sender on a
@@ -608,7 +625,8 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - **U0 implementation notes (16 Nov 2026)** — Docker volume
   is named `hisaab_api_pgdata` because an older project's
   `hisaab_pgdata` volume already existed and made Postgres
-  skip `init-roles.sql` (left untouched). shadcn's current
+  skip `init-roles.sql` (left untouched; deleted on 21 Nov 2026 after a
+  check showed it held only empty `alembic_version` tables from the old plan). shadcn's current
   `base-nova` style brought its own dependencies
   (`@base-ui/react`, `class-variance-authority`, `cn`,
   `tw-animate-css`, `shadcn`). `@types/node` is `^24` because
@@ -848,6 +866,19 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   domain (Resend, SES) are out; use SMTP with a verified
   single sender (Brevo) and keep host, port and credentials
   in env vars so the provider can change later.
+- **S3 stand-in is adobe/s3mock (21 Nov 2026)** — MinIO was the plan,
+  but its images can no longer be pulled from Docker Hub or Quay. s3mock
+  serves local dev (`s3` service in `docker-compose.yml`, port 9090, files
+  kept in the `hisaab_api_s3data` volume) and the tests (a Testcontainers
+  `GenericContainer` in `PostgresTestBase`). It creates the bucket from an
+  env var, does not check credentials, and has no web console. The app
+  code is unchanged by the choice: one `ObjectStorage` class over the S3
+  protocol.
+- **Attachments upload as the raw body, not multipart (21 Nov 2026)** —
+  `Content-Type` is the file type, `Content-Length` is required, `?file_name=`
+  carries the name. It streams to storage without buffering (512 MB host),
+  and image/PDF content types cannot be sent by a cross-site HTML form, so
+  the CSRF reasoning in `SecurityConfig` still holds.
 
 ## Session Notes
 
@@ -1202,3 +1233,10 @@ introduced, so later explanations don't repeat them.
   (exactly one parent), a `GenericContainer` in Testcontainers, response
   headers that make a download safe (`nosniff`, `sandbox`), and on the web an
   invisible `<input type="file">` driven from a button.
+  *Housekeeping (21 Nov 2026):* an earlier half-built U19 (untracked files,
+  never committed) was deleted and U19 restarted from the plan. Docker is now
+  shut down; the orphaned `hisaab-db-1` container and the old `hisaab_pgdata`
+  volume were removed (volumes `hisaab_api_pgdata` and `hisaab_api_s3data`
+  kept). Four throwaway test users (smoke*, u19-browser-1) have the dues
+  digest turned off so no mail goes to example.com. Docs synced: README,
+  CLAUDE.md, architecture, project-overview, code-standards, ui-context.

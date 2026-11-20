@@ -152,6 +152,22 @@
 - Structured data and metadata belong in Postgres.
   Files belong in R2.
 - Do not store files or large blobs in the database.
+- All object storage goes through `ObjectStorage`; no other
+  class builds an S3 client. Stream file bodies
+  (`InputStream` plus a known length); never read a whole
+  upload into memory. Upload as the raw request body with
+  the file's own `Content-Type`, not multipart, so the CSRF
+  reasoning in `SecurityConfig` holds. Never put a
+  user-supplied file name in an object key or an HTTP header
+  unencoded (use `ContentDisposition`).
+- Serve user files with `X-Content-Type-Options: nosniff`
+  and `Content-Security-Policy: sandbox`.
+- When a database row and a stored file change together,
+  write the row first and the file second on create, and
+  delete the file only after the row's deletion commits
+  (`TransactionSynchronization.afterCommit`).
+- Tests use real storage too: `PostgresTestBase` starts an
+  s3mock container next to Postgres.
 - Every schema change is a new Flyway migration
   (`V<n>__<description>.sql`). Check each one for: RLS
   enabled and forced on new workspace-scoped tables,

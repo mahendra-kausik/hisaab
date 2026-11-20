@@ -47,7 +47,7 @@ Then add a short dated entry to Session Notes in
 
 | Task                                          | Command         |
 | --------------------------------------------- | --------------- |
-| Start local Postgres                          | `make db-up`    |
+| Start local Postgres and the S3 stand-in      | `make db-up`    |
 | Run API + web in dev (API applies migrations) | `make dev`      |
 | Run only the API tests                        | `make test-api` |
 | Format Java code                              | `make fmt`      |

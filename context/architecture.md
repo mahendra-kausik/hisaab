@@ -19,13 +19,13 @@
 | Rate limiting   | Bucket4j (in-memory)                                              | Login and signup throttling                                  |
 | Outbound email  | Spring Mail (SMTP); Brevo, single verified sender (no domain) | Daily dues digest to the user; later verification and resets |
 | Documents       | Apache PDFBox (PDF statements), Apache POI (Excel export)         | Phase 1.5 exports                                            |
-| File storage    | Cloudflare R2 via AWS SDK for Java v2 (S3 client)                 | Attachments, exports, database backups (Phase 1.5)           |
+| File storage    | Cloudflare R2 via AWS SDK for Java v2 (S3 client); locally and in tests `adobe/s3mock` | Attachments (U19), exports, database backups (Phase 1.5) |
 | Web framework   | Next.js (App Router) + TypeScript (strict)                        | Web UI and PWA; proxies `/api` to the API                    |
 | UI              | Tailwind CSS + shadcn/ui, Lucide icons                            | Components and styling                                       |
 | Web data        | TanStack Query, openapi-typescript, Zod, react-hook-form          | Server state, generated API types, form validation           |
 | Charts          | Recharts                                                          | Reports                                                      |
 | Hosting (plan)  | Web: Vercel. API: Render (Docker). DB: Neon                       | Free tiers; worker runs inside the API, so one service. Free instances have 512 MB RAM, so cap the JVM heap (about `-Xmx300m`) |
-| Testing         | JUnit 5, Spring Boot Test, MockMvc, AssertJ, Testcontainers (real Postgres); Vitest for web helpers | Automated verification |
+| Testing         | JUnit 5, Spring Boot Test, MockMvc, AssertJ, Testcontainers (real Postgres and s3mock); Vitest for web helpers | Automated verification |
 | Code quality    | Spotless (google-java-format), compiler warnings as errors        | Formatting and hygiene                                       |
 
 Not used, on purpose: Lombok (so the code stays explicit
@@ -105,7 +105,11 @@ API directly with a bearer token.
 - **R2 (object storage)**: attachment files, generated
   exports (CSV, Excel, PDF), nightly database dumps. The
   database stores only the object key, MIME type, size,
-  and owning workspace.
+  file name, and owning workspace. Only `ObjectStorage`
+  (package `attachments`) talks to it; files stream through
+  the API in both directions, so the browser never sees a
+  storage URL. Keys are `workspaces/{workspaceId}/...` and
+  never contain a user-supplied name.
 - **Browser**: nothing sensitive beyond httpOnly
   cookies. No tokens in localStorage.
 

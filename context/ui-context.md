@@ -198,12 +198,28 @@ the color tokens.
   only, through a confirm dialog). A hidden category carries a
   "Hidden" text badge; hiding a parent also hides its subcategories
   in the pickers.
+- **Attachments (U19):** an "Attachments" section at the bottom of
+  the transaction edit dialog (not for transfers) and the due edit
+  dialog, above the error line and footer. A heading with an
+  "Attach file" outline button (paperclip icon), then one row per
+  file: the name (truncated) and size in a link that opens the file
+  in a new tab, and a trash button. The file input is hidden (`sr-only`)
+  and opened from the button; accepted types are JPEG, PNG, WebP,
+  HEIC and PDF, up to 10 MB, checked in the browser before the
+  upload and again by the API. Files upload and delete at once, not
+  on Save, and the empty state says so. When adding (nothing saved
+  yet) the section is the single line "Save first, then edit to
+  attach photos or PDFs." Every button in it is `type="button"`
+  because it sits inside the dialog's form.
 - **Empty states:** one sentence and one primary action
   ("No transactions yet — Add your first expense").
 - **Destructive actions:** a confirm dialog for deletes that
   cannot be undone. A soft delete (a transaction or transfer)
   takes effect at once and shows an Undo toast for 8 seconds,
-  with no confirm dialog.
+  with no confirm dialog. Removing an attachment cannot be
+  undone, and a second dialog on top of the edit dialog is
+  heavy, so its row swaps the trash button for inline
+  Keep / Remove buttons.
 - **Click/tap targets:** at least 44×44px, so phone use
   works later without redesign.
 - **Keyboard:** visible focus rings on every interactive

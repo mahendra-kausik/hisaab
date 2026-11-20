@@ -6,9 +6,9 @@ import org.springframework.validation.annotation.Validated;
 
 /**
  * Where attachment files are kept: any S3-compatible service. In production that is Cloudflare R2
- * ({@code https://<account>.r2.cloudflarestorage.com}, region {@code auto}); locally it is MinIO
- * from docker-compose. Bound from the {@code app.storage.*} keys, which read {@code STORAGE_*}
- * environment variables.
+ * ({@code https://<account>.r2.cloudflarestorage.com}, region {@code auto}); locally and in tests
+ * it is adobe/s3mock from docker-compose. Bound from the {@code app.storage.*} keys, which read
+ * {@code STORAGE_*} environment variables.
  */
 @ConfigurationProperties(prefix = "app.storage")
 @Validated

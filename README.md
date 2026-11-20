@@ -36,7 +36,7 @@ The `.env` files are gitignored. The example values are local-only and match
 ## Run it
 
 ```bash
-make db-up   # start Postgres (port 5432) with the two database roles
+make db-up   # start Postgres (port 5432, two database roles) and s3mock (port 9090, attachment files)
 make dev     # API on :8080 and web on :3000, together (Ctrl+C stops both)
 ```
 
@@ -44,16 +44,23 @@ Open <http://localhost:3000>. The home page calls `/api/v1/health` through the
 Next.js `/api` proxy and shows the result. The API applies database migrations
 on startup. Swagger UI is at <http://localhost:8080/swagger-ui.html> in dev.
 
-Stop the database with `make db-down`. To wipe it and re-run the role setup
-script, run `docker compose down -v` first.
+Stop the containers with `make db-down`. To wipe the data (database and
+attachment files) and re-run the role setup script, run `docker compose down -v`
+first.
+
+Attachment files go to an S3-compatible store. Locally that is
+[s3mock](https://github.com/adobe/S3Mock) from `docker-compose.yml` (it creates the
+bucket itself and does not check credentials); in production it is Cloudflare R2.
+The `STORAGE_*` values in `apps/api/.env.example` point at s3mock, and the API will
+not start without them.
 
 ## Everyday commands
 
 | Command | What it does |
 | --- | --- |
-| `make db-up` / `make db-down` | Start / stop local Postgres |
+| `make db-up` / `make db-down` | Start / stop local Postgres and s3mock |
 | `make dev` | Run API and web together (`dev-api`, `dev-web` run one each) |
-| `make test-api` | API tests (real Postgres through Testcontainers) |
+| `make test-api` | API tests (real Postgres and s3mock through Testcontainers) |
 | `make fmt` | Format the Java code (Spotless + google-java-format) |
 | `make gen-api` | Regenerate `apps/web/lib/api/schema.d.ts` from the running API |
 | `make check` | Everything CI runs: format check, build, tests, lint, typecheck |

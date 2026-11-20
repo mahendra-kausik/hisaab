@@ -178,7 +178,13 @@ insights, and later tax and business features.
   overdue, due-today, and next-3-days dues across the
   user's workspaces (can be turned off in settings).
 - Attachments: photos or PDFs of receipts, cheques, and
-  agreements on a transaction or due.
+  agreements on a transaction or due. JPEG, PNG, WebP,
+  HEIC or PDF, up to 10 MB each, no limit on how many.
+  Added, opened and removed from the item's edit dialog
+  (an item must be saved first); files are saved the moment
+  they are added. Transfers cannot have attachments.
+  Deleting a transaction hides its files, and restoring it
+  brings them back.
 - Per-party statement as a shareable PDF.
 - Excel export of a workspace's transactions and dues.
 
