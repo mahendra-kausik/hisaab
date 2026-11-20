@@ -138,7 +138,8 @@ the color tokens.
   order.
 - **Due reminders:** a dismissible banner at the top of
   Home ("3 dues overdue · 1 due today") linking to Dues,
-  and a count badge on the Dues nav item.
+  and a count badge on the Dues nav item. Dismissal is per
+  workspace and lasts until the next day; the badge never hides.
 - **Lists:** grouped by date with a daily total. Each
   row shows the category icon, note or party name,
   account, and the amount right-aligned. The daily total is

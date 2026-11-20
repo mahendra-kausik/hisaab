@@ -1,5 +1,6 @@
 "use client";
 
+import { DuesBanner } from "@/components/dues/dues-banner";
 import { useMe } from "@/lib/queries/me";
 import { useWorkspace } from "@/lib/workspace";
 
@@ -9,11 +10,14 @@ export function HomeGreeting() {
   const { active } = useWorkspace();
 
   return (
-    <section className="flex flex-col gap-2">
-      <h1 className="text-3xl font-semibold">Hi, {me?.name}</h1>
-      <p className="text-muted-foreground">
-        You are working in <span className="font-medium text-foreground">{active.name}</span>.
-      </p>
-    </section>
+    <div className="flex flex-col gap-6">
+      <DuesBanner />
+      <section className="flex flex-col gap-2">
+        <h1 className="text-3xl font-semibold">Hi, {me?.name}</h1>
+        <p className="text-muted-foreground">
+          You are working in <span className="font-medium text-foreground">{active.name}</span>.
+        </p>
+      </section>
+    </div>
   );
 }

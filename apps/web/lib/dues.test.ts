@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dueSection, dueWhen, partyNet, partyTotals } from "./dues";
+import { dueAlertText, dueAlerts, dueSection, dueWhen, partyNet, partyTotals } from "./dues";
 
 const TODAY = "2026-11-20";
 
@@ -15,6 +15,27 @@ describe("dueSection", () => {
     expect(dueSection({ state: "open", due_date: "2026-11-27" }, TODAY)).toBe("upcoming");
     expect(dueSection({ state: "open", due_date: "2026-11-28" }, TODAY)).toBe("later");
     expect(dueSection({ state: "partially_paid", due_date: undefined }, TODAY)).toBe("later");
+  });
+});
+
+describe("dueAlerts", () => {
+  const dues = [
+    { state: "overdue", due_date: "2026-11-19" },
+    { state: "partially_paid", due_date: "2026-11-01" },
+    { state: "open", due_date: TODAY },
+    { state: "open", due_date: "2026-11-21" },
+    { state: "settled", due_date: "2026-11-01" },
+    { state: "cancelled", due_date: TODAY },
+  ] as const;
+
+  it("counts overdue and due-today only", () => {
+    expect(dueAlerts([...dues], TODAY)).toEqual({ overdue: 2, today: 1 });
+  });
+
+  it("words the counts and skips zeros", () => {
+    expect(dueAlertText({ overdue: 3, today: 1 })).toBe("3 dues overdue · 1 due today");
+    expect(dueAlertText({ overdue: 1, today: 0 })).toBe("1 due overdue");
+    expect(dueAlertText({ overdue: 0, today: 2 })).toBe("2 due today");
   });
 });
 

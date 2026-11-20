@@ -37,6 +37,27 @@ export function dueSection(
   return due.due_date <= shiftDay(today, 7) ? "upcoming" : "later";
 }
 
+/** How many dues are overdue and how many fall due today (the ones worth a reminder). */
+export function dueAlerts(
+  dues: Pick<Due, "state" | "due_date">[],
+  today: string,
+): { overdue: number; today: number } {
+  const counts = { overdue: 0, today: 0 };
+  for (const d of dues) {
+    const s = dueSection(d, today);
+    if (s === "overdue" || s === "today") counts[s]++;
+  }
+  return counts;
+}
+
+/** "3 dues overdue · 1 due today"; a zero part is left out. */
+export function dueAlertText({ overdue, today }: { overdue: number; today: number }): string {
+  const parts: string[] = [];
+  if (overdue) parts.push(`${overdue} ${overdue === 1 ? "due" : "dues"} overdue`);
+  if (today) parts.push(`${today} due today`);
+  return parts.join(" · ");
+}
+
 /** "Due today", "in 3 days", "5 days overdue", or the date when it is further than a week away. */
 export function dueWhen(dueDate: string | undefined, today: string): string {
   if (!dueDate) return "No due date";

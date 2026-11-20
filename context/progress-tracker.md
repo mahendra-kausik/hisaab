@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U18 Due reminders (see Next Up). U15 still needs a browser pass.
+- Phase 1.5: U18 in-app reminders built, browser pass pending; the email digest waits on the email provider. U15 still needs a browser pass.
 
 ## Completed
 
@@ -426,8 +426,9 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   upcoming / settled), party ledger page, and the "record
   money handed over" option when creating a due.
 - [ ] **U18 — Due reminders for the user:** Home banner
-  and Dues badge first; then the daily email digest job
-  (blocked on the email provider decision).
+  and Dues badge done (20 Nov 2026, web only); the daily
+  email digest job is still open (blocked on the email
+  provider decision).
 - [ ] **U19 — Attachments (R2)** on transactions and
   dues.
 - [ ] **U20 — Per-party PDF statement** (PDFBox).
@@ -1079,3 +1080,16 @@ introduced, so later explanations don't repeat them.
   totals summed in the browser. Try it: start Docker, `make dev`, add a
   party, open Dues. Read next: `lib/dues.ts`, then `DueDialog`'s
   `onSubmit` beside `DueService.create` in the API.
+
+- **20 Nov 2026 — U18 in-app reminders (web only).** Key files:
+  `lib/dues.ts` (`dueAlerts`, `dueAlertText`, tested),
+  `components/dues/dues-banner.tsx` (`useDueAlerts`, `DuesBanner`),
+  changed `home-greeting.tsx` and `sidebar.tsx`. No API change: the
+  banner and the Dues badge reuse `useDues` (same cache as the Dues page,
+  so any due change updates both) and count overdue + due-today dues for
+  the active workspace. Dismissing the banner stores today's date in
+  localStorage per workspace, so it returns the next day. The email
+  digest is not built (no provider chosen). Concepts used: a shared hook
+  used by two components, derived data instead of a new endpoint,
+  guarded localStorage. Try it: `make dev`, add a due dated yesterday,
+  look at Home and the sidebar. Read next: `dues-banner.tsx`.

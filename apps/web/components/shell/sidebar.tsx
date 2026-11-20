@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDueAlerts } from "@/components/dues/dues-banner";
 import { useQuickAdd } from "@/components/transactions/quick-add-provider";
 import { cn } from "@/lib/utils";
 import type { Me } from "@/lib/queries/me";
@@ -44,6 +45,8 @@ const ITEM = "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medi
 export function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
   const pathname = usePathname();
   const { openAdd } = useQuickAdd();
+  const { counts } = useDueAlerts();
+  const needAttention = counts.overdue + counts.today;
 
   return (
     <div className="flex h-full flex-col gap-4 p-3">
@@ -81,6 +84,12 @@ export function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void })
             >
               <Icon className="h-5 w-5" />
               {label}
+              {href === "/dues" && needAttention > 0 && (
+                <span className="ml-auto rounded-md bg-destructive px-1.5 py-0.5 text-xs font-medium text-white">
+                  {needAttention}
+                  <span className="sr-only"> need attention</span>
+                </span>
+              )}
             </Link>
           ) : (
             <span key={label} aria-disabled="true" className={cn(ITEM, "text-muted-foreground")}>
