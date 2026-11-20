@@ -64,6 +64,8 @@ function useRefreshAfterChange(workspaceId: string) {
       queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] }),
       queryClient.invalidateQueries({ queryKey: ["transfer", workspaceId] }),
       queryClient.invalidateQueries({ queryKey: accountsKey(workspaceId) }),
+      // A payment changes its due's paid and outstanding amounts.
+      queryClient.invalidateQueries({ queryKey: ["dues", workspaceId] }),
     ]);
 }
 

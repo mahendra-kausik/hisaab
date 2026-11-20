@@ -17,6 +17,10 @@ function item(overrides: Partial<TransactionItem>): TransactionItem {
 }
 
 describe("toRows", () => {
+  it("keeps the due a payment is linked to", () => {
+    expect(toRows([item({ id: "p1", due_id: "d1" })])[0]).toMatchObject({ dueId: "d1" });
+  });
+
   it("merges a transfer's two legs into one row keyed by the transfer id", () => {
     const rows = toRows([
       item({ id: "out", type: "transfer_out", account_id: "bank", transfer_group_id: "g1" }),

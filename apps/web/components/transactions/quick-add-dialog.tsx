@@ -188,6 +188,8 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
           category_id: v.categoryId || undefined,
           party_id: partyId || undefined,
           project_id: projectId || undefined,
+          // Not shown in this form; sent back so editing a payment does not unlink it (PUT replaces).
+          due_id: editing?.dueId,
           payment_method: editing?.paymentMethod,
           note: v.note || undefined,
           tags: v.tags,

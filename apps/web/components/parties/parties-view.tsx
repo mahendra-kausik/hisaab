@@ -37,9 +37,9 @@ function PartyRow({ party, onEdit }: { party: Party; onEdit: () => void }) {
 
   return (
     <li className="flex items-center">
-      {/* Opens the Transactions page filtered to this party (the full ledger comes with dues). */}
+      {/* Opens this party's ledger: totals, dues and transactions. */}
       <Link
-        href={`/transactions?party_id=${party.id}`}
+        href={`/parties/${party.id}`}
         className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-l-xl px-3 py-2 outline-none hover:bg-subtle focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <UserRound className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />

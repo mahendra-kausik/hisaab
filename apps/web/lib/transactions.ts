@@ -21,6 +21,8 @@ export type Row = {
   categoryId?: string;
   partyId?: string;
   projectId?: string;
+  /** Set when this entry is a payment against a due; sent back on edit so it stays linked. */
+  dueId?: string;
   note?: string;
   tags: string[];
   paymentMethod?: PaymentMethod;
@@ -89,6 +91,7 @@ export function toRows(items: TransactionItem[]): Row[] {
         categoryId: t.category_id,
         partyId: t.party_id,
         projectId: t.project_id,
+        dueId: t.due_id,
         note: t.note,
         tags: t.tags,
         paymentMethod: t.payment_method,

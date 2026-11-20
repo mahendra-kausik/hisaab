@@ -32,7 +32,7 @@ const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Categories", icon: Tags, href: "/categories" },
   { label: "Parties", icon: Users, href: "/parties" },
   { label: "Projects", icon: Building2, href: "/projects" },
-  { label: "Dues", icon: HandCoins },
+  { label: "Dues", icon: HandCoins, href: "/dues" },
   { label: "Reports", icon: ChartColumn, href: "/reports" },
   { label: "Budgets", icon: PiggyBank, href: "/budgets" },
   { label: "Recurring", icon: Repeat, href: "/recurring" },
@@ -64,17 +64,19 @@ export function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void })
       </Button>
 
       <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
-        {NAV.map(({ label, icon: Icon, href }) =>
-          href ? (
+        {NAV.map(({ label, icon: Icon, href }) => {
+          // A sub-page (a party's ledger under /parties) keeps its section highlighted.
+          const current = !!href && (pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)));
+          return href ? (
             <Link
               key={label}
               href={href}
               onClick={onNavigate}
-              aria-current={pathname === href ? "page" : undefined}
+              aria-current={current ? "page" : undefined}
               className={cn(
                 ITEM,
                 "outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
-                pathname === href && "bg-muted text-primary",
+                current && "bg-muted text-primary",
               )}
             >
               <Icon className="h-5 w-5" />
@@ -86,8 +88,8 @@ export function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void })
               {label}
               <span className="ml-auto rounded-md bg-subtle px-1.5 py-0.5 text-xs font-normal">Soon</span>
             </span>
-          ),
-        )}
+          );
+        })}
       </nav>
 
       <UserMenu me={me} />

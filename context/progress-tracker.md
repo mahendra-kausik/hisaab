@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U17 Web dues (see Next Up).
+- Phase 1.5: U18 Due reminders (see Next Up). U15 and U17 still need a browser pass.
 
 ## Completed
 
@@ -324,6 +324,30 @@ change.
   `due_id` on `/transactions`; party and direction fixed after create;
   cancel and reopen, no delete yet; the client picks the origin's
   category. Web types regenerated; no web code (U17).
+- **U17 — Web dues (20 Nov 2026):** web only. `/dues` page
+  (`components/dues/{dues-view,due-row,due-dialog,payment-dialog}.tsx`),
+  party ledger at `/parties/{id}` (`components/parties/party-ledger.tsx`),
+  `lib/queries/dues.ts`, pure helpers in `lib/dues.ts` (`dueSection`,
+  `dueWhen`, `partyNet`, `partyTotals`; `lib/dues.test.ts`), sidebar Dues
+  link, party rows now open the ledger. Decisions (20 Nov): net balance =
+  receivable outstanding − payable outstanding from the party's dues;
+  total paid / received are summed in the browser over all pages of
+  `/transactions?party_id=` (`usePartyTotals`; an API SUM endpoint is the
+  upgrade if a party has thousands of rows). **Bug fixed along the way:**
+  editing a payment in quick-add sent a `PUT` without `due_id`, silently
+  unlinking it from its due; `Row` now carries `dueId` and the edit sends
+  it back. Any transaction change now also refetches `dues`. A dynamic
+  route broke `next build` (the shell's `usePathname()` is unknown at
+  build time), so `app/(app)/layout.tsx` wraps `AppShell` in `<Suspense>`.
+  Lint, typecheck, 63 web tests and the production build pass. **Not
+  done: browser pass and `make check`** (Docker was not running, so no
+  API or Postgres). Click through: add a party; add a receivable of
+  ₹10,000 with "handed over" (an expense appears, the balance drops);
+  record ₹4,000 (income, ₹6,000 outstanding, "Partially paid"); try to
+  overpay; a due dated yesterday lands in Overdue; edit that payment in
+  quick-add and check it stays linked; cancel and reopen; the ledger shows
+  paid ₹10,000, received ₹4,000, "They owe you ₹6,000"; 360px has no
+  horizontal overflow.
 
 
 ## In Progress
@@ -392,7 +416,7 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   optional origin transaction for lending/borrowing;
   payments linked to dues; computed outstanding and
   state.
-- [ ] **U17 — Web dues:** Dues screen (overdue / today /
+- [x] **U17 — Web dues:** Dues screen (overdue / today /
   upcoming / settled), party ledger page, and the "record
   money handed over" option when creating a due.
 - [ ] **U18 — Due reminders for the user:** Home banner
@@ -1025,3 +1049,27 @@ introduced, so later explanations don't repeat them.
   `outstanding_paise` and `state`. Try it: `make test-api`, or `make
   dev` and `POST /dues` with an `origin`. Read next: `DuePayments`, then
   `DueService.create`, then `DuesApiTest.partPaymentsOverdueAndOverpayment`.
+
+- **20 Nov 2026 — U17 done (web dues), browser pass pending.** Key files:
+  `lib/dues.ts` (+ test), `lib/queries/dues.ts`, `components/dues/{dues-view,
+  due-row,due-dialog,payment-dialog}.tsx`, `components/parties/party-ledger.tsx`,
+  `app/(app)/dues/page.tsx`, `app/(app)/parties/[partyId]/page.tsx`,
+  `app/(app)/layout.tsx`; changed `lib/transactions.ts`,
+  `quick-add-dialog.tsx`, `lib/queries/transactions.ts`, `sidebar.tsx`,
+  `parties-view.tsx`. Concepts used: a dynamic route segment
+  (`[partyId]`) read with `useParams`, a `<Suspense>` boundary so a
+  dynamic route can build, a `useQuery` that loops over cursor pages,
+  deriving a display section from API data with a small tested function,
+  and "send hidden fields back on a PUT" (the `due_id` bug).
+
+  *What to know (how it works):* "Record payment" -> `PaymentDialog` ->
+  `POST /transactions` with `due_id` (income for a receivable, expense for
+  a payable) -> `DuePayments` locks the due and checks the amount -> the
+  mutation refetches transactions, accounts and dues -> the row shows the
+  new outstanding and state. "Add due" with "handed over" -> one
+  `POST /dues` with `origin`; the API makes the loan transaction in the
+  same database transaction. The ledger at `/parties/{id}` combines
+  `GET /dues?party_id=`, the transaction list filtered by party, and
+  totals summed in the browser. Try it: start Docker, `make dev`, add a
+  party, open Dues. Read next: `lib/dues.ts`, then `DueDialog`'s
+  `onSubmit` beside `DueService.create` in the API.

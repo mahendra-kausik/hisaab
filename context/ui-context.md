@@ -159,10 +159,32 @@ the color tokens.
   colour. The opening balance field accepts a leading minus.
 - **Parties page (`/parties`):** the same layout as Accounts: open
   parties, then "Archived". Each row shows the name, role and phone
-  and links to `/transactions?party_id=…` (the full party ledger comes
-  with dues). The transaction and recurring forms show an optional
+  and links to the party's ledger (`/parties/{id}`). The transaction and
+  recurring forms show an optional
   "Party" select only once the workspace has a party; an archived
   party is listed there only while it is the saved choice.
+- **Party ledger (`/parties/{id}`):** back link, name with role and
+  phone, an "Add due" button (party preset), three tiles (Total paid,
+  Total received, Net balance as "They owe you ₹X" / "You owe them ₹X" /
+  "Settled up"; net comes from the party's non-cancelled dues), the
+  party's dues (cancelled last), then their transactions (the normal
+  list filtered by `party_id`). Total paid and received are summed in
+  the browser over every page of that party's transactions.
+- **Dues page (`/dues`):** sections Overdue, Due today, Upcoming (next
+  7 days), Later (no date or further out), Settled, Cancelled; empty
+  sections are hidden. A row shows the party (link to the ledger), a
+  state text badge, the reason, "Due today / in 3 days / 5 days
+  overdue", and the outstanding amount labelled "They owe you" (money
+  in colour) or "You owe" (money out colour), with "of ₹total" once part
+  paid. Row menu: Record payment (not for settled or cancelled), Edit,
+  Cancel due / Reopen (no confirm: both reverse). Add / edit dialog:
+  direction toggle (They owe me / I owe them), party, amount, reason,
+  optional due date, project and category; party and direction are
+  fixed when editing. When adding, the checkbox "Record the money I
+  handed over now" (receivable) / "received" (payable) reveals account,
+  date, category and note and sends them as `origin`. The payment
+  dialog prefills the outstanding amount; an overpayment shows the
+  API's message.
 - **Projects page (`/projects`):** the same layout as Parties, minus
   role and phone: the row shows the name and notes and links to
   `/transactions?project_id=…`. The transaction and recurring forms
