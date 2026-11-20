@@ -445,7 +445,9 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 - **Email provider** for the daily dues digest (U18),
   and later verification and password reset; also
-  whether Google sign-in should come first.
+  whether Google sign-in should come first. No domain
+  (see Architecture Decisions), so the shortlist is Brevo
+  (single verified sender) or Gmail SMTP for local testing.
 - **Scheduled jobs on free hosting:** the worker runs
   inside the API, but Render's free instance sleeps
   after 15 minutes without traffic, so `@Scheduled` jobs
@@ -454,8 +456,6 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   (recurring entries already catch up from
   `next_run_on`; digests would arrive late), or a paid
   always-on instance. Decide before deploying U11.
-- **Project name:** keep the working name "Hisaab" or
-  rename?
 - **Rate limiting behind Vercel (decide before deploy):**
   login and signup limits count per client IP. With the web
   app on Vercel proxying to the API on Render, every browser
@@ -784,6 +784,13 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   `"- 5"` (a space after the minus) is accepted, since the space is
   trimmed. Not done: reordering categories (no API), moving a
   category to another parent (no API), a total-balance headline.
+
+- **Project name stays "Hisaab" (20 Nov 2026)** — no rename.
+- **No custom domain (20 Nov 2026)** — the app will not own a
+  domain, so email providers that require a verified sending
+  domain (Resend, SES) are out; use SMTP with a verified
+  single sender (Brevo) and keep host, port and credentials
+  in env vars so the provider can change later.
 
 ## Session Notes
 
