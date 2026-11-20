@@ -425,13 +425,12 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U17 — Web dues:** Dues screen (overdue / today /
   upcoming / settled), party ledger page, and the "record
   money handed over" option when creating a due.
-- [ ] **U18 — Due reminders for the user:** Home banner
-  and Dues badge done (20 Nov 2026, web only). Daily email
-  digest built (`V12__dues_digests.sql`, `DuesDigestJob`, Spring
-  Mail config); 5 new API tests and `make check` pass (21 Nov
-  2026). `JobPoller.runDue` now loops until a batch is not full,
-  so a backlog clears in one pass. Still to do: one real send
-  through Brevo (credentials in `apps/api/.env`).
+- [x] **U18 — Due reminders for the user:** Home banner and
+  Dues badge (web) and the daily email digest (`V12__dues_digests.sql`,
+  `DuesDigestJob`, Spring Mail via Brevo SMTP). Done 21 Nov 2026:
+  5 API tests, `make check`, and one real send received. The first
+  real digest landed in Gmail spam (see Open Questions).
+  `JobPoller.runDue` now loops until a batch is not full.
 - [ ] **U19 — Attachments (R2)** on transactions and
   dues.
 - [ ] **U20 — Per-party PDF statement** (PDFBox).
@@ -446,6 +445,10 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 ## Open Questions
 
+- **Digest lands in spam:** the sender is a personal Gmail
+  address sent through Brevo, which Gmail's DMARC policy
+  distrusts. Mark "Not spam" once, or later use a sender on a
+  domain the app owns (rejected for now: no domain).
 - **Email provider** for the daily dues digest (U18),
   and later verification and password reset; also
   whether Google sign-in should come first. No domain
@@ -1110,3 +1113,17 @@ introduced, so later explanations don't repeat them.
   today"; 360px (iframe) no horizontal scroll; no console errors.
   `make check` passed. Not checked: light theme (the white-on-red badge
   contrast), several workspaces, a day rollover bringing the banner back.
+- **21 Nov 2026 — U18 done (daily dues digest).** Key files:
+  `DuesDigestJob.java`, `V12__dues_digests.sql`, `UserService.create`
+  (queues a user's first job), `JobPoller.java`, `application.yml` and
+  `.env.example` (MAIL_*), `DuesDigestTest.java`. One job per user
+  re-queues itself for the next 08:00 in their timezone; the claim row
+  in `dues_digests` and the send share one transaction, so a failed send
+  retries and a repeat run sends nothing. Concepts used: a self-queuing
+  job, `ON CONFLICT DO NOTHING` as a once-a-day lock, row-level
+  security on a user-scoped table (even the owner role sees no rows
+  without a current user), `@MockitoBean` for the mail sender.
+  Try it: set MAIL_* in `apps/api/.env`, run the API with
+  `APP_DUES_DIGEST_HOUR=0 APP_JOBS_POLL_MS=30000`, add a user with an
+  overdue due. Note: V12 queued jobs for existing users; turn their
+  digest off first if they have fake emails. Read next: `DuesDigestJob.handle`.
