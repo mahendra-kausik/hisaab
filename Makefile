@@ -19,7 +19,7 @@ endif
 
 # Postgres in Docker (waits until it is healthy).
 db-up:
-	docker compose up -d --wait postgres
+	docker compose up -d --wait postgres s3
 
 db-down:
 	docker compose down

@@ -348,8 +348,44 @@ direction comes from the type.
   send rolls the claim back so the retry sends. Sending needs
   `MAIL_FROM`; blank means the job runs but sends nothing.
 - `attachments`: id, workspace_id, transaction_id or
-  due_id, object_key, mime_type, size_bytes, created_by,
-  created_at.
+  due_id, object_key, file_name, mime_type, size_bytes,
+  created_by, created_at.
+  - U19 (`V13`): exactly one of `transaction_id` / `due_id`
+    (`CHECK num_nonnulls(...) = 1`), composite FKs to both parents
+    (workspace-safe), `size_bytes` capped at 10 MiB by a CHECK, RLS like
+    the other tables. `object_key` is `workspaces/{workspaceId}/attachments/
+    {random uuid}`; the user's file name is stored in `file_name` and never
+    appears in the key. The key is never returned by the API.
+  - Allowed types: `image/jpeg`, `image/png`, `image/webp`, `image/heic`,
+    `application/pdf` (415 `unsupported_type`); at most 10 MB (413
+    `file_too_large`); empty is 422 `empty_file`; a missing `Content-Length`
+    is 411. Transfer legs are refused (422 `transfer_leg`); a cancelled due
+    is fine. No count limit per parent.
+  - Endpoints: `GET|POST /workspaces/{id}/transactions/{txId}/attachments`,
+    `GET|POST /workspaces/{id}/dues/{dueId}/attachments`,
+    `GET /workspaces/{id}/attachments/{attId}/content`,
+    `DELETE /workspaces/{id}/attachments/{attId}` (204). Reads need viewer,
+    upload and delete need editor. The parent must be live and in the
+    workspace (checked through `TransactionService.get` / `DueService.get`),
+    so a soft-deleted parent hides its attachments (404) and restoring it
+    brings them back.
+  - **Upload is the raw file as the request body, not multipart:**
+    `Content-Type` is the file's type, `?file_name=` its name. It is streamed
+    to storage with the declared length and never buffered. Those content
+    types are not CORS-safelisted, so the CSRF reasoning in `SecurityConfig`
+    still holds. Download streams back through the API with `Content-Type`
+    from the stored value, `Content-Disposition: inline`, `X-Content-Type-
+    Options: nosniff` and `Content-Security-Policy: sandbox`, so a mislabelled
+    file cannot run as a page on our origin.
+  - Write order: the row is inserted, then the object is put (a failed put
+    rolls the row back). Delete removes the row, and the object only after
+    commit; if that removal fails the object is orphaned and logged (a sweep
+    job is the upgrade).
+  - Storage is any S3-compatible service through one class, `ObjectStorage`
+    (AWS SDK v2 `S3Client`, path-style, checksums "when required" for R2).
+    Config `app.storage.*` from `STORAGE_*` env vars. Locally and in tests the
+    stand-in is `adobe/s3mock` (MinIO's images are no longer published); it
+    creates the bucket from an env var and does not check credentials.
 - `jobs`: id, workspace_id (nullable for system jobs),
   kind, payload (jsonb), run_at, status (`queued` |
   `running` | `done` | `failed`), attempts, last_error,

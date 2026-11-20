@@ -19,7 +19,22 @@ services:
       timeout: 3s
       retries: 20
 
+  # Stands in for Cloudflare R2 locally (both speak the S3 protocol). Path-style URLs only, and
+  # credentials are not checked. The bucket is created at startup; files survive restarts.
+  s3:
+    image: adobe/s3mock:5.2.3
+    ports:
+      - "9090:9090"
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: hisaab
+      COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /s3mockroot
+      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "true"
+    volumes:
+      - s3data:/s3mockroot
+
 volumes:
+  s3data:
+    name: hisaab_api_s3data
   pgdata:
     # Explicit name so it cannot collide with an older project's "hisaab_pgdata".
     name: hisaab_api_pgdata

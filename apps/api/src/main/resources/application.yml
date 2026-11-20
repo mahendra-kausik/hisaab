@@ -42,6 +42,13 @@ app:
   mail:
     # The sender of the dues digest. Blank = the digest is not sent (local dev default).
     from: ${MAIL_FROM:}
+  # Attachment files live in any S3-compatible store: Cloudflare R2 in production, MinIO locally.
+  storage:
+    endpoint: ${STORAGE_ENDPOINT}
+    region: ${STORAGE_REGION:auto}
+    bucket: ${STORAGE_BUCKET}
+    access-key: ${STORAGE_ACCESS_KEY}
+    secret-key: ${STORAGE_SECRET_KEY}
 
 server:
   # "native": Tomcat honours X-Forwarded-For only when the request comes from a

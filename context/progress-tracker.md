@@ -354,6 +354,31 @@ change.
   overflow at 360px (same-origin iframe). Not clicked through: editing a
   due, the payable direction, the project select, light theme. U15's
   browser pass is still open.
+- **U19 (API half) — Attachments (21 Nov 2026):** `V13__attachments.sql`
+  (`attachments` with RLS, composite FKs to transactions and dues, exactly
+  one parent, 10 MiB CHECK), package `in.hisaab.attachments`
+  (`ObjectStorage` = the only class that talks to S3/R2, `Attachment`,
+  `AttachmentRepository`, `AttachmentService`, `AttachmentController`,
+  `UploadRejectedException`, `StorageProperties`, `dto/AttachmentResponse`).
+  Endpoints: `GET|POST` on `/transactions/{id}/attachments` and
+  `/dues/{id}/attachments`, `GET /attachments/{id}/content`, `DELETE
+  /attachments/{id}`. Upload is the raw file as the body (not multipart).
+  7 new tests (`AttachmentsApiTest`), `RlsIsolationTest` lists `attachments`;
+  `make check` passes (183 API, 65 web, production build). Smoke-tested over
+  real HTTP against the dev API and s3mock: upload 201, list, download with
+  identical bytes and the nosniff/sandbox headers, 415, 413, chunked upload
+  411 (nothing stored), delete 204 with the object gone from the bucket,
+  401 without login. Decisions (21 Nov): storage stand-in for R2 is
+  **adobe/s3mock 5.2.3** because MinIO's images can no longer be pulled from
+  Docker Hub or Quay (the plan said MinIO); it creates the bucket from an env
+  var, so no init container; docker-compose service is `s3` (port 9090) and
+  `make db-up` starts it. The AWS SDK uses the small URL-connection HTTP client
+  (Apache and Netty excluded) and `WHEN_REQUIRED` checksums, which R2 needs.
+  New required env vars `STORAGE_ENDPOINT`, `STORAGE_BUCKET`,
+  `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` (`STORAGE_REGION` defaults to
+  `auto`); the API will not start without them, so copy the new block from
+  `.env.example`. Not verified: a real R2 bucket (deploy-time env vars only);
+  real R2 may differ from s3mock on error details.
 
 
 ## In Progress
@@ -432,7 +457,8 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   real digest landed in Gmail spam (see Open Questions).
   `JobPoller.runDue` now loops until a batch is not full.
 - [ ] **U19 — Attachments (R2)** on transactions and
-  dues.
+  dues. API done 21 Nov 2026 (see Completed); web (edit
+  dialogs) still to do.
 - [ ] **U20 — Per-party PDF statement** (PDFBox).
 - [ ] **U21 — Excel export** for a workspace (Apache POI).
 - [ ] **U22 — Nightly database backup** to R2.

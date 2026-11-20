@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/transactions/{transactionId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listForTransaction"];
+        put?: never;
+        post: operations["uploadToTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces/{workspaceId}/recurring": {
         parameters: {
             query?: never;
@@ -286,6 +302,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/dues/{dueId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listForDue"];
+        put?: never;
+        post: operations["uploadToDue"];
         delete?: never;
         options?: never;
         head?: never;
@@ -532,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{workspaceId}/attachments/{attachmentId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -543,6 +591,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspaceId}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_4"];
         options?: never;
         head?: never;
         patch?: never;
@@ -747,6 +811,16 @@ export interface components {
             kind: string;
             role: string;
         };
+        AttachmentResponse: {
+            /** Format: uuid */
+            id: string;
+            file_name: string;
+            mime_type: string;
+            /** Format: int64 */
+            size_bytes: number;
+            /** Format: date-time */
+            created_at: string;
+        };
         CreateProjectRequest: {
             name: string;
             notes?: string;
@@ -900,6 +974,10 @@ export interface components {
         };
         ListResponseTransactionResponse: {
             items: components["schemas"]["TransactionResponse"][];
+            next_cursor?: string;
+        };
+        ListResponseAttachmentResponse: {
+            items: components["schemas"]["AttachmentResponse"][];
             next_cursor?: string;
         };
         ListResponseString: {
@@ -1423,6 +1501,54 @@ export interface operations {
             };
         };
     };
+    listForTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ListResponseAttachmentResponse"];
+                };
+            };
+        };
+    };
+    uploadToTransaction: {
+        parameters: {
+            query: {
+                file_name: string;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AttachmentResponse"];
+                };
+            };
+        };
+    };
     list_1: {
         parameters: {
             query?: never;
@@ -1705,6 +1831,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["DueResponse"];
+                };
+            };
+        };
+    };
+    listForDue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                dueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ListResponseAttachmentResponse"];
+                };
+            };
+        };
+    };
+    uploadToDue: {
+        parameters: {
+            query: {
+                file_name: string;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+                dueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AttachmentResponse"];
                 };
             };
         };
@@ -2168,6 +2342,29 @@ export interface operations {
             };
         };
     };
+    content: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
     health: {
         parameters: {
             query?: never;
@@ -2185,6 +2382,27 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["HealthResponse"];
                 };
+            };
+        };
+    };
+    delete_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

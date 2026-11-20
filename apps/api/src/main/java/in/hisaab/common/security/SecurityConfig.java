@@ -52,8 +52,9 @@ public class SecurityConfig {
         // CSRF protection is off. A CSRF attack makes a victim's browser send a forged request
         // with their cookies. Here that cannot work, for three reasons: (1) the auth cookies
         // are SameSite=Lax, so browsers do not send them on cross-site POST/PATCH/DELETE;
-        // (2) every request with a body must be application/json, which a cross-site HTML
-        // form cannot send and a cross-site script could only send after a CORS check;
+        // (2) every request with a body must be application/json (or, for attachment uploads,
+        // the file's own image/* or application/pdf type), none of which a cross-site HTML
+        // form can send, and a cross-site script could only send after a CORS check;
         // (3) CORS allows only our own web origin.
         .csrf(csrf -> csrf.disable())
         // Uses the CorsConfigurationSource bean below.

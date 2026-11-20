@@ -23,6 +23,7 @@
     <java.version>25</java.version>
     <springdoc.version>3.2.0</springdoc.version>
     <bucket4j.version>8.22.0</bucket4j.version>
+    <aws-sdk.version>2.59.5</aws-sdk.version>
     <spotless.version>3.11.0</spotless.version>
     <google-java-format.version>2.0.0</google-java-format.version>
   </properties>
@@ -71,6 +72,28 @@
       <groupId>com.bucket4j</groupId>
       <artifactId>bucket4j_jdk17-core</artifactId>
       <version>${bucket4j.version}</version>
+    </dependency>
+    <!-- S3 client for attachments (Cloudflare R2 speaks S3). The default Apache and Netty HTTP
+         clients are swapped for the small URL-connection one to save memory on a 512 MB host. -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>${aws-sdk.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>software.amazon.awssdk</groupId>
+          <artifactId>apache-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>software.amazon.awssdk</groupId>
+          <artifactId>netty-nio-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>url-connection-client</artifactId>
+      <version>${aws-sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
