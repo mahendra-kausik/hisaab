@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U18 in-app reminders built and browser-checked; the email digest waits on the email provider. U15 still needs a browser pass.
+- Phase 1.5: U18 in-app reminders built and browser-checked; the email digest waits on the email provider.
 
 ## Completed
 
@@ -1127,3 +1127,15 @@ introduced, so later explanations don't repeat them.
   `APP_DUES_DIGEST_HOUR=0 APP_JOBS_POLL_MS=30000`, add a user with an
   overdue due. Note: V12 queued jobs for existing users; turn their
   digest off first if they have fake emails. Read next: `DuesDigestJob.handle`.
+  *U15 browser pass (21 Nov 2026):* empty state, add project, duplicate
+  name in another case rejected ("A project with this name already
+  exists"), archive moves it to an "Archived" section and out of the
+  pickers, quick-add with a project shows the name on the row, Project
+  filter (UI and URL `?project_id=`, Export CSV link keeps it), CSV has
+  the `project` column after `party` with the comma-name quoted,
+  recurring dialog project select and the job copied the project onto
+  both transactions it made. 360px: no horizontal scroll on /projects,
+  /transactions, /recurring. Light theme /projects looks fine. No
+  console errors. Not checked: editing a project's name/notes, an
+  archived project staying on an already-linked transaction (covered by
+  API tests).
