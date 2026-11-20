@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.5: U18 in-app reminders built, browser pass pending; the email digest waits on the email provider. U15 still needs a browser pass.
+- Phase 1.5: U18 in-app reminders built and browser-checked; the email digest waits on the email provider. U15 still needs a browser pass.
 
 ## Completed
 
@@ -1093,3 +1093,10 @@ introduced, so later explanations don't repeat them.
   used by two components, derived data instead of a new endpoint,
   guarded localStorage. Try it: `make dev`, add a due dated yesterday,
   look at Home and the sidebar. Read next: `dues-banner.tsx`.
+  *Browser pass (20 Nov 2026):* no dues -> no banner or badge; one overdue
+  due -> badge 1; adding a due-today one -> Home banner "1 due overdue ·
+  1 due today" and badge 2; dismiss -> banner gone after reload while the
+  badge stays; cancelling the overdue due -> badge 1 and banner "1 due
+  today"; 360px (iframe) no horizontal scroll; no console errors.
+  `make check` passed. Not checked: light theme (the white-on-red badge
+  contrast), several workspaces, a day rollover bringing the banner back.
