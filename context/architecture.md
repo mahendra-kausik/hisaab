@@ -15,11 +15,11 @@
 | Security        | Spring Security, BCrypt passwords, JWT via Spring Security OAuth2 Resource Server (Nimbus) | Authentication, rotating refresh tokens     |
 | API docs        | springdoc-openapi                                                 | OpenAPI JSON at `/v3/api-docs`, Swagger UI in dev            |
 | Database        | PostgreSQL 16 (local: Docker; hosted: Neon)                       | All structured data; row-level security                      |
-| Background jobs | Postgres-backed `jobs` table, polled by a `@Scheduled` worker inside the same Spring Boot app | Recurring entries, dues digests, exports, later imports |
+| Background jobs | Postgres-backed `jobs` table, polled by a `@Scheduled` worker inside the same Spring Boot app | Recurring entries, dues digests, later imports |
 | Rate limiting   | Bucket4j (in-memory)                                              | Login and signup throttling                                  |
 | Outbound email  | Spring Mail (SMTP); Brevo, single verified sender (no domain) | Daily dues digest to the user; later verification and resets |
 | Documents       | Apache PDFBox (PDF statements), Apache POI (Excel export)         | Phase 1.5 exports                                            |
-| File storage    | Cloudflare R2 via AWS SDK for Java v2 (S3 client); locally and in tests `adobe/s3mock` | Attachments (U19), exports, database backups (Phase 1.5) |
+| File storage    | Cloudflare R2 via AWS SDK for Java v2 (S3 client); locally and in tests `adobe/s3mock` | Attachments (U19), database backups (Phase 1.5) |
 | Web framework   | Next.js (App Router) + TypeScript (strict)                        | Web UI and PWA; proxies `/api` to the API                    |
 | UI              | Tailwind CSS + shadcn/ui, Lucide icons                            | Components and styling                                       |
 | Web data        | TanStack Query, openapi-typescript, Zod, react-hook-form          | Server state, generated API types, form validation           |
@@ -102,8 +102,9 @@ API directly with a bearer token.
   transactions, budgets, recurring rules, parties,
   projects, dues, attachment metadata, jobs, refresh
   tokens, audit log.
-- **R2 (object storage)**: attachment files, generated
-  exports (CSV, Excel, PDF), nightly database dumps. The
+- **R2 (object storage)**: attachment files and nightly
+  database dumps. Exports (CSV, Excel, PDF) are built per
+  request and streamed back, never stored. The
   database stores only the object key, MIME type, size,
   file name, and owning workspace. Only `ObjectStorage`
   (package `attachments`) talks to it; files stream through
@@ -200,6 +201,18 @@ direction comes from the type.
     Java's `NumberFormat` cannot group by pairs; a character the font
     cannot draw (PDFBox does no text shaping, so Devanagari) prints as
     `?`.
+  - Workspace Excel export (U21): `GET /workspaces/{id}/export.xlsx`
+    (package `exports`: `WorkspaceExportController`,
+    `WorkspaceExportService`). Every transaction (transfers included)
+    and every live due, all time, VIEWER access, no filters. Two
+    sheets, Transactions and Dues, read through the other features'
+    services (so access checks and RLS apply) in one read-only
+    transaction. Apache POI `XSSFWorkbook`, built in memory on request
+    and not stored in R2. Amounts are number cells (rupees from the
+    `long` paise via `BigDecimal`, the only place a double appears,
+    because xlsx stores nothing else) with Indian-grouping number
+    format; dates are date cells; text always goes in as a text cell,
+    so a note starting with `=` is never run as a formula.
 - `projects`: id, workspace_id, name, notes,
   archived_at, created_at, updated_at.
   - U15 (`V10`): same shape as parties, minus phone and role.

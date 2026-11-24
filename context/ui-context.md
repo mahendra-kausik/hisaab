@@ -148,6 +148,10 @@ the color tokens.
   ("Cash → HDFC Bank", neutral colour) even though it is two
   records. A row opens its edit dialog on click or Enter, and
   has an actions menu (Edit, Delete).
+- **Exports:** top right of the Transactions page, two outline
+  `<a download>` links (32px): "Export all (Excel)" (whole workspace,
+  ignores the filters, `.../export.xlsx`) and "Export CSV" (current
+  filters). The row wraps on narrow screens.
 - **Filters:** the Transactions page keeps its filters
   (search, type, account, category, party, project, tag, date range) in the
   URL, so a reload or shared link shows the same list. They

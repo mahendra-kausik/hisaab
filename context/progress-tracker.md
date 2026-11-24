@@ -6,11 +6,11 @@ change.
 ## Current Phase
 
 - Phase 1 (manual tracker) — code complete (U0–U13 done)
-- Phase 1.5 (people & dues) — in progress (U14–U20 done; U21–U22 left)
+- Phase 1.5 (people & dues) — in progress (U14–U21 done; U22 left)
 
 ## Current Goal
 
-- Phase 1.5: U20 per-party PDF statement done; next is U21 (Excel export).
+- Phase 1.5: U21 workspace Excel export done; next is U22 (nightly database backup to R2).
 
 ## Completed
 
@@ -430,6 +430,29 @@ change.
   A 2-page, 45-row PDF and a crore-sized one were opened as images and checked
   by eye. Not done: clicking the button to save a file (not saved to disk from
   the browser), opening the PDF in a desktop viewer, the light theme.
+- **U21 — Workspace Excel export (24 Nov 2026):** `GET /workspaces/{id}/
+  export.xlsx` (VIEWER, all time, no filters): a Transactions sheet (transfers
+  included) and a Dues sheet (live dues, cancelled included). API: package
+  `in.hisaab.exports` (`WorkspaceExportController`, `WorkspaceExportService`),
+  Apache POI `poi-ooxml` 5.5.1 (`poi.version` in `pom.xml`; 6.0.0 exists but was
+  not taken for a first use). `PartyStatementService.slug` and `stateLabel` are
+  now package-private and reused. Built per request through the other features'
+  services in one read-only transaction (access checks and RLS apply); not
+  stored in R2. Decisions (24 Nov): amounts are real number cells (rupees from
+  the `long` paise through `BigDecimal`; the one place a double appears, since
+  xlsx stores only doubles) with an Indian-grouping number format; dates are
+  date cells; text goes in as text cells, so `=SUM(A1)` in a note is never a
+  formula (no guard needed, unlike the CSV); fixed column widths instead of
+  `autoSizeColumn`, which needs AWT fonts. Web: an "Export all (Excel)" outline
+  `<a download>` beside Export CSV on the Transactions page (it ignores the
+  filters, so the label says "all"). 2 new API tests (191 total), 72 web tests;
+  `make check` passes. **Browser pass (Chrome, dev API + web, 24 Nov):** the
+  button sits beside Export CSV; fetching its URL in the page with the session
+  returned 200, the xlsx content type and a body starting with `PK` through the
+  Next proxy; both buttons on one row at 360px with no horizontal overflow
+  (same-origin iframe); no console errors. Not done: saving the file from the
+  button click, opening it in Excel (lakh grouping and SUM were checked only
+  through POI in the test, not by eye), the light theme.
 
 
 ## In Progress
@@ -512,7 +535,9 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   remove in the edit dialogs); see Completed.
 - [x] **U20 — Per-party PDF statement** (PDFBox). Done 24 Nov 2026:
   API, then web (Download statement on the party ledger); see Completed.
-- [ ] **U21 — Excel export** for a workspace (Apache POI).
+- [x] **U21 — Excel export** for a workspace (Apache POI). Done
+  24 Nov 2026: API, then web (Export all (Excel) on Transactions); see
+  Completed.
 - [ ] **U22 — Nightly database backup** to R2.
 
 ### Phase 1.6 — Phone
@@ -1292,3 +1317,16 @@ introduced, so later explanations don't repeat them.
   formatted from a `long` by hand (`NumberFormat` groups by one size only).
   Try it: `make db-up && make dev`, open a party, click Download statement.
   Read next: `PartyStatementService.statement`, then `StatementPdf.Page.table`.
+- **24 Nov 2026 — U21 done (workspace Excel export).** Key files:
+  `exports/{WorkspaceExportController,WorkspaceExportService}`,
+  `WorkspaceExportApiTest`, `pom.xml` (`poi.version`),
+  `components/transactions/transactions-view.tsx`, `lib/api/schema.d.ts`.
+  Concepts introduced: Apache POI's `XSSFWorkbook` (workbook, sheet, row, cell;
+  `CellStyle` for bold, number and date formats; `createFreezePane`);
+  why a cell's type matters (text vs number vs date, so Excel can sum and sort);
+  why money stays a `long` until the cell is written (xlsx only stores doubles);
+  reusing a service that is already a security boundary instead of querying
+  again; `@Transactional(readOnly = true)` to read two sheets from one snapshot;
+  reading a workbook back in a test with `new XSSFWorkbook(InputStream)`.
+  Try it: `make db-up && make dev`, open Transactions, click Export all (Excel).
+  Read next: `WorkspaceExportService.export`, then `moneyCell` and `sheet`.
