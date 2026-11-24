@@ -577,15 +577,20 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 ## Open Questions
 
-- **Backups need real infrastructure (U22):** the workflow has never run on
-  GitHub. Before deploy, follow "Backups" in `README.md`: create the R2 bucket
-  `hisaab-backups`, a token limited to it, and a 30-day lifecycle rule on
-  `backups/`; create the `hisaab_backup` role on Neon (`BYPASSRLS` plus
-  `pg_read_all_data`; if Neon refuses `BYPASSRLS`, fall back to its owner role);
-  add the five `BACKUP_*` secrets and `BACKUP_ENABLED=true`; run the workflow
-  once by hand, then do one real restore into a scratch database. Also: GitHub
-  switches schedules off after 60 days without repository activity (public
-  repositories), and a failed run only emails you.
+- **Backups: one check left after deploy (U22):** set up and run on real
+  infrastructure on 24 Nov 2026 (R2 bucket `hisaab-backups` with token and
+  30-day lifecycle rule, `hisaab_backup` role on Neon, the five `BACKUP_*`
+  secrets, `BACKUP_ENABLED=true`). The workflow ran green from GitHub, the dump
+  reached R2 and restored into a scratch database. But the Neon database had no
+  tables yet (the API had never run against it), so the dump was empty and
+  **nothing proved that `hisaab_backup` can read RLS-protected rows on Neon**.
+  After the API is deployed and has run once with some data: run the workflow by
+  hand, check the new file is clearly bigger, restore it into a scratch database
+  and compare row counts (`transactions`, `dues`, `users`) with production. If
+  they come out as 0, `hisaab_backup` is not bypassing RLS: use the owner role's
+  connection string in `BACKUP_DATABASE_URL`. Also: GitHub switches schedules off
+  after 60 days without repository activity (public repositories), and a failed
+  run only emails you.
 - **Non-Latin text in statements (U20):** the PDF font (Noto Sans) covers
   Latin and ₹ only, and PDFBox does no text shaping, so Hindi or other
   scripts in a party name, note or reason print as `?`. If statements need
