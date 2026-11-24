@@ -119,8 +119,11 @@ docker run --rm -i postgres:18-alpine pg_restore --no-owner -d "<database url>" 
 ```
 
 Use `--clean --if-exists` to overwrite a database that already has the tables.
-Restoring into a server older than 17 prints one harmless error about
-`transaction_timeout`; everything else still restores.
+Restoring prints a few harmless errors and ends with `errors ignored on
+restore: N`; everything else still restores. On a server older than 17 one is
+`SET transaction_timeout`. On Neon two more are `ALTER DEFAULT PRIVILEGES FOR
+ROLE cloud_admin ...` (Neon's own defaults, which your role may not change).
+Always compare row counts afterwards.
 
 ## Project rules
 

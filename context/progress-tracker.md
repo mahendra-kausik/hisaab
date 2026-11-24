@@ -475,8 +475,10 @@ change.
   denied for table flyway_schema_history`), and a dump as a temporary
   `BYPASSRLS` + `pg_read_all_data` role succeeded. Found: a pg 18 dump cannot be
   read by pg 16's `pg_restore` (`unsupported version (1.16)`), so restore uses
-  the same image; restoring into a server older than 17 prints one harmless
-  `SET transaction_timeout` error. Not done: a run on GitHub, a real R2 bucket,
+  the same image; restoring into a server older than 17 prints a harmless
+  `SET transaction_timeout` error, and a real restore into Neon (24 Nov) also
+  printed two `ALTER DEFAULT PRIVILEGES FOR ROLE cloud_admin` errors (Neon's
+  own defaults; "errors ignored on restore: 3", data restored). Not done: a run on GitHub, a real R2 bucket,
   the real `hisaab_backup` role (see Open Questions); the workflow file was only
   read by eye. `make check` was not re-run (no API or web code changed).
 
