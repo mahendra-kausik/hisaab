@@ -200,8 +200,8 @@ insights, and later tax and business features.
   screens. Pages must stay usable on a phone, but
   phone-optimized layouts come later.
 - Done (U23): phone layout (bottom tab bar, bottom-sheet
-  quick add). Later (U24): PWA installability (manifest,
-  icons). Online-only.
+  quick add). Done (U24): PWA installability (manifest,
+  icons; install from the browser). Online-only.
 
 ## Default Data
 
@@ -276,8 +276,6 @@ Business workspace:
   Questions).
 - Sending reminders or messages to parties (WhatsApp,
   SMS, or email).
-- Phone-optimized layouts and PWA install (planned right
-  after Phase 1.5).
 - Push notifications and offline mode.
 - Interest calculation on dues.
 - Languages other than English.

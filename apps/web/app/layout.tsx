@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { THEME_INIT_SCRIPT } from "@/lib/theme-init";
@@ -17,6 +17,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Hisaab",
   description: "Track expenses, income, and who owes what.",
+  appleWebApp: { title: "Hisaab", capable: true },
+};
+
+// Browser/title-bar color follows the page background in each mode.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F7F8FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0F14" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -124,6 +124,14 @@ the color tokens.
   right. Single-column content with 16px side padding, 96px
   bottom padding so the bar never covers the last row, and no
   horizontal overflow at 360px.
+- **App icon and install (PWA):** `app/icon.svg` is the one
+  icon source (white "H" on `--accent-primary` light, `#0F766E`,
+  art inside the central 80% so it also works maskable).
+  `app/manifest.ts` makes the app installable (standalone
+  window, theme `#0F766E`, splash `#F7F8FA`); the browser
+  chrome follows the page background per colour scheme. No
+  service worker: online-only. The PNG sizes are rendered from
+  the SVG with the `sharp` command noted in `manifest.ts`.
 - **Toasts on phones** sit above the tab bar (`--tab-bar-h`
   is 4rem below 768px, 0 above).
 - **Theme choice:** System, Light or Dark from the user

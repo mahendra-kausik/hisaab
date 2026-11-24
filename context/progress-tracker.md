@@ -10,7 +10,8 @@ change.
 
 ## Current Goal
 
-- Phase 1.6: U23 phone layout done; next is U24 (PWA).
+- Phase 1.6 (phone) — code complete (U23–U24 done). Next: deploy and the
+  open questions below.
 
 ## Completed
 
@@ -499,6 +500,25 @@ change.
   dialog and `N` shortcut are unchanged. Not done: a real phone; the full
   `make check` (API tests were not re-run: no API code changed).
 
+- **U24 — PWA (25 Nov 2026):** web only, no API change, online-only (no
+  service worker). `app/manifest.ts` (Next serves it at `/manifest.webmanifest`:
+  standalone, teal theme, page-background splash color, 192 / 512 icons and a
+  maskable 512), `app/icon.svg` (white "H" of rectangles on the teal accent;
+  Next uses it as the favicon), `app/apple-icon.png` (iOS home screen) and
+  `public/icon-{192,512}.png`. The PNGs were rendered once from the SVG with
+  `sharp`; the command is in a comment at the top of `manifest.ts`.
+  `app/layout.tsx` adds `appleWebApp` metadata and a `viewport.themeColor` per
+  colour scheme (light / dark page background). Deleted the default Next
+  `favicon.ico` and the five unused `public/*.svg` starter images.
+  **Verified (25 Nov):** `lint`, `tsc`, Vitest (72) and `next build` pass; with
+  `next start`, `/manifest.webmanifest` returns the JSON as
+  `application/manifest+json`, all four icon URLs return 200 with the right
+  type, and `/login` has the manifest link, apple-touch-icon, icon and both
+  theme-color metas. Not done: seeing Chrome's install button or installing on
+  a real phone (needs a look in a browser and the deployed HTTPS site); the icon
+  is a placeholder letter mark, so swap `icon.svg` and re-run the command if you
+  get a real logo.
+
 ## In Progress
 
 - None yet.
@@ -590,7 +610,8 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U23 — Phone layout:** bottom tab bar, bottom-sheet
   quick add, phone-sized lists and reports. Done 25 Nov 2026
   (web only); see Completed.
-- [ ] **U24 — PWA:** manifest, icons, installability.
+- [x] **U24 — PWA:** manifest, icons, installability. Done 25 Nov 2026
+  (web only); see Completed.
 
 ## Open Questions
 
@@ -1419,3 +1440,15 @@ introduced, so later explanations don't repeat them.
   narrower than 768px (or use the device toolbar), tap Add and More.
   Read next: `bottom-tabs.tsx`, then the `DialogContent` classes in
   `quick-add-dialog.tsx`, then `app-shell.tsx`.
+- **25 Nov 2026 — U24 done (PWA).** Key files: `app/manifest.ts`,
+  `app/icon.svg`, `app/apple-icon.png`, `public/icon-*.png`, `app/layout.tsx`.
+  Web only. Concepts introduced: the web app manifest and what makes a site
+  installable (manifest + icons + HTTPS; a service worker is not required);
+  Next.js metadata file conventions (`manifest.ts`, `icon.svg`, `apple-icon.png`
+  become routes and `<head>` tags with no wiring); the `viewport` export and
+  per-colour-scheme `themeColor`; maskable icons (the OS crops them to a shape,
+  so the art stays in the central 80%); rendering PNGs from an SVG with `sharp`.
+  Try it: `make dev`, open http://localhost:3000 in Chrome, look for the install
+  icon in the address bar, install, and it opens in its own window. On a phone
+  it needs the deployed HTTPS site (Chrome menu > Install app; iOS Share > Add
+  to Home Screen). Read next: `app/manifest.ts`, then `app/layout.tsx`.
