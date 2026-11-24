@@ -185,7 +185,13 @@ insights, and later tax and business features.
   they are added. Transfers cannot have attachments.
   Deleting a transaction hides its files, and restoring it
   brings them back.
-- Per-party statement as a shareable PDF.
+- Per-party statement as a shareable PDF, downloaded from the
+  party page. All time (no date range). It shows the totals
+  (paid, received, net balance), the party's dues, and every
+  transaction with date, note (or category), paid and received.
+  Accounts, payment methods and tags are left out because the
+  party sees the file. Text in scripts the PDF font cannot draw
+  (for example Devanagari) prints as "?".
 - Excel export of a workspace's transactions and dues.
 
 ### Phone Support (after Phase 1.5)

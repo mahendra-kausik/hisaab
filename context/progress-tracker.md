@@ -6,11 +6,11 @@ change.
 ## Current Phase
 
 - Phase 1 (manual tracker) — code complete (U0–U13 done)
-- Phase 1.5 (people & dues) — in progress (U14–U19 done; U20–U22 left)
+- Phase 1.5 (people & dues) — in progress (U14–U20 done; U21–U22 left)
 
 ## Current Goal
 
-- Phase 1.5: U19 attachments done; next is U20 (per-party PDF statement).
+- Phase 1.5: U20 per-party PDF statement done; next is U21 (Excel export).
 
 ## Completed
 
@@ -405,6 +405,31 @@ change.
   type in a real browser, the light theme, clicking the link to see the new
   tab. A duplicate row seen once came from the browser tool re-running a
   script, not from the app (a controlled single upload added one row).
+- **U20 — Per-party PDF statement (24 Nov 2026):** `GET /workspaces/{id}/
+  parties/{partyId}/statement.pdf` (all time, VIEWER, 404 for a party outside
+  the workspace). API: package `in.hisaab.exports` (`PartyStatementController`,
+  `PartyStatementService`, `StatementPdf`), `PartyService.get`, PDFBox 3.0.8
+  (`pdfbox.version` in `pom.xml`), embedded Noto Sans in `resources/fonts/`.
+  Web: an outline "Download statement" `<a download>` on the party ledger.
+  Decisions (24 Nov): all time, no date range; lines show date, note (else
+  category), paid, received, and leave out account, payment method and tags
+  because the party sees the file; characters the font cannot draw print as `?`.
+  Two bugs found by *looking* at the rendered PDF, not by the text assertions:
+  money was cut short with an ellipsis in a narrow column, and a long party name
+  ran off the page. Now money columns are sized to their widest value and only
+  text is shortened; both have a test. Also found: `NumberFormat` with `en-IN`
+  groups by thousands (₹100,000.00), not lakhs, so amounts are formatted by hand
+  from the `long` paise (`PartyStatementService.money`, `MoneyFormatTest`).
+  Not stored in R2: built per request. 6 new API tests (189 total), 72 web
+  tests; `make check` parts pass (API `spotless:check verify`, web lint,
+  typecheck, tests, build). **Browser pass (Chrome, dev API + web, 24 Nov):**
+  the button shows beside "Add due" at 44px; fetching its URL in the page with
+  the session returned 200, `application/pdf`, an attachment disposition and a
+  `%PDF-` body through the Next proxy; no horizontal overflow at 360px
+  (same-origin iframe); no console errors (tracked from after the page loaded).
+  A 2-page, 45-row PDF and a crore-sized one were opened as images and checked
+  by eye. Not done: clicking the button to save a file (not saved to disk from
+  the browser), opening the PDF in a desktop viewer, the light theme.
 
 
 ## In Progress
@@ -485,7 +510,8 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U19 — Attachments (R2)** on transactions and
   dues. Done 21 Nov 2026: API, then web (attach, open and
   remove in the edit dialogs); see Completed.
-- [ ] **U20 — Per-party PDF statement** (PDFBox).
+- [x] **U20 — Per-party PDF statement** (PDFBox). Done 24 Nov 2026:
+  API, then web (Download statement on the party ledger); see Completed.
 - [ ] **U21 — Excel export** for a workspace (Apache POI).
 - [ ] **U22 — Nightly database backup** to R2.
 
@@ -497,6 +523,18 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 ## Open Questions
 
+- **Non-Latin text in statements (U20):** the PDF font (Noto Sans) covers
+  Latin and ₹ only, and PDFBox does no text shaping, so Hindi or other
+  scripts in a party name, note or reason print as `?`. If statements need
+  Hindi, bundle a Devanagari font and a shaping step (or render the page
+  with another tool); a plain extra font would draw the letters in the
+  wrong shapes.
+- **Digest amounts use thousands grouping (found in U20):** `DuesDigestJob`
+  formats money with `NumberFormat` for `en-IN` from a `double`. On this JDK
+  that groups by thousands (₹100,000.00), not lakhs (₹1,00,000.00), as the
+  statement test showed. Not changed in U20. Fix: reuse
+  `PartyStatementService.money` (move it to `common/money/`) and format from
+  the `long` paise.
 - **Real R2 bucket before deploy (U19):** create a Cloudflare R2
   bucket and an API token, then set `STORAGE_ENDPOINT`
   (`https://<account-id>.r2.cloudflarestorage.com`), `STORAGE_REGION=auto`,
@@ -1240,3 +1278,17 @@ introduced, so later explanations don't repeat them.
   kept). Four throwaway test users (smoke*, u19-browser-1) have the dues
   digest turned off so no mail goes to example.com. Docs synced: README,
   CLAUDE.md, architecture, project-overview, code-standards, ui-context.
+- **24 Nov 2026 — U20 done (per-party PDF statement).** Key files:
+  `exports/{PartyStatementController,PartyStatementService,StatementPdf}`,
+  `PartyStatementApiTest`, `MoneyFormatTest`, `PartyService.get`,
+  `resources/fonts/NotoSans-Regular.ttf`, `components/parties/party-ledger.tsx`.
+  Concepts introduced: a pure renderer class that takes strings and returns
+  `byte[]` (no Spring, no DB) next to a service that gathers the data through
+  other features' services; PDFBox (`PDDocument`, `PDPageContentStream`, an
+  embedded `PDType0Font` so ₹ draws, and measuring text with `getStringWidth`
+  to size columns); `try`-with-resources for the document and font stream;
+  `ResponseEntity<byte[]>` with `ContentDisposition.attachment()`; reading a
+  PDF back in a test with `Loader.loadPDF` and `PDFTextStripper`; why money is
+  formatted from a `long` by hand (`NumberFormat` groups by one size only).
+  Try it: `make db-up && make dev`, open a party, click Download statement.
+  Read next: `PartyStatementService.statement`, then `StatementPdf.Page.table`.

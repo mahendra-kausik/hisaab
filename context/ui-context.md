@@ -165,7 +165,9 @@ the color tokens.
   "Party" select only once the workspace has a party; an archived
   party is listed there only while it is the saved choice.
 - **Party ledger (`/parties/{id}`):** back link, name with role and
-  phone, an "Add due" button (party preset), three tiles (Total paid,
+  phone, an outline "Download statement" link (a plain `<a download>` to
+  `.../statement.pdf`, like Export CSV) beside an "Add due" button (party
+  preset; both 44px, the row wraps on narrow screens), three tiles (Total paid,
   Total received, Net balance as "They owe you ₹X" / "You owe them ₹X" /
   "Settled up"; net comes from the party's non-cancelled dues), the
   party's dues (cancelled last), then their transactions (the normal

@@ -183,6 +183,23 @@ direction comes from the type.
     `GET /transactions` and `export.csv` take `party_id`; the
     CSV has a `party` column. The recurring job copies the
     rule's party into each transaction it makes.
+  - Statement (U20): `GET /workspaces/{id}/parties/{partyId}/
+    statement.pdf` (package `exports`: `PartyStatementController`,
+    `PartyStatementService`, `StatementPdf`). All-time, one party,
+    VIEWER access, 404 for another workspace's party. The service
+    reads dues, transactions, categories and the party through the
+    other features' services; `StatementPdf` is a pure renderer
+    (strings in, bytes out) using Apache PDFBox and an embedded Noto
+    Sans (`resources/fonts/`, OFL; the standard PDF fonts cannot draw
+    ₹). Generated on request and streamed back, not stored in R2.
+    Lines show date, note (or category) and paid / received; account,
+    payment method and tags are left out because the party sees the
+    file. Rules: money columns are sized to their widest value and are
+    never shortened (only text gets an ellipsis); amounts use Indian
+    grouping (₹1,00,000.00) built from the `long` paise, because
+    Java's `NumberFormat` cannot group by pairs; a character the font
+    cannot draw (PDFBox does no text shaping, so Devanagari) prints as
+    `?`.
 - `projects`: id, workspace_id, name, notes,
   archived_at, created_at, updated_at.
   - U15 (`V10`): same shape as parties, minus phone and role.
