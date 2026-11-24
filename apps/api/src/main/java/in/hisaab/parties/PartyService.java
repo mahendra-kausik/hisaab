@@ -38,6 +38,16 @@ public class PartyService {
         .toList();
   }
 
+  /** One party, archived or not. Another workspace's party is "not found". */
+  @Transactional(readOnly = true)
+  public PartyResponse get(UUID workspaceId, UUID partyId) {
+    access.require(workspaceId, WorkspaceRole.VIEWER);
+    return parties
+        .findByIdAndWorkspaceId(partyId, workspaceId)
+        .map(PartyResponse::from)
+        .orElseThrow(() -> new NotFoundException("Party not found"));
+  }
+
   /**
    * For transactions and recurring rules: the party must belong to this workspace and not be
    * archived. Not being in the workspace looks the same as not existing. Called after the caller's

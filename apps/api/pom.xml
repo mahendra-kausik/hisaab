@@ -24,6 +24,7 @@
     <springdoc.version>3.2.0</springdoc.version>
     <bucket4j.version>8.22.0</bucket4j.version>
     <aws-sdk.version>2.59.5</aws-sdk.version>
+    <pdfbox.version>3.0.8</pdfbox.version>
     <spotless.version>3.11.0</spotless.version>
     <google-java-format.version>2.0.0</google-java-format.version>
   </properties>
@@ -94,6 +95,12 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>url-connection-client</artifactId>
       <version>${aws-sdk.version}</version>
+    </dependency>
+    <!-- Per-party PDF statement (U20). Not managed by Spring Boot, so the version is pinned. -->
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>${pdfbox.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
