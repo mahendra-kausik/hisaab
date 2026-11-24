@@ -25,7 +25,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <Toaster />
+      <Toaster
+        offset={{ bottom: "calc(24px + var(--tab-bar-h, 0px))" }}
+        mobileOffset={{ bottom: "calc(16px + var(--tab-bar-h, 0px))" }}
+      />
     </QueryClientProvider>
   );
 }

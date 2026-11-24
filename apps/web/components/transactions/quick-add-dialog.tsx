@@ -39,6 +39,7 @@ import {
   useTransfer,
 } from "@/lib/queries/transactions";
 import { categoryItems, type CategoryItem, type Row } from "@/lib/transactions";
+import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
 import { NativeSelect } from "./native-select";
 
@@ -374,7 +375,8 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
         </p>
       )}
 
-      <DialogFooter>
+      {/* Sticky so Save stays in reach while the long form scrolls (no Enter on a phone keypad). */}
+      <DialogFooter className="sticky bottom-0 -mb-4 flex-row rounded-b-none bg-popover *:flex-1 md:rounded-b-xl md:*:flex-none">
         <Button type="button" variant="outline" className="h-11" onClick={onClose}>
           Cancel
         </Button>
@@ -431,7 +433,13 @@ export function QuickAddDialog({
   const title = !editing ? "Add transaction" : editing.kind === "transfer" ? "Edit transfer" : "Edit transaction";
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl sm:max-w-md">
+      {/* Phone: a bottom sheet (top corners rounded, slides up). md and up: the centred dialog. */}
+      <DialogContent
+        className={cn(
+          "top-auto bottom-0 left-0 max-h-[90dvh] max-w-full translate-x-0 translate-y-0 overflow-y-auto rounded-none rounded-t-2xl data-open:slide-in-from-bottom data-closed:slide-out-to-bottom",
+          "md:top-1/2 md:bottom-auto md:left-1/2 md:max-h-[calc(100dvh-2rem)] md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:data-open:slide-in-from-bottom-0 md:data-closed:slide-out-to-bottom-0",
+        )}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="sr-only">

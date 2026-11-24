@@ -63,6 +63,13 @@
   --radius: 0.625rem;
 }
 
+/* Height of the phone bottom tab bar; toasts sit above it (see components/providers.tsx). */
+@media (width < 48rem) {
+  :root {
+    --tab-bar-h: 4rem;
+  }
+}
+
 :root.light {
   color-scheme: light;
 }

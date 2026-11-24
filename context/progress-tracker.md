@@ -10,7 +10,7 @@ change.
 
 ## Current Goal
 
-- Phase 1.6: U22 nightly database backup done (Phase 1.5 complete); next is U23 (phone layout).
+- Phase 1.6: U23 phone layout done; next is U24 (PWA).
 
 ## Completed
 
@@ -481,7 +481,23 @@ change.
   own defaults; "errors ignored on restore: 3", data restored). Not done: a run on GitHub, a real R2 bucket,
   the real `hisaab_backup` role (see Open Questions); the workflow file was only
   read by eye. `make check` was not re-run (no API or web code changed).
-
+- **U23 — Phone layout (25 Nov 2026):** web only, no API change. Below 768px
+  the shell shows a top bar (Hisaab + workspace switcher) and a fixed bottom tab
+  bar (`components/shell/bottom-tabs.tsx`): Home, Transactions, a raised Add (+),
+  Dues (with the needs-attention badge) and More. More opens the old `Sidebar`
+  in a right-hand sheet (every page, user menu, theme). `isCurrent()` moved out
+  of `sidebar.tsx` so both navs share it. Quick add is a bottom sheet on phones
+  (classes on `DialogContent` in `quick-add-dialog.tsx`; `md:` restores the
+  centred dialog) with a sticky, opaque Cancel / Save footer. Toasts are lifted
+  above the bar through `--tab-bar-h` (`globals.css`) and Sonner's `offset` /
+  `mobileOffset` (`providers.tsx`). `<main>` gets `pb-24` on phones.
+  **Verified (25 Nov):** `lint`, `tsc`, Vitest (72) and `next build` pass. In
+  Chrome, with the app in 360px and 390px iframes (the window resize tool does
+  not change the viewport): no horizontal overflow on any of the 11 pages, with
+  and without data; tab highlight, More sheet, bottom-sheet add (Save visible
+  while scrolling), Undo toast above the bar; at 1280px the sidebar, centred
+  dialog and `N` shortcut are unchanged. Not done: a real phone; the full
+  `make check` (API tests were not re-run: no API code changed).
 
 ## In Progress
 
@@ -571,8 +587,9 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 ### Phase 1.6 — Phone
 
-- [ ] **U23 — Phone layout:** bottom tab bar, bottom-sheet
-  quick add, phone-sized lists and reports.
+- [x] **U23 — Phone layout:** bottom tab bar, bottom-sheet
+  quick add, phone-sized lists and reports. Done 25 Nov 2026
+  (web only); see Completed.
 - [ ] **U24 — PWA:** manifest, icons, installability.
 
 ## Open Questions
@@ -1387,3 +1404,18 @@ introduced, so later explanations don't repeat them.
   Try it: `make db-up && make backup`, then list the bucket with the aws-cli
   image (see README, Restore). Read next: `scripts/backup-db.sh` top to bottom,
   then `backup.yml`.
+- **25 Nov 2026 — U23 done (phone layout).** Key files:
+  `components/shell/{bottom-tabs,app-shell,sidebar}.tsx`,
+  `components/transactions/quick-add-dialog.tsx`, `components/providers.tsx`,
+  `app/globals.css`. Web only. Concepts introduced: Tailwind's mobile-first
+  breakpoints (base classes are the phone, `md:` the desktop, `md:hidden` /
+  `hidden md:block` to swap whole components); restyling a generated shadcn
+  component through `className` (`tailwind-merge` lets the later class win)
+  instead of editing `components/ui`; one Base UI dialog used as a centred
+  dialog or a bottom sheet; `position: sticky` for a footer inside a scrolling
+  popup; a CSS custom property set in a media query and read with `calc(var())`;
+  `dvh` units; testing a phone width with a same-origin iframe.
+  Try it: `make db-up && make dev`, open http://localhost:3000, make the browser
+  narrower than 768px (or use the device toolbar), tap Add and More.
+  Read next: `bottom-tabs.tsx`, then the `DialogContent` classes in
+  `quick-add-dialog.tsx`, then `app-shell.tsx`.

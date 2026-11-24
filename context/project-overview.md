@@ -199,9 +199,9 @@ insights, and later tax and business features.
 - Phase 1 and 1.5 are designed for laptop and desktop
   screens. Pages must stay usable on a phone, but
   phone-optimized layouts come later.
-- Later: phone layout (bottom tab bar, bottom-sheet
-  quick add) and PWA installability (manifest, icons).
-  Online-only.
+- Done (U23): phone layout (bottom tab bar, bottom-sheet
+  quick add). Later (U24): PWA installability (manifest,
+  icons). Online-only.
 
 ## Default Data
 

@@ -42,6 +42,11 @@ const NAV: { label: string; icon: LucideIcon; href?: string }[] = [
 
 const ITEM = "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium";
 
+/** A sub-page (a party's ledger under /parties) keeps its section highlighted. */
+export function isCurrent(pathname: string, href: string): boolean {
+  return pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
+}
+
 export function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
   const pathname = usePathname();
   const { openAdd } = useQuickAdd();
@@ -68,8 +73,7 @@ export function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void })
 
       <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
         {NAV.map(({ label, icon: Icon, href }) => {
-          // A sub-page (a party's ledger under /parties) keeps its section highlighted.
-          const current = !!href && (pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)));
+          const current = !!href && isCurrent(pathname, href);
           return href ? (
             <Link
               key={label}

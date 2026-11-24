@@ -114,10 +114,18 @@ the color tokens.
   prominent Add button, then Home, Transactions, Accounts,
   Categories, Dues, Reports, Budgets, Settings. Content max width 1100px.
   Design and verify at 1280px first.
-- **Narrow screens (< 768px, for now):** the sidebar
-  collapses into a slide-over menu opened from a top app
-  bar. Single-column content with 16px side padding and
-  no horizontal overflow at 360px.
+- **Phone (< 768px):** a 56px top bar (app name, workspace
+  switcher) and a fixed 64px bottom tab bar: Home,
+  Transactions, a raised round Add (+), Dues (with the
+  needs-attention count badge) and More. The current tab is
+  `text-primary` with `aria-current="page"`; More is current
+  on any page that has no tab of its own. More opens the full
+  sidebar (every page, user menu, theme) as a sheet from the
+  right. Single-column content with 16px side padding, 96px
+  bottom padding so the bar never covers the last row, and no
+  horizontal overflow at 360px.
+- **Toasts on phones** sit above the tab bar (`--tab-bar-h`
+  is 4rem below 768px, 0 above).
 - **Theme choice:** System, Light or Dark from the user
   menu, kept in `localStorage` (`hisaab.theme`; System is
   "no value"). A small script in `<head>` applies it before
@@ -125,11 +133,11 @@ the color tokens.
 - **Unbuilt pages:** sidebar items whose page does not exist
   yet are shown muted with a "Soon" badge and are not links;
   the unit that builds the page gives the item its `href`.
-- **Phone layout (later, U23):** bottom tab bar with
-  Home, Transactions, Add (+), Dues, More; quick add as
-  a bottom sheet.
 - **Quick add:** a dialog, opened by the Add button or
   the `N` key from any page; Enter saves, Esc closes.
+  Below 768px it is a bottom sheet (full width, top corners
+  rounded, slides up, at most 90% of the screen height) whose
+  Cancel / Save footer stays pinned while the form scrolls.
   The amount field comes first, is autofocused, and uses
   `inputmode="decimal"`. Then a type toggle (Expense /
   Income / Transfer), a searchable category picker
