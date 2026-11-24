@@ -151,7 +151,8 @@ the color tokens.
   The amount field comes first, is autofocused, and uses
   `inputmode="decimal"`. Then a type toggle (Expense /
   Income / Transfer), a searchable category picker
-  (recent first), account and date prefilled, an
+  (recent first; expense only, since income has no
+  categories), account and date prefilled, an
   optional note, and Save. Tab order follows the visual
   order.
 - **Due reminders:** a dismissible banner at the top of
@@ -216,8 +217,13 @@ the color tokens.
   show an optional "Project" select under the party one, only once
   the workspace has a project. Transaction rows list the project
   name among the detail chips.
-- **Categories page (`/categories`):** Expense and Income sections,
-  parents with their subcategories indented. Row menu: Rename, Add
+- **Budgets page (`/budgets`):** each budgeted category in the
+  current period has outline Edit and Remove buttons (Remove sets the
+  amount to 0, which the API treats as removal); past periods are
+  read-only. A new budget shows what is already spent without a reload.
+- **Categories page (`/categories`):** one plain list (no Expense or
+  Income headings, since categories are expense-only) with a single
+  "Add category" button; parents with their subcategories indented. Row menu: Rename, Add
   subcategory (parents only), Hide / Show, Delete (custom categories
   only, through a confirm dialog). A hidden category carries a
   "Hidden" text badge; hiding a parent also hides its subcategories

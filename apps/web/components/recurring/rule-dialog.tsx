@@ -104,7 +104,7 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
           account_id: v.accountId,
           type: kind,
           amount_paise: v.amountPaise,
-          category_id: categoryId || undefined,
+          category_id: kind === "expense" ? categoryId || undefined : undefined,
           party_id: partyId || undefined,
           project_id: projectId || undefined,
           note: v.note || undefined,
@@ -164,28 +164,31 @@ function RuleForm({ editing, onClose }: { editing: RecurringRule | null; onClose
         </div>
       </fieldset>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="rule-category">Category</Label>
-        <Combobox<CategoryItem>
-          items={items}
-          value={selectedCategory}
-          onValueChange={(item) => setCategoryId(item?.id ?? "")}
-          itemToStringLabel={(item) => item.label}
-          isItemEqualToValue={(a, b) => a.id === b.id}
-        >
-          <ComboboxInput id="rule-category" placeholder="Uncategorized" showClear className="h-11 w-full" />
-          <ComboboxContent>
-            <ComboboxEmpty>No category found</ComboboxEmpty>
-            <ComboboxList>
-              {(item: CategoryItem) => (
-                <ComboboxItem key={item.id} value={item} className="min-h-9">
-                  {item.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </div>
+      {/* Income has no categories. */}
+      {kind === "expense" && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rule-category">Category</Label>
+          <Combobox<CategoryItem>
+            items={items}
+            value={selectedCategory}
+            onValueChange={(item) => setCategoryId(item?.id ?? "")}
+            itemToStringLabel={(item) => item.label}
+            isItemEqualToValue={(a, b) => a.id === b.id}
+          >
+            <ComboboxInput id="rule-category" placeholder="Uncategorized" showClear className="h-11 w-full" />
+            <ComboboxContent>
+              <ComboboxEmpty>No category found</ComboboxEmpty>
+              <ComboboxList>
+                {(item: CategoryItem) => (
+                  <ComboboxItem key={item.id} value={item} className="min-h-9">
+                    {item.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="rule-account">Account</Label>

@@ -1,8 +1,7 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import type { Row } from "@/lib/transactions";
-import { accountsKey } from "./accounts";
 
 type TransactionRequest = components["schemas"]["TransactionRequest"];
 type TransferRequest = components["schemas"]["TransferRequest"];
@@ -56,61 +55,43 @@ export function useTransfer(workspaceId: string, transferId: string, enabled: bo
   });
 }
 
-/** Every change here moves the list and the account balances, so both are refetched. */
-function useRefreshAfterChange(workspaceId: string) {
-  const queryClient = useQueryClient();
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] }),
-      queryClient.invalidateQueries({ queryKey: ["transfer", workspaceId] }),
-      queryClient.invalidateQueries({ queryKey: accountsKey(workspaceId) }),
-      // A payment changes its due's paid and outstanding amounts.
-      queryClient.invalidateQueries({ queryKey: ["dues", workspaceId] }),
-    ]);
-}
+// Every change here moves the list, balances, budgets, reports and dues. None of that is listed:
+// each successful mutation refetches whatever is on screen (components/providers.tsx).
 
 /** Create (no `id`) or replace (`id`, a PUT) an expense or income. */
 export function useSaveTransaction(workspaceId: string) {
-  const refresh = useRefreshAfterChange(workspaceId);
   return useMutation({
     mutationFn: ({ id, body }: { id?: string; body: TransactionRequest }) =>
       apiFetch(`${base(workspaceId)}/transactions${id ? `/${id}` : ""}`, {
         method: id ? "PUT" : "POST",
         json: body,
       }),
-    onSuccess: refresh,
   });
 }
 
 /** Create (no `id`) or replace (`id`, a PUT) a transfer. */
 export function useSaveTransfer(workspaceId: string) {
-  const refresh = useRefreshAfterChange(workspaceId);
   return useMutation({
     mutationFn: ({ id, body }: { id?: string; body: TransferRequest }) =>
       apiFetch(`${base(workspaceId)}/transfers${id ? `/${id}` : ""}`, {
         method: id ? "PUT" : "POST",
         json: body,
       }),
-    onSuccess: refresh,
   });
 }
 
 /** Soft delete: the row is hidden, not erased, so `useRestoreEntry` can bring it back. */
 export function useDeleteEntry(workspaceId: string) {
-  const refresh = useRefreshAfterChange(workspaceId);
   return useMutation({
     mutationFn: (row: Pick<Row, "kind" | "id">) =>
       apiFetch(entryPath(workspaceId, row), { method: "DELETE" }),
-    onSuccess: refresh,
   });
 }
 
 /** The Undo of a delete. */
 export function useRestoreEntry(workspaceId: string) {
-  const refresh = useRefreshAfterChange(workspaceId);
   return useMutation({
     mutationFn: (row: Pick<Row, "kind" | "id">) =>
       apiFetch(`${entryPath(workspaceId, row)}/restore`, { method: "POST" }),
-    onSuccess: refresh,
   });
 }

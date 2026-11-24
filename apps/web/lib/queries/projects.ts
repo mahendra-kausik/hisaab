@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -20,21 +20,18 @@ export function useProjects(workspaceId: string) {
   });
 }
 
+// Mutations need no cache code: every success refetches the pages on screen (components/providers.tsx).
 export function useCreateProject(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateProjectRequest) =>
       apiFetch<Project>(base(workspaceId), { method: "POST", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: projectsKey(workspaceId) }),
   });
 }
 
 /** A PATCH: only the fields sent change. Archiving is `{ archived: true }`. */
 export function useUpdateProject(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateProjectRequest }) =>
       apiFetch<Project>(`${base(workspaceId)}/${id}`, { method: "PATCH", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: projectsKey(workspaceId) }),
   });
 }

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -20,30 +20,26 @@ export function useCategories(workspaceId: string) {
   });
 }
 
+// The mutations below need no cache code: every successful mutation refetches the pages on
+// screen (the MutationCache rule in components/providers.tsx).
 export function useCreateCategory(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateCategoryRequest) =>
       apiFetch<Category>(base(workspaceId), { method: "POST", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: categoriesKey(workspaceId) }),
   });
 }
 
 /** A PATCH: rename with `{ name }`, hide or show with `{ hidden }`. */
 export function useUpdateCategory(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateCategoryRequest }) =>
       apiFetch<Category>(`${base(workspaceId)}/${id}`, { method: "PATCH", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: categoriesKey(workspaceId) }),
   });
 }
 
 /** Permanent. The API refuses a default category (409 `system_category`) or one in use (409 `category_in_use`). */
 export function useDeleteCategory(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => apiFetch(`${base(workspaceId)}/${id}`, { method: "DELETE" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: categoriesKey(workspaceId) }),
   });
 }

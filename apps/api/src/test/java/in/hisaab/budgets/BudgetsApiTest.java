@@ -40,7 +40,12 @@ class BudgetsApiTest extends PostgresTestBase {
     setBudget(s, ws, food, 500000).andExpect(status().isNoContent());
     postTx(s, ws, tx(cash, "expense", 10000, food));
     postTx(s, ws, tx(cash, "expense", 25000, groceries));
-    postTx(s, ws, tx(cash, "income", 99999, categoryId(s, ws, "Salary", "income")));
+    // Income has no categories, so it is posted without one.
+    postTx(
+        s,
+        ws,
+        "{\"account_id\": \"%s\", \"type\": \"income\", \"amount_paise\": 99999, \"occurred_on\": \"%s\"}"
+            .formatted(cash, TODAY));
     String deleted = JsonPath.read(postTx(s, ws, tx(cash, "expense", 7777, food)), "$.id");
     mockMvc
         .perform(
@@ -86,14 +91,11 @@ class BudgetsApiTest extends PostgresTestBase {
   }
 
   @Test
-  void onlyTopLevelExpenseCategoriesCanBeBudgeted() throws Exception {
+  void onlyTopLevelCategoriesCanBeBudgeted() throws Exception {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
     String food = categoryId(s, ws, "Food", "expense");
 
-    setBudget(s, ws, categoryId(s, ws, "Salary", "income"), 100)
-        .andExpect(status().isUnprocessableContent())
-        .andExpect(jsonPath("$.error.code").value("invalid_category"));
     setBudget(s, ws, childId(s, ws, food), 100).andExpect(status().isUnprocessableContent());
     setBudget(s, ws, food, -1).andExpect(status().isBadRequest());
   }

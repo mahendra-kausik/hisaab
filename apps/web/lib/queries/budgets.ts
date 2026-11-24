@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -16,15 +16,17 @@ export function useBudgets(workspaceId: string, day?: string) {
   });
 }
 
-/** Sets a category's budget from the current period on; 0 removes it. */
+/**
+ * Sets a category's budget from the current period on; 0 removes it. No cache code here: the
+ * MutationCache rule in components/providers.tsx refetches the budgets on screen afterwards, so
+ * the new row shows what has already been spent.
+ */
 export function useSetBudget(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ categoryId, amountPaise }: { categoryId: string; amountPaise: number }) =>
       apiFetch(`${base(workspaceId)}/${categoryId}`, {
         method: "PUT",
         json: { amount_paise: amountPaise },
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: key(workspaceId) }),
   });
 }

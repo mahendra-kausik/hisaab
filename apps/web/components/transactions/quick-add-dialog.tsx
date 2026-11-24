@@ -187,7 +187,7 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
           type: kind,
           amount_paise: v.amountPaise,
           occurred_on: v.occurredOn,
-          category_id: v.categoryId || undefined,
+          category_id: kind === "expense" ? v.categoryId || undefined : undefined,
           party_id: partyId || undefined,
           project_id: projectId || undefined,
           // Not shown in this form; sent back so editing a payment does not unlink it (PUT replaces).
@@ -272,6 +272,8 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
         </>
       ) : (
         <>
+          {/* Income has no categories. */}
+          {kind === "expense" && (
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="entry-category">Category</Label>
             <Combobox<CategoryItem>
@@ -299,6 +301,7 @@ function EntryForm({ editing, onClose }: { editing: Row | null; onClose: () => v
               </ComboboxContent>
             </Combobox>
           </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="entry-account">Account</Label>
             <NativeSelect

@@ -619,6 +619,10 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   fewer default categories; sidebar trimmed to five pages plus a collapsible
   "More"; Settings moved into the profile menu; the sidebar link list scrolls
   on its own. Done 25 Nov 2026; see Completed.
+- [x] **U26 — Expense-only categories, budget Edit/Remove, no stale pages:**
+  income has no categories; the defaults are the user's own list; migration V14
+  cleans existing workspaces; budgets get visible Edit and Remove; one global
+  refetch after every mutation. Done 25 Nov 2026; see Completed.
 
 ## Open Questions
 
@@ -1480,3 +1484,28 @@ introduced, so later explanations don't repeat them.
   no subcategories), add a subcategory under Food, open /budgets and see More
   expand, shrink the window height and watch only the nav scroll. Read next:
   `DefaultCategories.java`, then `sidebar.tsx`.
+- **25 Nov 2026 — U26 done (expense-only categories, budget Edit/Remove, no stale
+  pages).** Key files: `categories/DefaultCategories.java`,
+  `db/migration/V14__expense_only_categories.sql`,
+  `categories/ExpenseOnlyMigrationTest.java`, `components/providers.tsx`,
+  `components/budgets/budgets-view.tsx`. **Categories:** income has no
+  categories (creating one is 422 `invalid_kind`; income transactions are
+  uncategorized); defaults are the user's list (personal 8, business 8, no
+  children). V14 deletes every income category and the named default expense ones
+  from existing workspaces, nulls them on transactions and dues, promotes custom
+  children of a deleted parent to top level. **Gotcha found:** these tables have
+  `FORCE ROW LEVEL SECURITY`, which applies to the owner too, and a migration has
+  no current user, so a plain UPDATE/DELETE changes zero rows silently. V14 lifts
+  FORCE on three tables and restores it in the same transaction; the migration
+  test seeds old data and runs the file to prove it. **Budgets:** Edit and Remove
+  are now outline buttons (Remove = amount 0). **Stale pages:** each mutation hook
+  refreshed only its own queries, so a new transaction never refreshed budgets or
+  reports. Now `MutationCache.onSuccess` in `providers.tsx` invalidates every query
+  after any successful mutation (TanStack awaits it before the caller's
+  `onSuccess`); the per-hook invalidations were deleted; logout opts out with
+  `meta: { skipRefresh: true }`. Concepts: Postgres FORCE RLS vs the table owner,
+  `CREATE TEMP TABLE ... ON COMMIT DROP`, `MutationCache` global callbacks, query
+  invalidation prefix matching (`invalidateQueries()` with no key matches all).
+  Try it: `make dev` (V14 runs on your local DB), open Categories and Budgets, set
+  a budget, add an expense from Add, watch the budget update with no reload. Read
+  next: `providers.tsx`, then `V14__expense_only_categories.sql`.

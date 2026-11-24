@@ -80,19 +80,43 @@ function AmountForm({
 }
 
 function BudgetRow({ item, editable }: { item: BudgetItem; editable: boolean }) {
+  const { active } = useWorkspace();
+  const setBudget = useSetBudget(active.id);
   const [editing, setEditing] = useState(false);
   const state = budgetState(item.spent_paise, item.amount_paise);
   const pct = Math.min(100, Math.floor((item.spent_paise * 100) / item.amount_paise));
   const left = item.amount_paise - item.spent_paise;
+
+  // An amount of 0 removes the budget (the same call the edit form makes when it is cleared).
+  function remove() {
+    setBudget.mutate(
+      { categoryId: item.category_id, amountPaise: 0 },
+      {
+        onSuccess: () => toast("Budget removed"),
+        onError: (e) =>
+          toast.error(e instanceof ApiError ? e.message : "Could not remove the budget"),
+      },
+    );
+  }
 
   return (
     <li className="flex flex-col gap-2 p-4">
       <div className="flex items-center justify-between gap-3">
         <span className="min-w-0 truncate text-sm font-medium">{item.category_name}</span>
         {editable && !editing && (
-          <Button variant="ghost" className="h-11" onClick={() => setEditing(true)}>
-            Edit
-          </Button>
+          <div className="flex shrink-0 gap-1">
+            <Button variant="outline" className="h-11" onClick={() => setEditing(true)}>
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 text-destructive"
+              disabled={setBudget.isPending}
+              onClick={remove}
+            >
+              Remove
+            </Button>
+          </div>
         )}
       </div>
       {editing ? (

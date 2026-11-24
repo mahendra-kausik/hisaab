@@ -132,7 +132,7 @@ export function DueDialog({
             reason: v.reason,
             due_date: v.dueDate || undefined,
             project_id: projectId || undefined,
-            category_id: categoryId || undefined,
+            category_id: dueKind === "expense" ? categoryId || undefined : undefined,
           },
         },
         callbacks,
@@ -147,7 +147,7 @@ export function DueDialog({
       origin = {
         account_id: o.data.accountId,
         occurred_on: o.data.date,
-        category_id: originCategoryId || undefined,
+        category_id: originKind === "expense" ? originCategoryId || undefined : undefined,
         note: o.data.note || undefined,
       };
     }
@@ -160,7 +160,7 @@ export function DueDialog({
           reason: v.reason,
           due_date: v.dueDate || undefined,
           project_id: projectId || undefined,
-          category_id: categoryId || undefined,
+          category_id: dueKind === "expense" ? categoryId || undefined : undefined,
           origin,
         },
       },
@@ -273,23 +273,24 @@ export function DueDialog({
             keepId={editing?.project_id}
           />
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="due-category">
-              Category for {direction === "receivable" ? "payments received" : "payments made"} (optional)
-            </Label>
-            <NativeSelect
-              id="due-category"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-            >
-              <option value="">Uncategorized</option>
-              {dueCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </NativeSelect>
-          </div>
+          {/* Only payments made are expenses; income has no categories. */}
+          {dueKind === "expense" && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="due-category">Category for payments made (optional)</Label>
+              <NativeSelect
+                id="due-category"
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
+                <option value="">Uncategorized</option>
+                {dueCategories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+          )}
 
           {!editing && (
             <div className="flex flex-col gap-4 rounded-xl border p-3">
@@ -335,21 +336,23 @@ export function DueDialog({
                       className="h-11"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="origin-category">Category (optional)</Label>
-                    <NativeSelect
-                      id="origin-category"
-                      value={originCategoryId}
-                      onChange={(e) => setOriginCategoryId(e.target.value)}
-                    >
-                      <option value="">Uncategorized</option>
-                      {originCategories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </div>
+                  {originKind === "expense" && (
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="origin-category">Category (optional)</Label>
+                      <NativeSelect
+                        id="origin-category"
+                        value={originCategoryId}
+                        onChange={(e) => setOriginCategoryId(e.target.value)}
+                      >
+                        <option value="">Uncategorized</option>
+                        {originCategories.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="origin-note">Note (optional)</Label>
                     <Input

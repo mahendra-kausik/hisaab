@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -31,21 +31,18 @@ export function useParties(workspaceId: string) {
   });
 }
 
+// Mutations need no cache code: every success refetches the pages on screen (components/providers.tsx).
 export function useCreateParty(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreatePartyRequest) =>
       apiFetch<Party>(base(workspaceId), { method: "POST", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: partiesKey(workspaceId) }),
   });
 }
 
 /** A PATCH: only the fields sent change. Archiving is `{ archived: true }`. */
 export function useUpdateParty(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdatePartyRequest }) =>
       apiFetch<Party>(`${base(workspaceId)}/${id}`, { method: "PATCH", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: partiesKey(workspaceId) }),
   });
 }

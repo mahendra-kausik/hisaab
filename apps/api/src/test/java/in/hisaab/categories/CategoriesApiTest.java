@@ -31,24 +31,29 @@ class CategoriesApiTest extends PostgresTestBase {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
 
-    // 10 expense + 5 income categories, no subcategories.
+    // 8 expense categories, no income categories, no subcategories.
     String body =
         mockMvc
             .perform(get(url(ws)).cookie(auth(s)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(15))
-            .andExpect(jsonPath("$.items[0].kind").value("expense"))
+            .andExpect(jsonPath("$.items.length()").value(8))
+            .andExpect(jsonPath("$.items[?(@.kind == 'income')]").isEmpty())
             .andExpect(jsonPath("$.items[?(@.is_system == false)]").isEmpty())
-            .andExpect(jsonPath("$.items[?(@.name == 'Money Lent')]").isNotEmpty())
-            .andExpect(jsonPath("$.items[?(@.name == 'Loan Repayment')]").isNotEmpty())
             .andReturn()
             .getResponse()
             .getContentAsString();
     // JsonPath.read directly: MockMvc's jsonPath(...).value(List) does not match filter results.
-    List<String> income = JsonPath.read(body, "$.items[?(@.kind == 'income')].name");
-    assertThat(income)
+    List<String> names = JsonPath.read(body, "$.items[*].name");
+    assertThat(names)
         .containsExactly(
-            "Salary", "Refunds", "Money Borrowed", "Repayment Received", "Other Income");
+            "Food",
+            "Transport",
+            "Bills & Recharges",
+            "Shopping",
+            "Education",
+            "Entertainment",
+            "Subscriptions",
+            "Other");
   }
 
   @Test
@@ -102,17 +107,21 @@ class CategoriesApiTest extends PostgresTestBase {
   }
 
   @Test
-  void aParentOfTheOtherKindIsRejected() throws Exception {
+  void incomeCategoriesCannotBeCreated() throws Exception {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
     String food = idOf(s, ws, "Food", "expense");
 
+    postCat(s, ws, "{\"name\": \"Tips\", \"kind\": \"income\"}")
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.error.code").value("invalid_kind"));
+    // The kind check comes before the parent check.
     postCat(
             s,
             ws,
             "{\"name\": \"Tips\", \"kind\": \"income\", \"parent_id\": \"%s\"}".formatted(food))
         .andExpect(status().isUnprocessableContent())
-        .andExpect(jsonPath("$.error.code").value("invalid_parent"));
+        .andExpect(jsonPath("$.error.code").value("invalid_kind"));
   }
 
   @Test
@@ -154,7 +163,7 @@ class CategoriesApiTest extends PostgresTestBase {
     UUID ws = fixtures.workspaceIdOf(s);
 
     mockMvc
-        .perform(delete(url(ws) + "/" + idOf(s, ws, "Money Lent", "expense")).cookie(auth(s)))
+        .perform(delete(url(ws) + "/" + idOf(s, ws, "Food", "expense")).cookie(auth(s)))
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.error.code").value("system_category"));
   }
@@ -199,13 +208,13 @@ class CategoriesApiTest extends PostgresTestBase {
                 .formatted(food))
         .andExpect(status().isConflict());
     // Renaming onto an existing sibling.
-    patchCat(s, ws, idOf(s, ws, "Health", "expense"), "{\"name\": \"shopping\"}")
+    patchCat(s, ws, idOf(s, ws, "Transport", "expense"), "{\"name\": \"shopping\"}")
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.error.code").value("name_taken"));
   }
 
   @Test
-  void theSameNameIsAllowedUnderADifferentParentOrKind() throws Exception {
+  void theSameNameIsAllowedUnderADifferentParent() throws Exception {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
     String food = idOf(s, ws, "Food", "expense");
@@ -216,8 +225,6 @@ class CategoriesApiTest extends PostgresTestBase {
             ws,
             "{\"name\": \"Other\", \"kind\": \"expense\", \"parent_id\": \"%s\"}".formatted(food))
         .andExpect(status().isCreated());
-    // Income is a separate set from expense.
-    postCat(s, ws, "{\"name\": \"Other\", \"kind\": \"income\"}").andExpect(status().isCreated());
   }
 
   @Test
@@ -232,7 +239,7 @@ class CategoriesApiTest extends PostgresTestBase {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error.details.fields.kind").exists());
     postCat(s, ws, "{\"name\": \"X\", \"kind\": \"transfer\"}").andExpect(status().isBadRequest());
-    patchCat(s, ws, idOf(s, ws, "Health", "expense"), "{\"name\": \"  \"}")
+    patchCat(s, ws, idOf(s, ws, "Shopping", "expense"), "{\"name\": \"  \"}")
         .andExpect(status().isBadRequest());
   }
 

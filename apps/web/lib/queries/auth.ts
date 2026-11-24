@@ -30,6 +30,8 @@ export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => apiFetch<void>("/api/v1/auth/logout", { method: "POST" }),
+    // The cache is cleared below; refetching everything first would just produce 401s.
+    meta: { skipRefresh: true },
     // Drop every cached query so the next person on this browser sees none of it.
     onSettled: () => queryClient.clear(),
   });

@@ -42,30 +42,24 @@ class WorkspacesApiTest extends PostgresTestBase {
         mockMvc
             .perform(get("/api/v1/workspaces/" + ws + "/categories").cookie(auth(s)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(12))
+            .andExpect(jsonPath("$.items.length()").value(8))
             .andExpect(jsonPath("$.items[?(@.is_system == false)]").isEmpty())
+            .andExpect(jsonPath("$.items[?(@.kind == 'income')]").isEmpty())
             .andReturn()
             .getResponse()
             .getContentAsString();
     // JsonPath.read directly: MockMvc's jsonPath(...).value(List) does not match filter results.
     List<String> expense = JsonPath.read(categories, "$.items[?(@.kind == 'expense')].name");
-    List<String> income = JsonPath.read(categories, "$.items[?(@.kind == 'income')].name");
     assertThat(expense)
         .containsExactly(
             "Labour",
             "Materials",
+            "Contractor Payments",
+            "Broker Commission",
+            "Registration & Legal",
             "Transport",
             "Office & Admin",
-            "Money Lent",
-            "Loan Repayment",
             "Other");
-    assertThat(income)
-        .containsExactly(
-            "Sale Proceeds",
-            "Advance Received",
-            "Money Borrowed",
-            "Repayment Received",
-            "Other Income");
 
     mockMvc
         .perform(get("/api/v1/workspaces/" + ws + "/accounts").cookie(auth(s)))

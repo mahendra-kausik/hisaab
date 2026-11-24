@@ -1,8 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { partyTotals } from "@/lib/dues";
-import { accountsKey } from "./accounts";
 
 export type Due = components["schemas"]["DueResponse"];
 type CreateDueRequest = components["schemas"]["CreateDueRequest"];
@@ -27,32 +26,23 @@ export function useDues(workspaceId: string, partyId?: string) {
 
 /**
  * Create (no `id`) or replace (`id`, a PUT) a due. A create can carry an `origin`, which also
- * makes a transaction, so the transaction list and account balances are refetched too.
+ * makes a transaction; the global refetch after a mutation (components/providers.tsx) covers it.
  */
 export function useSaveDue(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id?: string; body: CreateDueRequest | UpdateDueRequest }) =>
       apiFetch<Due>(id ? `${base(workspaceId)}/${id}` : base(workspaceId), {
         method: id ? "PUT" : "POST",
         json: body,
       }),
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: duesKey(workspaceId) }),
-        queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] }),
-        queryClient.invalidateQueries({ queryKey: accountsKey(workspaceId) }),
-      ]),
   });
 }
 
 /** Cancel or reopen a due. Both reverse each other, so neither needs a confirm dialog. */
 export function useCancelReopenDue(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, action }: { id: string; action: "cancel" | "reopen" }) =>
       apiFetch<Due>(`${base(workspaceId)}/${id}/${action}`, { method: "POST" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: duesKey(workspaceId) }),
   });
 }
 

@@ -136,14 +136,10 @@ export function TransactionFilterBar({
         <Field label="Category" htmlFor="filter-category_id">
           <NativeSelect {...select("category_id")}>
             <option value="">All categories</option>
-            {(["expense", "income"] as const).map((kind) => (
-              <optgroup key={kind} label={kind === "expense" ? "Expense" : "Income"}>
-                {categoryItems(categoryList, kind, { includeHidden: true }).map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </optgroup>
+            {categoryItems(categoryList, "expense", { includeHidden: true }).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
             ))}
           </NativeSelect>
         </Field>

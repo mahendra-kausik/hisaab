@@ -307,21 +307,16 @@ class TransactionsApiTest extends PostgresTestBase {
                     ", \"category_id\": \"%s\"}".formatted(categoryId(b, wsB, "Food", "expense"))))
         .andExpect(status().isUnprocessableContent())
         .andExpect(jsonPath("$.error.code").value("invalid_category"));
-    // Right workspace, wrong kind: an income category on an expense.
-    String salary = categoryId(a, wsA, "Salary", "income");
-    postTx(
-            a,
-            wsA,
-            tx(cashA, "expense", 100, "2026-11-01")
-                .replace("}", ", \"category_id\": \"%s\"}".formatted(salary)))
-        .andExpect(status().isUnprocessableContent())
-        .andExpect(jsonPath("$.error.code").value("invalid_category"));
+    // Right workspace, wrong kind: income has no categories, so an income cannot take one.
+    String food = categoryId(a, wsA, "Food", "expense");
     postTx(
             a,
             wsA,
             tx(cashA, "income", 100, "2026-11-01")
-                .replace("}", ", \"category_id\": \"%s\"}".formatted(salary)))
-        .andExpect(status().isCreated());
+                .replace("}", ", \"category_id\": \"%s\"}".formatted(food)))
+        .andExpect(status().isUnprocessableContent())
+        .andExpect(jsonPath("$.error.code").value("invalid_category"));
+    postTx(a, wsA, tx(cashA, "income", 100, "2026-11-01")).andExpect(status().isCreated());
   }
 
   @Test
@@ -367,7 +362,6 @@ class TransactionsApiTest extends PostgresTestBase {
     String bank = createAccount(s, ws, "Bank");
     String food = categoryId(s, ws, "Food", "expense");
     String groceries = createChildCategory(s, ws, "Groceries", food);
-    String salary = categoryId(s, ws, "Salary", "income");
 
     createTx(
         s,
@@ -377,11 +371,7 @@ class TransactionsApiTest extends PostgresTestBase {
                 "}",
                 ", \"category_id\": \"%s\", \"note\": \"Lunch at cafe\", \"tags\": [\"Trip\"]}"
                     .formatted(food)));
-    createTx(
-        s,
-        ws,
-        tx(bank, "income", 5000, "2026-10-15")
-            .replace("}", ", \"category_id\": \"%s\"}".formatted(salary)));
+    createTx(s, ws, tx(bank, "income", 5000, "2026-10-15"));
     createTx(
         s,
         ws,

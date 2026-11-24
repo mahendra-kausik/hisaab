@@ -44,6 +44,12 @@ public class CategoryService {
   @Transactional
   public CategoryResponse create(UUID workspaceId, CreateCategoryRequest request) {
     access.require(workspaceId, WorkspaceRole.EDITOR);
+    if (request.kind() == CategoryKind.INCOME) {
+      throw new ValidationException(
+          "invalid_kind",
+          "Income has no categories",
+          Map.of("fields", Map.of("kind", "Only expense categories exist")));
+    }
     if (request.parentId() != null) {
       requireValidParent(workspaceId, request);
     }
@@ -111,19 +117,14 @@ public class CategoryService {
     }
   }
 
-  /** Seeds the default categories for a new workspace. Called by WorkspaceService.create. */
+  /**
+   * Seeds the default (expense) categories for a new workspace. Called by WorkspaceService.create.
+   */
   @Transactional
   public void createDefaults(UUID workspaceId, WorkspaceKind workspaceKind) {
-    for (var kind : CategoryKind.values()) {
-      var seeds = DefaultCategories.forKind(workspaceKind, kind);
-      for (int i = 0; i < seeds.size(); i++) {
-        var seed = seeds.get(i);
-        var parent = categories.save(new Category(workspaceId, null, seed.name(), kind, true, i));
-        for (int j = 0; j < seed.children().size(); j++) {
-          categories.save(
-              new Category(workspaceId, parent.getId(), seed.children().get(j), kind, true, j));
-        }
-      }
+    var names = DefaultCategories.forKind(workspaceKind);
+    for (int i = 0; i < names.size(); i++) {
+      categories.save(new Category(workspaceId, null, names.get(i), CategoryKind.EXPENSE, true, i));
     }
   }
 

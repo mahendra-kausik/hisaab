@@ -33,7 +33,7 @@ class ReportsApiTest extends PostgresTestBase {
     String food = categoryId(s, ws, "Food", "expense");
     String groceries = childId(s, ws, food);
 
-    postTx(s, ws, tx(cash, "income", 100000, "2024-02-01", categoryId(s, ws, "Salary", "income")));
+    postTx(s, ws, tx(cash, "income", 100000, "2024-02-01", null));
     postTx(s, ws, tx(cash, "expense", 10000, "2024-02-02", food));
     postTx(s, ws, tx(cash, "expense", 25000, "2024-02-02", groceries));
     postTx(s, ws, tx(cash, "expense", 5000, "2024-02-29", null));

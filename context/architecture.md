@@ -265,11 +265,15 @@ direction comes from the type.
     `UNIQUE (id, workspace_id)` as their targets.
   - CHECK constraints: a transfer type if and only if
     `transfer_group_id` is set; transfers have no category.
-  - Category rules in the API: an expense uses an expense
-    category and an income uses an income category (422
-    `invalid_category`); hidden categories are allowed. A
-    category used by any transaction, including a
-    soft-deleted one, cannot be deleted.
+  - Category rules in the API: categories are
+    expense-only (creating an income category is 422
+    `invalid_kind`; the `kind` column stays, and V14
+    removed every existing income category). An expense
+    uses an expense category and an income uses none (a
+    category on an income is 422 `invalid_category`);
+    hidden categories are allowed. A category used by any
+    transaction, including a soft-deleted one, cannot be
+    deleted.
   - Archived accounts: creating a transaction on one, or
     moving one onto it, is 422 `account_archived`. Editing
     a transaction that already lives there, delete and

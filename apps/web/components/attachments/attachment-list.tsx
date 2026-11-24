@@ -38,7 +38,7 @@ function Attached({ parent }: { parent: AttachmentParent }) {
   const { active } = useWorkspace();
   const list = useAttachments(active.id, parent);
   const upload = useUploadAttachment(active.id, parent);
-  const remove = useDeleteAttachment(active.id, parent);
+  const remove = useDeleteAttachment(active.id);
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   // The attachment whose Remove button was clicked once; a second click confirms.

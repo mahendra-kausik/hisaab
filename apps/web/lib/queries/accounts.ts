@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -20,21 +20,19 @@ export function useAccounts(workspaceId: string) {
   });
 }
 
+// The mutations below need no cache code: every successful mutation refetches the pages on
+// screen (the MutationCache rule in components/providers.tsx).
 export function useCreateAccount(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateAccountRequest) =>
       apiFetch<Account>(base(workspaceId), { method: "POST", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: accountsKey(workspaceId) }),
   });
 }
 
 /** A PATCH: only the fields sent change. Archiving is `{ archived: true }`. */
 export function useUpdateAccount(workspaceId: string) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateAccountRequest }) =>
       apiFetch<Account>(`${base(workspaceId)}/${id}`, { method: "PATCH", json: body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: accountsKey(workspaceId) }),
   });
 }

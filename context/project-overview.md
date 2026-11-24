@@ -95,8 +95,8 @@ insights, and later tax and business features.
 
 ### Categories & Tags
 
-- Two-level categories (parent → child), separate sets
-  for expense and income.
+- Two-level categories (parent → child). Categories are
+  expense-only: income has no categories.
 - Default categories seeded per workspace by kind (see
   Default Data). Users can rename, add, and hide
   categories. Hiding a parent category also hides its
@@ -206,26 +206,15 @@ insights, and later tax and business features.
 ## Default Data
 
 Every new workspace gets one Cash account and a short
-list of categories. The lists are kept to the bare minimum
-and there are no default subcategories: users add their
-own. The loan categories (expense Money Lent and Loan
-Repayment; income Money Borrowed and Repayment Received)
-are in every workspace because dues use them.
+list of expense categories. Income has no categories, and
+there are no default subcategories: users add their own.
 
-Personal workspace:
+Personal workspace: Food, Transport, Bills & Recharges,
+Shopping, Education, Entertainment, Subscriptions, Other.
 
-- Expense: Food, Transport, Housing, Bills & Recharges,
-  Shopping, Health, Entertainment, Money Lent, Loan
-  Repayment, Other.
-- Income: Salary, Refunds, Money Borrowed, Repayment
-  Received, Other Income.
-
-Business workspace:
-
-- Expense: Labour, Materials, Transport, Office & Admin,
-  Money Lent, Loan Repayment, Other.
-- Income: Sale Proceeds, Advance Received, Money Borrowed,
-  Repayment Received, Other Income.
+Business workspace: Labour, Materials, Contractor
+Payments, Broker Commission, Registration & Legal,
+Transport, Office & Admin, Other.
 
 ## Roadmap (beyond current scope)
 

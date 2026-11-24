@@ -105,47 +105,6 @@ function CategoryRow({
   );
 }
 
-function KindSection({
-  kind,
-  title,
-  categories,
-  actions,
-  onAdd,
-}: {
-  kind: Category["kind"];
-  title: string;
-  categories: Category[];
-  actions: Actions;
-  onAdd: () => void;
-}) {
-  const tree = categoryTree(categories, kind);
-  return (
-    <section aria-labelledby={`${kind}-heading`} className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-3 px-1">
-        <h2 id={`${kind}-heading`} className="text-lg font-semibold">
-          {title}
-        </h2>
-        <Button variant="outline" className="h-11 gap-2" onClick={onAdd}>
-          <Plus className="h-4 w-4" />
-          Add category
-        </Button>
-      </div>
-      <ul className="divide-y rounded-xl border bg-surface">
-        {tree.map(({ parent, children }) => (
-          <li key={parent.id} className="list-none">
-            <ul className="divide-y">
-              <CategoryRow category={parent} actions={actions} />
-              {children.map((child) => (
-                <CategoryRow key={child.id} category={child} parent={parent} actions={actions} />
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 export function CategoriesView() {
   const { active } = useWorkspace();
   const query = useCategories(active.id);
@@ -159,12 +118,18 @@ export function CategoriesView() {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Categories</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Hidden categories stay on old transactions but no longer appear when you add new ones.
-        </p>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Categories</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Hidden categories stay on old transactions but no longer appear when you add new ones.
+          </p>
+        </div>
+        <Button variant="outline" className="h-11 gap-2" onClick={() => setTarget({ mode: "add", kind: "expense" })}>
+          <Plus className="h-4 w-4" />
+          Add category
+        </Button>
       </div>
 
       {query.isError ? (
@@ -181,22 +146,18 @@ export function CategoriesView() {
           ))}
         </div>
       ) : (
-        <>
-          <KindSection
-            kind="expense"
-            title="Expense"
-            categories={query.data}
-            actions={actions}
-            onAdd={() => setTarget({ mode: "add", kind: "expense" })}
-          />
-          <KindSection
-            kind="income"
-            title="Income"
-            categories={query.data}
-            actions={actions}
-            onAdd={() => setTarget({ mode: "add", kind: "income" })}
-          />
-        </>
+        <ul className="divide-y rounded-xl border bg-surface">
+          {categoryTree(query.data, "expense").map(({ parent, children }) => (
+            <li key={parent.id} className="list-none">
+              <ul className="divide-y">
+                <CategoryRow category={parent} actions={actions} />
+                {children.map((child) => (
+                  <CategoryRow key={child.id} category={child} parent={parent} actions={actions} />
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
       )}
 
       {target && <CategoryDialog target={target} onClose={() => setTarget(null)} />}

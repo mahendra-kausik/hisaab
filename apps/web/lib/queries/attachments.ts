@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { attachmentType } from "@/lib/attachments";
@@ -33,8 +33,8 @@ export function useAttachments(workspaceId: string, parent: AttachmentParent) {
 }
 
 /** Uploads the file as the raw request body; the API reads its type, size and name from the request. */
+// Mutations need no cache code: every success refetches the pages on screen (components/providers.tsx).
 export function useUploadAttachment(workspaceId: string, parent: AttachmentParent) {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (file: File) =>
       apiFetch<Attachment>(`${listPath(workspaceId, parent)}?file_name=${encodeURIComponent(file.name)}`, {
@@ -42,17 +42,12 @@ export function useUploadAttachment(workspaceId: string, parent: AttachmentParen
         headers: { "Content-Type": attachmentType(file) ?? file.type },
         body: file,
       }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: attachmentsKey(workspaceId, parent) }),
   });
 }
 
-export function useDeleteAttachment(workspaceId: string, parent: AttachmentParent) {
-  const queryClient = useQueryClient();
+export function useDeleteAttachment(workspaceId: string) {
   return useMutation({
     mutationFn: (attachmentId: string) =>
       apiFetch<void>(`${workspace(workspaceId)}/attachments/${attachmentId}`, { method: "DELETE" }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: attachmentsKey(workspaceId, parent) }),
   });
 }

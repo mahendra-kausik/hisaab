@@ -91,6 +91,12 @@
   browser interactivity requires it.
 - Browser data fetching goes through TanStack Query
   hooks in `lib/queries/`, one hook per resource action.
+- Keeping pages fresh is one global rule, not per-hook
+  code: the `MutationCache` in `components/providers.tsx`
+  refetches every query on screen after any successful
+  mutation. A mutation hook therefore has no `onSuccess`
+  invalidation. A mutation that must not trigger it (logout)
+  sets `meta: { skipRefresh: true }`.
 - Always call relative `/api/v1/...` paths (proxied by
   the rewrite). Never call the API origin directly.
 - Keep pages thin; compose feature components.
