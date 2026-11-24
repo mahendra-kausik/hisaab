@@ -56,7 +56,15 @@ export function TransactionsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        {/* Whole workspace (all transactions and dues), so it ignores the filters above. */}
+        <a
+          href={`/api/v1/workspaces/${active.id}/export.xlsx`}
+          download
+          className={buttonVariants({ variant: "outline" })}
+        >
+          <Download className="size-4" /> Export all (Excel)
+        </a>
         <a href={exportHref} download className={buttonVariants({ variant: "outline" })}>
           <Download className="size-4" /> Export CSV
         </a>
