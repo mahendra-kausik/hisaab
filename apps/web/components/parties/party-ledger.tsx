@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Download, Plus } from "lucide-react";
 import { DueDialog } from "@/components/dues/due-dialog";
 import { DueRow } from "@/components/dues/due-row";
 import { PaymentDialog } from "@/components/dues/payment-dialog";
 import { TransactionList } from "@/components/transactions/transaction-list";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { todayIn } from "@/lib/dates";
 import { partyNet } from "@/lib/dues";
@@ -70,17 +70,29 @@ export function PartyLedger() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         {back}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-semibold">{party.name}</h1>
             <p className="truncate text-sm text-muted-foreground">
               {[role, party.phone, party.archived_at ? "Archived" : null].filter(Boolean).join(" · ")}
             </p>
           </div>
-          <Button className="h-11 shrink-0 gap-2" onClick={() => setDialog({ due: null })}>
-            <Plus className="h-4 w-4" />
-            Add due
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            {/* A plain link: the browser downloads the PDF with the session cookie (same as the
+                CSV export on Transactions). All-time statement; the API names the file. */}
+            <a
+              href={`/api/v1/workspaces/${active.id}/parties/${partyId}/statement.pdf`}
+              download
+              className={`${buttonVariants({ variant: "outline" })} h-11 gap-2`}
+            >
+              <Download className="h-4 w-4" />
+              Download statement
+            </a>
+            <Button className="h-11 gap-2" onClick={() => setDialog({ due: null })}>
+              <Plus className="h-4 w-4" />
+              Add due
+            </Button>
+          </div>
         </div>
       </div>
 
