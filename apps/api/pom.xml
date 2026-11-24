@@ -25,6 +25,7 @@
     <bucket4j.version>8.22.0</bucket4j.version>
     <aws-sdk.version>2.59.5</aws-sdk.version>
     <pdfbox.version>3.0.8</pdfbox.version>
+    <poi.version>5.5.1</poi.version>
     <spotless.version>3.11.0</spotless.version>
     <google-java-format.version>2.0.0</google-java-format.version>
   </properties>
@@ -101,6 +102,12 @@
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>pdfbox</artifactId>
       <version>${pdfbox.version}</version>
+    </dependency>
+    <!-- Workspace Excel export (U21). Not managed by Spring Boot, so the version is pinned. -->
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>${poi.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>

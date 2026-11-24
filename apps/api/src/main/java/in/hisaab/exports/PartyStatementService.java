@@ -192,7 +192,7 @@ public class PartyStatementService {
     return "%s₹%s.%02d".formatted(paise < 0 ? "-" : "", grouped, abs % 100);
   }
 
-  private static String stateLabel(DueState state) {
+  static String stateLabel(DueState state) {
     return switch (state) {
       case OPEN -> "Open";
       case PARTIALLY_PAID -> "Partially paid";
@@ -203,7 +203,7 @@ public class PartyStatementService {
   }
 
   /** ASCII only, so the Content-Disposition file name needs no encoding. */
-  private static String slug(String name) {
+  static String slug(String name) {
     var s = name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
     return s.isEmpty() ? "party" : s;
   }
