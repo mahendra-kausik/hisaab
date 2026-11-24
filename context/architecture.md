@@ -19,7 +19,7 @@
 | Rate limiting   | Bucket4j (in-memory)                                              | Login and signup throttling                                  |
 | Outbound email  | Spring Mail (SMTP); Brevo, single verified sender (no domain) | Daily dues digest to the user; later verification and resets |
 | Documents       | Apache PDFBox (PDF statements), Apache POI (Excel export)         | Phase 1.5 exports                                            |
-| File storage    | Cloudflare R2 via AWS SDK for Java v2 (S3 client); locally and in tests `adobe/s3mock` | Attachments (U19), database backups (Phase 1.5) |
+| File storage    | Cloudflare R2 via AWS SDK for Java v2 (S3 client); locally and in tests `adobe/s3mock` | Attachments (U19); nightly database backups (U22) by a GitHub Actions script |
 | Web framework   | Next.js (App Router) + TypeScript (strict)                        | Web UI and PWA; proxies `/api` to the API                    |
 | UI              | Tailwind CSS + shadcn/ui, Lucide icons                            | Components and styling                                       |
 | Web data        | TanStack Query, openapi-typescript, Zod, react-hook-form          | Server state, generated API types, form validation           |
@@ -102,15 +102,28 @@ API directly with a bearer token.
   transactions, budgets, recurring rules, parties,
   projects, dues, attachment metadata, jobs, refresh
   tokens, audit log.
-- **R2 (object storage)**: attachment files and nightly
-  database dumps. Exports (CSV, Excel, PDF) are built per
-  request and streamed back, never stored. The
+- **R2 (object storage)**: attachment files, and nightly
+  database dumps in a **separate bucket** (`hisaab-backups`,
+  its own token, 30-day lifecycle rule). Exports (CSV, Excel,
+  PDF) are built per request and streamed back, never stored. The
   database stores only the object key, MIME type, size,
   file name, and owning workspace. Only `ObjectStorage`
   (package `attachments`) talks to it; files stream through
   the API in both directions, so the browser never sees a
   storage URL. Keys are `workspaces/{workspaceId}/...` and
   never contain a user-supplied name.
+- **Backups (U22)**: not part of the API. The workflow
+  `.github/workflows/backup.yml` runs `scripts/backup-db.sh`
+  nightly (02:00 IST): `pg_dump --format=custom` as a dedicated
+  `hisaab_backup` role (`BYPASSRLS` + `pg_read_all_data`; the
+  API's `hisaab_app` is refused), a `pg_restore --list` check,
+  then upload to `backups/hisaab-<UTC time>.dump`. This is the
+  one writer to object storage other than `ObjectStorage`,
+  and the only holder of an RLS-bypassing credential, which
+  never reaches the API process. It runs on GitHub so it
+  survives a sleeping free API instance. Restore needs a
+  `pg_restore` at least as new as the dump's `pg_dump`
+  (`postgres:18-alpine`); steps are in `README.md`.
 - **Browser**: nothing sensitive beyond httpOnly
   cookies. No tokens in localStorage.
 

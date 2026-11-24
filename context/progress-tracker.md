@@ -6,11 +6,11 @@ change.
 ## Current Phase
 
 - Phase 1 (manual tracker) — code complete (U0–U13 done)
-- Phase 1.5 (people & dues) — in progress (U14–U21 done; U22 left)
+- Phase 1.5 (people & dues) — code complete (U14–U22 done)
 
 ## Current Goal
 
-- Phase 1.5: U21 workspace Excel export done; next is U22 (nightly database backup to R2).
+- Phase 1.6: U22 nightly database backup done (Phase 1.5 complete); next is U23 (phone layout).
 
 ## Completed
 
@@ -453,6 +453,32 @@ change.
   (same-origin iframe); no console errors. Not done: saving the file from the
   button click, opening it in Excel (lakh grouping and SUM were checked only
   through POI in the test, not by eye), the light theme.
+- **U22 — Nightly database backup (24 Nov 2026):** no Java change. A GitHub
+  Actions workflow (`.github/workflows/backup.yml`, cron `30 20 * * *` = 02:00
+  IST, plus a manual "Run workflow") runs `scripts/backup-db.sh`: `pg_dump
+  --format=custom` to a temp file, `pg_restore --list` to prove it is readable,
+  then `aws s3 cp -` to `s3://<backup bucket>/backups/hisaab-<UTC time>.dump`.
+  `pg_dump`, `pg_restore` and the AWS CLI all run as Docker images
+  (`postgres:18-alpine`, `amazon/aws-cli`), so nothing is installed on the
+  runner or on Windows. `make backup` runs the same script against local
+  Postgres and s3mock (`docker-compose.yml` now creates `hisaab,hisaab-backups`).
+  Decisions (24 Nov): GitHub Actions rather than an API job, because Render's
+  free instance sleeps through the night and `pg_dump` needs a role that
+  bypasses RLS, which must never be the API's role (invariant 3); a separate
+  `hisaab-backups` bucket with its own token, so a leaked API token cannot
+  touch backups; retention is an R2 lifecycle rule (30 days), not code; the job
+  is gated on the repository variable `BACKUP_ENABLED` so it does not fail
+  nightly before deploy. **Verified locally (24 Nov):** `make backup` uploaded a
+  136 KB dump; downloading it and restoring into a scratch database gave the
+  same row counts for `transactions` (159), `dues` (13), `users` (27) and
+  `flyway_schema_history` (13); a dump as `hisaab_app` is refused (`permission
+  denied for table flyway_schema_history`), and a dump as a temporary
+  `BYPASSRLS` + `pg_read_all_data` role succeeded. Found: a pg 18 dump cannot be
+  read by pg 16's `pg_restore` (`unsupported version (1.16)`), so restore uses
+  the same image; restoring into a server older than 17 prints one harmless
+  `SET transaction_timeout` error. Not done: a run on GitHub, a real R2 bucket,
+  the real `hisaab_backup` role (see Open Questions); the workflow file was only
+  read by eye. `make check` was not re-run (no API or web code changed).
 
 
 ## In Progress
@@ -538,7 +564,8 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 - [x] **U21 — Excel export** for a workspace (Apache POI). Done
   24 Nov 2026: API, then web (Export all (Excel) on Transactions); see
   Completed.
-- [ ] **U22 — Nightly database backup** to R2.
+- [x] **U22 — Nightly database backup** to R2. Done 24 Nov 2026: GitHub
+  Actions workflow plus `scripts/backup-db.sh`; see Completed.
 
 ### Phase 1.6 — Phone
 
@@ -548,6 +575,15 @@ Numbers Sorted" in `ai-workflow-rules.md`).
 
 ## Open Questions
 
+- **Backups need real infrastructure (U22):** the workflow has never run on
+  GitHub. Before deploy, follow "Backups" in `README.md`: create the R2 bucket
+  `hisaab-backups`, a token limited to it, and a 30-day lifecycle rule on
+  `backups/`; create the `hisaab_backup` role on Neon (`BYPASSRLS` plus
+  `pg_read_all_data`; if Neon refuses `BYPASSRLS`, fall back to its owner role);
+  add the five `BACKUP_*` secrets and `BACKUP_ENABLED=true`; run the workflow
+  once by hand, then do one real restore into a scratch database. Also: GitHub
+  switches schedules off after 60 days without repository activity (public
+  repositories), and a failed run only emails you.
 - **Non-Latin text in statements (U20):** the PDF font (Noto Sans) covers
   Latin and ₹ only, and PDFBox does no text shaping, so Hindi or other
   scripts in a party name, note or reason print as `?`. If statements need
@@ -1330,3 +1366,17 @@ introduced, so later explanations don't repeat them.
   reading a workbook back in a test with `new XSSFWorkbook(InputStream)`.
   Try it: `make db-up && make dev`, open Transactions, click Export all (Excel).
   Read next: `WorkspaceExportService.export`, then `moneyCell` and `sheet`.
+- **24 Nov 2026 — U22 done (nightly database backup).** Key files:
+  `scripts/backup-db.sh`, `.github/workflows/backup.yml`, `Makefile` (`backup`),
+  `docker-compose.yml` (second bucket), `README.md` (Backups). No Java change.
+  Concepts introduced: `pg_dump --format=custom` and `pg_restore` (and why the
+  restore client must be as new as the dump's); why a backup needs a role with
+  `BYPASSRLS` (RLS hides rows from every normal role, including the table owner
+  because policies are forced) and why that role stays out of the API; GitHub
+  Actions `schedule` (cron in UTC), `workflow_dispatch`, repository secrets and
+  variables, and gating a job with `if: vars.X`; running tools as Docker images
+  instead of installing them; streaming to S3 from stdin (`aws s3 cp -`); bash
+  safety (`set -euo pipefail`, `trap ... EXIT`); R2 lifecycle rules for retention.
+  Try it: `make db-up && make backup`, then list the bucket with the aws-cli
+  image (see README, Restore). Read next: `scripts/backup-db.sh` top to bottom,
+  then `backup.yml`.
