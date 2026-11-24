@@ -1,0 +1,30 @@
+name: backup
+
+# Nightly dump of the production database to the R2 backup bucket (U22).
+# Runs on GitHub, not inside the API, so it still happens while the free API instance sleeps
+# and the database credential here never reaches the API process.
+# See "Backups" in README.md for the secrets and the one-time setup.
+
+on:
+  schedule:
+    - cron: "30 20 * * *" # 02:00 IST (GitHub cron is UTC)
+  workflow_dispatch: # the "Run workflow" button, to test or take an extra backup
+
+jobs:
+  backup:
+    # Off until you turn it on (Settings > Secrets and variables > Actions > Variables),
+    # so it does not fail every night before the app is deployed.
+    if: vars.BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dump and upload
+        run: bash scripts/backup-db.sh
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          STORAGE_ENDPOINT: ${{ secrets.BACKUP_STORAGE_ENDPOINT }}
+          STORAGE_BUCKET: ${{ secrets.BACKUP_STORAGE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_STORAGE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_STORAGE_SECRET_KEY }}
+          AWS_DEFAULT_REGION: auto

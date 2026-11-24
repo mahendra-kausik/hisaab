@@ -26,7 +26,8 @@ services:
     ports:
       - "9090:9090"
     environment:
-      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: hisaab
+      # hisaab-backups stands in for the separate R2 bucket the nightly backup writes to.
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: hisaab,hisaab-backups
       COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /s3mockroot
       COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "true"
     volumes:

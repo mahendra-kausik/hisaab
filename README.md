@@ -64,6 +64,7 @@ not start without them.
 | `make fmt` | Format the Java code (Spotless + google-java-format) |
 | `make gen-api` | Regenerate `apps/web/lib/api/schema.d.ts` from the running API |
 | `make check` | Everything CI runs: format check, build, tests, lint, typecheck |
+| `make backup` | Dump the local database to the local `hisaab-backups` bucket (needs `make db-up`) |
 
 `make gen-api` needs the API running (`make dev-api`) because it reads
 `/v3/api-docs`.
@@ -75,6 +76,51 @@ Two Postgres roles are created by `docker/postgres/init-roles.sql`:
 - `hisaab_owner` owns the schema and runs Flyway migrations.
 - `hisaab_app` is what the running API connects as. It owns no tables and
   cannot bypass row-level security.
+
+## Backups
+
+A GitHub Actions workflow (`.github/workflows/backup.yml`) runs
+`scripts/backup-db.sh` every night at 02:00 IST. It runs `pg_dump` (custom
+format, already compressed), checks the file with `pg_restore --list`, and
+uploads it to the **backup bucket** as `backups/hisaab-<UTC time>.dump`. It runs
+on GitHub, not in the API, so it still happens while a free API instance is
+asleep and the database credential never reaches the API. The same script runs
+locally with `make backup` (into the `hisaab-backups` bucket in s3mock).
+
+One-time setup before the workflow does anything:
+
+1. **R2:** create a bucket `hisaab-backups` (separate from the attachments
+   bucket) and an API token limited to that bucket. Add a lifecycle rule that
+   deletes objects under `backups/` after 30 days; the script never deletes.
+2. **Database role:** `pg_dump` must read every row, but row-level security hides
+   them from normal roles. Create a dedicated role (as the database admin):
+   ```sql
+   CREATE ROLE hisaab_backup LOGIN BYPASSRLS PASSWORD '<generate one>';
+   GRANT pg_read_all_data TO hisaab_backup;
+   ```
+   Without `BYPASSRLS` the dump fails loudly instead of coming out empty. If the
+   host will not let you grant `BYPASSRLS`, use its owner role instead.
+3. **GitHub** (Settings > Secrets and variables > Actions): secrets
+   `BACKUP_DATABASE_URL` (`postgresql://hisaab_backup:...@host/db?sslmode=require`),
+   `BACKUP_STORAGE_ENDPOINT` (`https://<account-id>.r2.cloudflarestorage.com`),
+   `BACKUP_STORAGE_BUCKET` (`hisaab-backups`), `BACKUP_STORAGE_ACCESS_KEY`,
+   `BACKUP_STORAGE_SECRET_KEY`; and the variable `BACKUP_ENABLED` = `true`.
+   Then run the workflow once by hand ("Run workflow") and check the object appears.
+
+GitHub emails you when a scheduled run fails. A public repository with no
+activity for 60 days has its schedules switched off, so push something now and then.
+
+**Restore** with the same `pg_restore` version as the dump (the script uses
+`postgres:18-alpine`; an older `pg_restore` refuses the file). Download the
+object, make an empty database, then:
+
+```bash
+docker run --rm -i postgres:18-alpine pg_restore --no-owner -d "<database url>" < hisaab-....dump
+```
+
+Use `--clean --if-exists` to overwrite a database that already has the tables.
+Restoring into a server older than 17 prints one harmless error about
+`transaction_timeout`; everything else still restores.
 
 ## Project rules
 

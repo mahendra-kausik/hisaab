@@ -15,7 +15,7 @@ ifeq ($(OS),Windows_NT)
   endif
 endif
 
-.PHONY: db-up db-down dev dev-api dev-web test-api fmt gen-api check
+.PHONY: db-up db-down dev dev-api dev-web test-api fmt gen-api check backup
 
 # Postgres in Docker (waits until it is healthy).
 db-up:
@@ -45,6 +45,16 @@ fmt:
 # Needs the API running (`make dev-api`): reads /v3/api-docs.
 gen-api:
 	cd apps/web && $(NPM) run gen:api
+
+# Runs the nightly backup script against the local Postgres and s3mock (`make db-up` first).
+# Dumps as the local superuser; production uses a dedicated BYPASSRLS role (see README).
+# MSYS_NO_PATHCONV stops Git Bash rewriting the "/" paths Docker receives.
+backup:
+	MSYS_NO_PATHCONV=1 DOCKER_NETWORK=hisaab_default \
+	DATABASE_URL=postgresql://postgres:postgres@postgres:5432/hisaab \
+	STORAGE_ENDPOINT=http://s3:9090 STORAGE_BUCKET=hisaab-backups \
+	AWS_ACCESS_KEY_ID=local-dev AWS_SECRET_ACCESS_KEY=not-checked AWS_DEFAULT_REGION=us-east-1 \
+	bash scripts/backup-db.sh
 
 # Everything CI runs: API format check + compile (warnings are errors) + tests,
 # then web lint, typecheck, tests and production build.
