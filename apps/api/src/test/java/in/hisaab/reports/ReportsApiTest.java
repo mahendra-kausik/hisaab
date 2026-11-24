@@ -201,11 +201,22 @@ class ReportsApiTest extends PostgresTestBase {
     return ids.getFirst();
   }
 
+  /** Defaults have no subcategories, so this creates a "Groceries" child under the parent. */
   private String childId(Session s, UUID ws, String parentId) throws Exception {
-    List<String> ids =
-        JsonPath.read(
-            fetch(s, ws, "categories"), "$.items[?(@.parent_id == '%s')].id".formatted(parentId));
-    return ids.getFirst();
+    String body =
+        mockMvc
+            .perform(
+                post("/api/v1/workspaces/" + ws + "/categories")
+                    .cookie(auth(s))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        "{\"name\": \"Groceries\", \"kind\": \"expense\", \"parent_id\": \"%s\"}"
+                            .formatted(parentId)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return JsonPath.read(body, "$.id");
   }
 
   private String fetch(Session s, UUID ws, String path) throws Exception {

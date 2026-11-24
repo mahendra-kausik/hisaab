@@ -205,30 +205,27 @@ insights, and later tax and business features.
 
 ## Default Data
 
-Every new workspace gets one Cash account, plus these
-loan categories in addition to the lists below:
-expense Money Lent and Loan Repayment; income Money
-Borrowed and Repayment Received.
+Every new workspace gets one Cash account and a short
+list of categories. The lists are kept to the bare minimum
+and there are no default subcategories: users add their
+own. The loan categories (expense Money Lent and Loan
+Repayment; income Money Borrowed and Repayment Received)
+are in every workspace because dues use them.
 
 Personal workspace:
 
-- Expense: Food (Groceries, Eating Out, Food Delivery),
-  Transport (Fuel, Cab/Auto, Public Transport), Housing
-  (Rent, Maintenance, Utilities), Bills & Recharges
-  (Mobile, Internet, Electricity), Shopping, Health,
-  Education, Entertainment, Subscriptions, Travel,
-  Personal Care, Gifts & Donations, Fees & Charges,
-  Other.
-- Income: Salary, Stipend, Business Income, Refunds,
-  Interest, Gifts Received, Other Income.
+- Expense: Food, Transport, Housing, Bills & Recharges,
+  Shopping, Health, Entertainment, Money Lent, Loan
+  Repayment, Other.
+- Income: Salary, Refunds, Money Borrowed, Repayment
+  Received, Other Income.
 
 Business workspace:
 
-- Expense: Labour, Materials, Contractor Payments,
-  Broker Commission, Registration & Legal, Transport,
-  Office & Admin, Other.
-- Income: Sale Proceeds, Advance Received, Rent
-  Received, Commission, Other Income.
+- Expense: Labour, Materials, Transport, Office & Admin,
+  Money Lent, Loan Repayment, Other.
+- Income: Sale Proceeds, Advance Received, Money Borrowed,
+  Repayment Received, Other Income.
 
 ## Roadmap (beyond current scope)
 

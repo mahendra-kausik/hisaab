@@ -17,21 +17,16 @@ final class DefaultCategories {
     return new Seed(name, List.of(children));
   }
 
+  // Bare minimum on purpose, and no default subcategories: users add their own.
   private static final List<Seed> PERSONAL_EXPENSE =
       List.of(
-          top("Food", "Groceries", "Eating Out", "Food Delivery"),
-          top("Transport", "Fuel", "Cab/Auto", "Public Transport"),
-          top("Housing", "Rent", "Maintenance", "Utilities"),
-          top("Bills & Recharges", "Mobile", "Internet", "Electricity"),
+          top("Food"),
+          top("Transport"),
+          top("Housing"),
+          top("Bills & Recharges"),
           top("Shopping"),
           top("Health"),
-          top("Education"),
           top("Entertainment"),
-          top("Subscriptions"),
-          top("Travel"),
-          top("Personal Care"),
-          top("Gifts & Donations"),
-          top("Fees & Charges"),
           top("Money Lent"),
           top("Loan Repayment"),
           top("Other"));
@@ -39,11 +34,7 @@ final class DefaultCategories {
   private static final List<Seed> PERSONAL_INCOME =
       List.of(
           top("Salary"),
-          top("Stipend"),
-          top("Business Income"),
           top("Refunds"),
-          top("Interest"),
-          top("Gifts Received"),
           top("Money Borrowed"),
           top("Repayment Received"),
           top("Other Income"));
@@ -52,9 +43,6 @@ final class DefaultCategories {
       List.of(
           top("Labour"),
           top("Materials"),
-          top("Contractor Payments"),
-          top("Broker Commission"),
-          top("Registration & Legal"),
           top("Transport"),
           top("Office & Admin"),
           top("Money Lent"),
@@ -65,8 +53,6 @@ final class DefaultCategories {
       List.of(
           top("Sale Proceeds"),
           top("Advance Received"),
-          top("Rent Received"),
-          top("Commission"),
           top("Money Borrowed"),
           top("Repayment Received"),
           top("Other Income"));

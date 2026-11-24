@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CircleUser, LogOut } from "lucide-react";
+import { CircleUser, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ const THEMES: { value: Theme; label: string }[] = [
   { value: "dark", label: "Dark" },
 ];
 
-export function UserMenu({ me }: { me: Me }) {
+export function UserMenu({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
   const router = useRouter();
   const logout = useLogout();
   const theme = useTheme();
@@ -56,6 +56,16 @@ export function UserMenu({ me }: { me: Me }) {
           </DropdownMenuRadioGroup>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="min-h-11"
+          onClick={() => {
+            onNavigate?.(); // closes the slide-over menu on phones
+            router.push("/settings");
+          }}
+        >
+          <Settings className="h-4 w-4" />
+          Profile &amp; settings
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="min-h-11"
           onClick={() =>

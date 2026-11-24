@@ -366,7 +366,7 @@ class TransactionsApiTest extends PostgresTestBase {
     String cash = cashId(s, ws);
     String bank = createAccount(s, ws, "Bank");
     String food = categoryId(s, ws, "Food", "expense");
-    String groceries = categoryId(s, ws, "Groceries", "expense");
+    String groceries = createChildCategory(s, ws, "Groceries", food);
     String salary = categoryId(s, ws, "Salary", "income");
 
     createTx(
@@ -740,6 +740,25 @@ class TransactionsApiTest extends PostgresTestBase {
             .cookie(auth(s))
             .contentType(MediaType.APPLICATION_JSON)
             .content(json));
+  }
+
+  /** Defaults have no subcategories, so tests that need one create it. */
+  private String createChildCategory(Session s, UUID ws, String name, String parentId)
+      throws Exception {
+    String json =
+        mockMvc
+            .perform(
+                post("/api/v1/workspaces/" + ws + "/categories")
+                    .cookie(auth(s))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        "{\"name\": \"%s\", \"kind\": \"expense\", \"parent_id\": \"%s\"}"
+                            .formatted(name, parentId)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return JsonPath.read(json, "$.id");
   }
 
   private String categoryId(Session s, UUID ws, String name, String kind) throws Exception {

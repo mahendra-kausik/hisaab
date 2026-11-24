@@ -112,7 +112,12 @@ the color tokens.
 - **Desktop (≥ 768px, primary):** fixed 240px left
   sidebar with the workspace switcher at the top, a
   prominent Add button, then Home, Transactions, Accounts,
-  Categories, Dues, Reports, Budgets, Settings. Content max width 1100px.
+  Dues, Reports and a collapsible "More" group (Budgets,
+  Recurring, Categories, Parties, Projects; it opens by itself
+  when the current page is inside it). Settings is not in the
+  list: it is "Profile & settings" in the user menu at the
+  bottom. Only the link list scrolls (the switcher, Add button
+  and user menu stay pinned). Content max width 1100px.
   Design and verify at 1280px first.
 - **Phone (< 768px):** a 56px top bar (app name, workspace
   switcher) and a fixed 64px bottom tab bar: Home,
@@ -138,9 +143,6 @@ the color tokens.
   menu, kept in `localStorage` (`hisaab.theme`; System is
   "no value"). A small script in `<head>` applies it before
   first paint so there is no flash.
-- **Unbuilt pages:** sidebar items whose page does not exist
-  yet are shown muted with a "Soon" badge and are not links;
-  the unit that builds the page gives the item its `href`.
 - **Quick add:** a dialog, opened by the Add button or
   the `N` key from any page; Enter saves, Esc closes.
   Below 768px it is a bottom sheet (full width, top corners

@@ -120,7 +120,7 @@ export function SettingsView() {
   const me = useMe();
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
-      <h1 className="text-xl font-semibold">Settings</h1>
+      <h1 className="text-xl font-semibold">Profile &amp; settings</h1>
       {me.data ? <SettingsForm me={me.data} /> : <Skeleton className="h-64 max-w-md" />}
     </div>
   );

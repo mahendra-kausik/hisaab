@@ -42,7 +42,7 @@ class WorkspacesApiTest extends PostgresTestBase {
         mockMvc
             .perform(get("/api/v1/workspaces/" + ws + "/categories").cookie(auth(s)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(17))
+            .andExpect(jsonPath("$.items.length()").value(12))
             .andExpect(jsonPath("$.items[?(@.is_system == false)]").isEmpty())
             .andReturn()
             .getResponse()
@@ -54,9 +54,6 @@ class WorkspacesApiTest extends PostgresTestBase {
         .containsExactly(
             "Labour",
             "Materials",
-            "Contractor Payments",
-            "Broker Commission",
-            "Registration & Legal",
             "Transport",
             "Office & Admin",
             "Money Lent",
@@ -66,8 +63,6 @@ class WorkspacesApiTest extends PostgresTestBase {
         .containsExactly(
             "Sale Proceeds",
             "Advance Received",
-            "Rent Received",
-            "Commission",
             "Money Borrowed",
             "Repayment Received",
             "Other Income");

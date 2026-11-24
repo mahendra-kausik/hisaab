@@ -10,8 +10,8 @@ change.
 
 ## Current Goal
 
-- Phase 1.6 (phone) — code complete (U23–U24 done). Next: deploy and the
-  open questions below.
+- Phase 1.6 (phone) — code complete (U23–U24 done). U25 (leaner defaults and
+  navigation) done as a patch-up. Next: deploy and the open questions below.
 
 ## Completed
 
@@ -612,6 +612,13 @@ Numbers Sorted" in `ai-workflow-rules.md`).
   (web only); see Completed.
 - [x] **U24 — PWA:** manifest, icons, installability. Done 25 Nov 2026
   (web only); see Completed.
+
+### Patch-ups after Phase 1
+
+- [x] **U25 — Leaner defaults and navigation:** no default subcategories and
+  fewer default categories; sidebar trimmed to five pages plus a collapsible
+  "More"; Settings moved into the profile menu; the sidebar link list scrolls
+  on its own. Done 25 Nov 2026; see Completed.
 
 ## Open Questions
 
@@ -1452,3 +1459,24 @@ introduced, so later explanations don't repeat them.
   icon in the address bar, install, and it opens in its own window. On a phone
   it needs the deployed HTTPS site (Chrome menu > Install app; iOS Share > Add
   to Home Screen). Read next: `app/manifest.ts`, then `app/layout.tsx`.
+- **25 Nov 2026 — U25 done (leaner defaults and navigation).** Key files:
+  `categories/DefaultCategories.java`, `components/shell/sidebar.tsx`,
+  `components/shell/user-menu.tsx`. No migration: only new workspaces get the
+  shorter lists (personal 15 categories, business 12, none with children);
+  existing workspaces keep what they have, and a local dev database can be reset
+  with `make db-down && make db-up`. The seeding code (`CategoryService`) did not
+  change because every seed simply has an empty child list. Tests that relied on
+  a default "Groceries" now create it through the API. Sidebar: Home,
+  Transactions, Accounts, Dues, Reports, then a native `<details>` "More" group
+  (Budgets, Recurring, Categories, Parties, Projects) that opens itself when the
+  current page is inside it. Settings is "Profile & settings" in the user menu.
+  The `nav` has `min-h-0 overflow-y-auto`, so only the links scroll. The "Soon"
+  placeholder branch was removed (every page exists). Concepts introduced: the
+  native `<details>`/`<summary>` disclosure (no state to manage), Tailwind's
+  `group-open:` variant, and why a flex child needs `min-h-0` before
+  `overflow-y-auto` works. How a request flows: `POST /workspaces` ->
+  `WorkspaceService.create` -> `CategoryService.seedDefaults` -> `DefaultCategories.forKind`.
+  Try it: `make dev`, sign up a new user, open Categories (10 expense, 5 income,
+  no subcategories), add a subcategory under Food, open /budgets and see More
+  expand, shrink the window height and watch only the nav scroll. Read next:
+  `DefaultCategories.java`, then `sidebar.tsx`.

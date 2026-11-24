@@ -31,12 +31,12 @@ class CategoriesApiTest extends PostgresTestBase {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
 
-    // 16 top-level + 12 child expense categories, 9 income categories.
+    // 10 expense + 5 income categories, no subcategories.
     String body =
         mockMvc
             .perform(get(url(ws)).cookie(auth(s)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(37))
+            .andExpect(jsonPath("$.items.length()").value(15))
             .andExpect(jsonPath("$.items[0].kind").value("expense"))
             .andExpect(jsonPath("$.items[?(@.is_system == false)]").isEmpty())
             .andExpect(jsonPath("$.items[?(@.name == 'Money Lent')]").isNotEmpty())
@@ -48,32 +48,22 @@ class CategoriesApiTest extends PostgresTestBase {
     List<String> income = JsonPath.read(body, "$.items[?(@.kind == 'income')].name");
     assertThat(income)
         .containsExactly(
-            "Salary",
-            "Stipend",
-            "Business Income",
-            "Refunds",
-            "Interest",
-            "Gifts Received",
-            "Money Borrowed",
-            "Repayment Received",
-            "Other Income");
+            "Salary", "Refunds", "Money Borrowed", "Repayment Received", "Other Income");
   }
 
   @Test
-  void defaultChildrenPointAtTheirParent() throws Exception {
+  void defaultsHaveNoSubcategories() throws Exception {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
 
-    String food = idOf(s, ws, "Food", "expense");
     String body =
         mockMvc
             .perform(get(url(ws)).cookie(auth(s)))
             .andReturn()
             .getResponse()
             .getContentAsString();
-    List<String> children =
-        JsonPath.read(body, "$.items[?(@.parent_id == '%s')].name".formatted(food));
-    assertThat(children).containsExactly("Groceries", "Eating Out", "Food Delivery");
+    List<String> children = JsonPath.read(body, "$.items[?(@.parent_id != null)].name");
+    assertThat(children).isEmpty();
   }
 
   @Test
@@ -92,15 +82,15 @@ class CategoriesApiTest extends PostgresTestBase {
         .andExpect(jsonPath("$.parent_id").value(food))
         .andExpect(jsonPath("$.is_system").value(false))
         .andExpect(jsonPath("$.hidden_at").doesNotExist())
-        // Three defaults (0, 1, 2) already exist, so the new child goes last.
-        .andExpect(jsonPath("$.sort_order").value(3));
+        // Food has no other children, so the new one is first.
+        .andExpect(jsonPath("$.sort_order").value(0));
   }
 
   @Test
   void aChildOfAChildIsRejected() throws Exception {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
-    String groceries = idOf(s, ws, "Groceries", "expense");
+    String groceries = createCat(s, ws, "Groceries", "expense", idOf(s, ws, "Food", "expense"));
 
     postCat(
             s,
@@ -195,6 +185,7 @@ class CategoriesApiTest extends PostgresTestBase {
     Session s = fixtures.signup();
     UUID ws = fixtures.workspaceIdOf(s);
     String food = idOf(s, ws, "Food", "expense");
+    createCat(s, ws, "Groceries", "expense", food);
 
     // Top level: "Food" already exists.
     postCat(s, ws, "{\"name\": \"FOOD\", \"kind\": \"expense\"}")
@@ -208,7 +199,7 @@ class CategoriesApiTest extends PostgresTestBase {
                 .formatted(food))
         .andExpect(status().isConflict());
     // Renaming onto an existing sibling.
-    patchCat(s, ws, idOf(s, ws, "Health", "expense"), "{\"name\": \"education\"}")
+    patchCat(s, ws, idOf(s, ws, "Health", "expense"), "{\"name\": \"shopping\"}")
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.error.code").value("name_taken"));
   }

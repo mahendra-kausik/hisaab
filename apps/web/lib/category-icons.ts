@@ -29,8 +29,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-// The default categories (see DefaultCategories.java) mapped to icons by name. Subcategories
-// such as "Groceries" are not listed: they use their parent's icon. Custom categories get Tag.
+// Category names mapped to icons. Covers the current defaults (DefaultCategories.java) and some
+// older ones that existing workspaces may still have. Subcategories are not listed: they use
+// their parent's icon. Custom categories get Tag.
 const BY_NAME: Record<string, LucideIcon> = {
   Food: Utensils,
   Transport: Car,
